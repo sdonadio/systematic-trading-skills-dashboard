@@ -9,6 +9,8 @@ window.SKILLS = {
     "companion_url": "https://sdonadio.github.io/systematic-trading-arena/",
     "lms": "Canvas",
     "lang": "Python",
+    "session_word": "Week",
+    "deck_word": "Week",
     "accent": "#800000",
     "accent_2": "#d6d6ce",
     "storage_prefix": "finm-st-skills"
