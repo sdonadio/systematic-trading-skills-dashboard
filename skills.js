@@ -129,6 +129,11 @@ window.SKILLS = {
         "python.asyncio-queue",
         "python.non-blocking",
         "python.async-races",
+        "python.threading",
+        "python.executors",
+        "python.start-methods",
+        "python.concurrency-choice",
+        "python.to-thread",
         "python.reconnect"
       ]
     },
@@ -156,11 +161,14 @@ window.SKILLS = {
       "exam": null,
       "companion_url": "https://sdonadio.github.io/systematic-trading-arena/week3.html",
       "skills": [
-        "tools.uml",
-        "python.asyncio-queue",
-        "python.reconnect",
+        "tools.osi-stack",
+        "tools.udp-tcp",
         "python.sockets",
+        "python.socket-examples",
+        "trading.fix-itch",
         "python.websockets",
+        "python.reconnect",
+        "python.asyncio-queue",
         "python.pydantic",
         "python.discriminated-union",
         "python.error-boundary",
@@ -642,7 +650,7 @@ window.SKILLS = {
         {
           "type": "deck",
           "session": 2,
-          "label": "Deck Week 2 · slide 18"
+          "label": "Deck Week 2 · slide 29"
         },
         {
           "type": "lab",
@@ -771,8 +779,7 @@ window.SKILLS = {
       "can": "You can draw a class diagram with visibility, typed members, generalization, aggregation, composition, dependency and multiplicity, and a sequence diagram showing who calls whom in what order.",
       "introduced": 1,
       "practised": [
-        2,
-        3
+        2
       ],
       "depth": 3,
       "where": [
@@ -784,12 +791,7 @@ window.SKILLS = {
         {
           "type": "deck",
           "session": 2,
-          "label": "Deck Week 2 · slide 16"
-        },
-        {
-          "type": "deck",
-          "session": 3,
-          "label": "Deck Week 3 · slide 22"
+          "label": "Deck Week 2 · slide 27"
         },
         {
           "type": "lab",
@@ -847,8 +849,8 @@ window.SKILLS = {
     {
       "id": "python.gil",
       "category": "python",
-      "name": "The GIL: threads, processes or async",
-      "can": "You can state that CPython runs one thread of Python bytecode at a time, and pick threads, processes or asyncio from whether the work is blocking I/O, CPU-bound or high-volume I/O.",
+      "name": "The GIL: I/O-bound vs CPU-bound work",
+      "can": "You can explain that CPython's GIL lets one thread execute bytecode at a time and is released around blocking I/O, classify a piece of work as I/O-bound or CPU-bound, and predict from that whether threads will speed it up.",
       "introduced": 2,
       "practised": [
         6
@@ -858,7 +860,7 @@ window.SKILLS = {
         {
           "type": "deck",
           "session": 2,
-          "label": "Deck Week 2 · slides 5–7"
+          "label": "Deck Week 2 · slides 5–7, 14"
         },
         {
           "type": "deck",
@@ -869,6 +871,12 @@ window.SKILLS = {
           "type": "lab",
           "session": 2,
           "label": "Lab 2 · part 2 — Concurrency is not parallelism — prove it",
+          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-2-concurrency-and-the-event-loop"
+        },
+        {
+          "type": "lab",
+          "session": 2,
+          "label": "Lab 2 · part 8 — Threads vs processes vs one core",
           "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-2-concurrency-and-the-event-loop"
         },
         {
@@ -935,7 +943,7 @@ window.SKILLS = {
         {
           "type": "deck",
           "session": 2,
-          "label": "Deck Week 2 · slides 9, 14"
+          "label": "Deck Week 2 · slides 9, 25"
         },
         {
           "type": "lab",
@@ -973,12 +981,12 @@ window.SKILLS = {
         {
           "type": "deck",
           "session": 2,
-          "label": "Deck Week 2 · slides 10, 16"
+          "label": "Deck Week 2 · slides 10, 27"
         },
         {
           "type": "deck",
           "session": 3,
-          "label": "Deck Week 3 · slide 12"
+          "label": "Deck Week 3 · slide 29"
         },
         {
           "type": "lab",
@@ -1006,7 +1014,7 @@ window.SKILLS = {
       "id": "python.non-blocking",
       "category": "python",
       "name": "Never block the event loop",
-      "can": "You can spot the calls that freeze every task on a loop (time.sleep, blocking HTTP, a heavy computation) and fix them with await or run_in_executor, and justify the one background thread a blocking library still needs.",
+      "can": "You can spot the calls that freeze every task on a loop (time.sleep, blocking HTTP, a heavy computation), prove the stall with debug=True or a heartbeat measurement, and keep a synchronous on_tick returning fast.",
       "introduced": 2,
       "practised": [],
       "depth": 3,
@@ -1014,7 +1022,7 @@ window.SKILLS = {
         {
           "type": "deck",
           "session": 2,
-          "label": "Deck Week 2 · slides 11, 15, 18"
+          "label": "Deck Week 2 · slides 11, 26, 29"
         },
         {
           "type": "lab",
@@ -1082,12 +1090,12 @@ window.SKILLS = {
         {
           "type": "deck",
           "session": 2,
-          "label": "Deck Week 2 · slide 14"
+          "label": "Deck Week 2 · slides 25, 31"
         },
         {
           "type": "deck",
           "session": 3,
-          "label": "Deck Week 3 · slide 12"
+          "label": "Deck Week 3 · slides 28, 34"
         },
         {
           "type": "lab",
@@ -1101,8 +1109,243 @@ window.SKILLS = {
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901644"
         },
         {
+          "type": "lab",
+          "session": 3,
+          "label": "Lab 3 · step 5 — WebSockets",
+          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-3-socket-streaming-and-protocols"
+        },
+        {
           "type": "exam",
           "label": "Final · group: Live Systems: Risk, Reconciliation & Failure Modes"
+        },
+        {
+          "type": "project",
+          "label": "Phase 1 — Connect & Trade for Real",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901653"
+        }
+      ],
+      "interview": true
+    },
+    {
+      "id": "python.threading",
+      "category": "python",
+      "name": "threading: Thread, Lock, Queue & Event",
+      "can": "You can start and join threading.Thread workers, hand data between them with a queue.Queue and stop them with an Event, and find and fix a read-modify-write race with a Lock (or an RLock when a locked method calls another).",
+      "introduced": 2,
+      "practised": [],
+      "depth": 3,
+      "where": [
+        {
+          "type": "deck",
+          "session": 2,
+          "label": "Deck Week 2 · slides 15–16"
+        },
+        {
+          "type": "lab",
+          "session": 2,
+          "label": "Lab 2 · part 8 — Threads vs processes vs one core",
+          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-2-concurrency-and-the-event-loop"
+        },
+        {
+          "type": "hw",
+          "label": "HW 2 — Async concurrency with asyncio",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901644"
+        },
+        {
+          "type": "exam",
+          "label": "Midterm · group: Threads, the GIL & Concurrency Pitfalls"
+        },
+        {
+          "type": "exam",
+          "label": "Final · group: asyncio & Concurrency (recap)"
+        }
+      ],
+      "interview": true
+    },
+    {
+      "id": "python.executors",
+      "category": "python",
+      "name": "ThreadPoolExecutor vs ProcessPoolExecutor, measured",
+      "can": "You can run the same job through ThreadPoolExecutor and ProcessPoolExecutor, time sequential vs threads vs processes, and justify the pool you pick from that measurement, including when start-up and pickling make a process pool slower than one core.",
+      "introduced": 2,
+      "practised": [
+        6
+      ],
+      "depth": 3,
+      "where": [
+        {
+          "type": "deck",
+          "session": 2,
+          "label": "Deck Week 2 · slides 17–18, 23"
+        },
+        {
+          "type": "lab",
+          "session": 2,
+          "label": "Lab 2 · part 8 — Threads vs processes vs one core",
+          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-2-concurrency-and-the-event-loop"
+        },
+        {
+          "type": "exam",
+          "label": "Midterm · group: Threads, the GIL & Concurrency Pitfalls"
+        },
+        {
+          "type": "exam",
+          "label": "Final · group: asyncio & Concurrency (recap)"
+        }
+      ],
+      "interview": true
+    },
+    {
+      "id": "python.start-methods",
+      "category": "python",
+      "name": "Start methods, pickling & shared memory",
+      "can": "You can name spawn, fork and forkserver and say which one your OS uses, explain why a pool needs a module-level function and a __main__ guard, list what cannot be pickled (lambdas, sockets, locks, event loops) and say when shared_memory beats pickling.",
+      "introduced": 2,
+      "practised": [],
+      "depth": 2,
+      "where": [
+        {
+          "type": "deck",
+          "session": 2,
+          "label": "Deck Week 2 · slides 19–20"
+        },
+        {
+          "type": "lab",
+          "session": 2,
+          "label": "Lab 2 · part 8 — Threads vs processes vs one core",
+          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-2-concurrency-and-the-event-loop"
+        },
+        {
+          "type": "exam",
+          "label": "Midterm · group: Threads, the GIL & Concurrency Pitfalls"
+        }
+      ],
+      "interview": true
+    },
+    {
+      "id": "python.concurrency-choice",
+      "category": "python",
+      "name": "Threads vs processes vs asyncio, per component",
+      "can": "You can take each component of a trading system (feed handler, reference-price poll, light and heavy signals, order gateway, logging) and choose asyncio, a thread or a process from where its time goes, defaulting to asyncio and measuring before you add a process.",
+      "introduced": 2,
+      "practised": [
+        6
+      ],
+      "depth": 3,
+      "where": [
+        {
+          "type": "deck",
+          "session": 2,
+          "label": "Deck Week 2 · slides 6, 21"
+        },
+        {
+          "type": "lab",
+          "session": 2,
+          "label": "Lab 2 · part 8 — Threads vs processes vs one core",
+          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-2-concurrency-and-the-event-loop"
+        },
+        {
+          "type": "hw",
+          "label": "HW 2 — Async concurrency with asyncio",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901644"
+        },
+        {
+          "type": "exam",
+          "label": "Midterm · group: Threads, the GIL & Concurrency Pitfalls"
+        },
+        {
+          "type": "exam",
+          "label": "Final · group: asyncio & Concurrency (recap)"
+        }
+      ],
+      "interview": true
+    },
+    {
+      "id": "python.to-thread",
+      "category": "python",
+      "name": "Handing blocking work off the event loop",
+      "can": "You can move a blocking call off the loop with await asyncio.to_thread, push a value from a thread into the loop with loop.call_soon_threadsafe, and explain why a thread must never touch an asyncio.Queue or any other loop object directly.",
+      "introduced": 2,
+      "practised": [],
+      "depth": 3,
+      "where": [
+        {
+          "type": "deck",
+          "session": 2,
+          "label": "Deck Week 2 · slides 22, 26, 29"
+        },
+        {
+          "type": "lab",
+          "session": 2,
+          "label": "Lab 2 · part 6 — The one legitimate thread in this codebase",
+          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-2-concurrency-and-the-event-loop"
+        },
+        {
+          "type": "hw",
+          "label": "HW 2 — Async concurrency with asyncio",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901644"
+        },
+        {
+          "type": "exam",
+          "label": "Midterm · group: Threads, the GIL & Concurrency Pitfalls"
+        },
+        {
+          "type": "exam",
+          "label": "Final · group: asyncio & Concurrency (recap)"
+        }
+      ],
+      "interview": true
+    },
+    {
+      "id": "tools.osi-stack",
+      "category": "tools",
+      "name": "The OSI stack, layer by layer",
+      "can": "You can name the seven OSI layers and give each one's job, PDU, header fields, protocols and devices, map them onto the four TCP/IP layers, and place DNS, TLS, the WebSocket and your JSON on the stack, so a failure can be read by its layer.",
+      "introduced": 3,
+      "practised": [],
+      "depth": 3,
+      "where": [
+        {
+          "type": "deck",
+          "session": 3,
+          "label": "Deck Week 3 · slides 3–11"
+        },
+        {
+          "type": "lab",
+          "session": 3,
+          "label": "Lab 3 · step 0 — The stack on your own laptop",
+          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-3-socket-streaming-and-protocols"
+        },
+        {
+          "type": "exam",
+          "label": "Midterm · group: Sockets, WebSockets & Protocol Framing"
+        }
+      ],
+      "interview": true
+    },
+    {
+      "id": "tools.udp-tcp",
+      "category": "tools",
+      "name": "UDP vs TCP: market data vs order entry",
+      "can": "You can compare TCP and UDP on connection, unit, reliability, ordering, head-of-line blocking and fan-out, and pick TCP for order entry and UDP multicast for market data, numbering datagrams so a gap can be detected and filled.",
+      "introduced": 3,
+      "practised": [],
+      "depth": 3,
+      "where": [
+        {
+          "type": "deck",
+          "session": 3,
+          "label": "Deck Week 3 · slides 12–13"
+        },
+        {
+          "type": "lab",
+          "session": 3,
+          "label": "Lab 3 · step 1 — UDP vs TCP: multicast for market data",
+          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-3-socket-streaming-and-protocols"
+        },
+        {
+          "type": "exam",
+          "label": "Midterm · group: Sockets, WebSockets & Protocol Framing"
         }
       ],
       "interview": true
@@ -1110,21 +1353,48 @@ window.SKILLS = {
     {
       "id": "python.sockets",
       "category": "python",
-      "name": "Sockets, TCP vs UDP & message framing",
-      "can": "You can open a TCP socket with bind/listen/accept and connect/send/recv, explain why recv gives you bytes and not messages, and say when a market data feed would rather have UDP.",
+      "name": "The socket API, call by call",
+      "can": "You can walk through socket/bind/listen/accept and connect/sendall/recv/close for TCP and socket/bind/sendto/recvfrom for UDP, and say what the kernel is doing at each call: the backlog of finished handshakes, recv returning b'' on FIN, TIME_WAIT and SO_REUSEADDR.",
       "introduced": 3,
       "practised": [],
-      "depth": 2,
+      "depth": 3,
       "where": [
         {
           "type": "deck",
           "session": 3,
-          "label": "Deck Week 3 · slides 5–7, 11"
+          "label": "Deck Week 3 · slides 15–17"
         },
         {
           "type": "lab",
           "session": 3,
-          "label": "Lab 3 · part 1 — TCP has no messages, only bytes",
+          "label": "Lab 3 · step 2 — The socket API, call by call",
+          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-3-socket-streaming-and-protocols"
+        },
+        {
+          "type": "exam",
+          "label": "Midterm · group: Sockets, WebSockets & Protocol Framing"
+        }
+      ],
+      "interview": true
+    },
+    {
+      "id": "python.socket-examples",
+      "category": "python",
+      "name": "TCP echo, framing & a UDP pair",
+      "can": "You can write a TCP echo server and client with timeouts, add length-prefix or newline framing because one recv is not one message, and write a UDP sender and receiver that numbers its datagrams and survives silence.",
+      "introduced": 3,
+      "practised": [],
+      "depth": 3,
+      "where": [
+        {
+          "type": "deck",
+          "session": 3,
+          "label": "Deck Week 3 · slides 18–20"
+        },
+        {
+          "type": "lab",
+          "session": 3,
+          "label": "Lab 3 · step 3 — Server/client examples, run",
           "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-3-socket-streaming-and-protocols"
         },
         {
@@ -1140,10 +1410,37 @@ window.SKILLS = {
       "interview": true
     },
     {
+      "id": "trading.fix-itch",
+      "category": "trading",
+      "name": "FIX, ITCH & OUCH on the wire",
+      "can": "You can read a FIX message tag by tag (8, 9, 35, 34, 11, 10 and the checksum), tell session messages from application messages, decode an ITCH Add Order with one struct call, and say what OUCH is and how venues recover a gap.",
+      "introduced": 3,
+      "practised": [],
+      "depth": 2,
+      "where": [
+        {
+          "type": "deck",
+          "session": 3,
+          "label": "Deck Week 3 · slides 21–24"
+        },
+        {
+          "type": "lab",
+          "session": 3,
+          "label": "Lab 3 · step 4 — One order as FIX, ITCH and JSON",
+          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-3-socket-streaming-and-protocols"
+        },
+        {
+          "type": "exam",
+          "label": "Midterm · group: Sockets, WebSockets & Protocol Framing"
+        }
+      ],
+      "interview": true
+    },
+    {
       "id": "python.websockets",
       "category": "python",
-      "name": "WebSockets: the upgrade, frames & full duplex",
-      "can": "You can describe the HTTP Upgrade handshake that returns 101 Switching Protocols, explain why one recv yields exactly one framed message, and say why a trading bot needs full duplex rather than HTTP polling.",
+      "name": "WebSockets: upgrade, frames, ping/pong & reconnect",
+      "can": "You can describe the HTTP Upgrade that returns 101 Switching Protocols, read a frame header (FIN, opcode, mask, length), explain ping/pong and the close codes 1000 and 1006, and map AlgoArena's JSON-over-WebSocket onto FIX: what it keeps and what it leaves out.",
       "introduced": 3,
       "practised": [],
       "depth": 3,
@@ -1151,18 +1448,23 @@ window.SKILLS = {
         {
           "type": "deck",
           "session": 3,
-          "label": "Deck Week 3 · slides 9–11"
+          "label": "Deck Week 3 · slides 24–30"
         },
         {
           "type": "lab",
           "session": 3,
-          "label": "Lab 3 · part 2 — The upgrade, by hand",
+          "label": "Lab 3 · step 5 — WebSockets",
           "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-3-socket-streaming-and-protocols"
         },
         {
           "type": "hw",
           "label": "HW 3 — Protocols & pydantic message schemas",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901645"
+        },
+        {
+          "type": "project",
+          "label": "Phase 1 — Connect & Trade for Real",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901653"
         },
         {
           "type": "exam",
@@ -1187,12 +1489,12 @@ window.SKILLS = {
         {
           "type": "deck",
           "session": 3,
-          "label": "Deck Week 3 · slides 15–16, 20"
+          "label": "Deck Week 3 · slides 31–32"
         },
         {
           "type": "lab",
           "session": 3,
-          "label": "Lab 3 · part 4 — Round-trip, reject, and version",
+          "label": "Lab 3 · step 6 — The contract: what may be said, and what the venue does with junk",
           "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-3-socket-streaming-and-protocols"
         },
         {
@@ -1223,12 +1525,18 @@ window.SKILLS = {
         {
           "type": "deck",
           "session": 3,
-          "label": "Deck Week 3 · slides 17, 21"
+          "label": "Deck Week 3 · slides 33, 35"
         },
         {
           "type": "lab",
           "session": 3,
-          "label": "Lab 3 · part 3 — The contract: what may be said, and by whom",
+          "label": "Lab 3 · step 6 — The contract: what may be said, and what the venue does with junk",
+          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-3-socket-streaming-and-protocols"
+        },
+        {
+          "type": "lab",
+          "session": 3,
+          "label": "Lab 3 · step 7 — Talk to the exchange by hand",
           "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-3-socket-streaming-and-protocols"
         },
         {
@@ -1259,12 +1567,12 @@ window.SKILLS = {
         {
           "type": "deck",
           "session": 3,
-          "label": "Deck Week 3 · slide 18"
+          "label": "Deck Week 3 · slide 33"
         },
         {
           "type": "lab",
           "session": 3,
-          "label": "Lab 3 · part 5 — The venue enforces it too",
+          "label": "Lab 3 · step 6 — The contract: what may be said, and what the venue does with junk",
           "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-3-socket-streaming-and-protocols"
         },
         {
@@ -1295,12 +1603,12 @@ window.SKILLS = {
         {
           "type": "deck",
           "session": 3,
-          "label": "Deck Week 3 · slides 14, 22"
+          "label": "Deck Week 3 · slides 31, 34"
         },
         {
           "type": "lab",
           "session": 3,
-          "label": "Lab 3 · part 3 — The contract: what may be said, and by whom",
+          "label": "Lab 3 · step 6 — The contract: what may be said, and what the venue does with junk",
           "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-3-socket-streaming-and-protocols"
         },
         {
