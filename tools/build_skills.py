@@ -790,10 +790,14 @@ SKILLS = [
 
 
     # ================= session 4 =================
-    S("tools.parquet", "tools", "Parquet, partitions & predicate pushdown",
-      "You can convert a tape to partitioned Parquet, explain row groups, footer "
-      "statistics, dictionary encoding and projection, query the files in place "
-      "with DuckDB or Polars, and reuse them as a feature cache.",
+    # Week 4 is a short intro (why columns, row groups, column chunks, min/max
+    # statistics, DuckDB on the files); partitioning depth, Polars and Spark
+    # are Week 6 (course/systematic-trading/MIGRATION.md).
+    S("tools.parquet", "tools", "Parquet: columns, row groups & predicate pushdown",
+      "You can convert a tape to Parquet, explain how columns, row groups and the "
+      "min/max statistics of each column chunk let a reader skip data, query the "
+      "file in place with DuckDB, and by Week 6 partition it and reuse it as a "
+      "feature cache.",
       4, [6], 3,
       [deck(6, "6, 9"),
        lab(6, 6, "Columnar vs row storage"),

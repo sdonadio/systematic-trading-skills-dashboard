@@ -2240,8 +2240,8 @@ window.SKILLS = {
     {
       "id": "tools.parquet",
       "category": "tools",
-      "name": "Parquet, partitions & predicate pushdown",
-      "can": "You can convert a tape to partitioned Parquet, explain row groups, footer statistics, dictionary encoding and projection, query the files in place with DuckDB or Polars, and reuse them as a feature cache.",
+      "name": "Parquet: columns, row groups & predicate pushdown",
+      "can": "You can convert a tape to Parquet, explain how columns, row groups and the min/max statistics of each column chunk let a reader skip data, query the file in place with DuckDB, and by Week 6 partition it and reuse it as a feature cache.",
       "introduced": 4,
       "practised": [
         6

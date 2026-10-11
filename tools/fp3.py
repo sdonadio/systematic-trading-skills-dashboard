@@ -58,7 +58,7 @@ print("sma samples", n, "| mean of 20-bar SMA", round(tot / n, 4))
         },
         {
             "title": "Scale up first, then out — and use processes",
-            "text": "Vertical scaling needs no code change but has a ceiling and prices superlinearly; horizontal scaling is near-unlimited but you must partition the work and combine the results. More RAM plus smaller dtypes plus Parquet often removes the problem outright, so start there. When you do go parallel, remember the GIL: only one thread runs Python bytecode at a time, so threads buy nothing for a CPU-bound sweep. Use processes — ProcessPoolExecutor from the stdlib, with the __main__ guard, because each worker re-imports your module and without the guard it re-spawns the pool. joblib is the same idea in one line. Dask and Ray extend it across machines; this course names them and stays on one box.",
+            "text": "Vertical scaling needs no code change but has a ceiling and prices superlinearly; horizontal scaling is near-unlimited but you must partition the work and combine the results. More RAM plus smaller dtypes plus Parquet often removes the problem outright, so start there. When you do go parallel, remember the GIL: only one thread runs Python bytecode at a time, so threads buy nothing for a CPU-bound sweep. Use processes — ProcessPoolExecutor from the stdlib, with the __main__ guard, because each worker re-imports your module and without the guard it re-spawns the pool. joblib is the same idea in one line. Dask, Ray and Spark extend it across machines; this course names them and stays on one box.",
             "code": """from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 def cycles(lookback):              # CPU-bound shard: one parameter, one process
