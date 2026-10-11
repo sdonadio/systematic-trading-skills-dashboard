@@ -11,6 +11,10 @@ Sources of truth (all real, all checked by tools/validate_skills.py):
   * assignments  Canvas course 74211, published only
   * exams        course/exams/st_midterm_bank.json / st_final_bank.json (group names)
   * schedule     ta_bot/kb_sources/uchicago-systematic/schedule.md
+  * Canvas cache raw/assignments.json (GET-only; hw/project names + due dates)
+
+Resequenced 2026-10-11: Session 5 = midterm only (no skills), sources 5..7 are
+taught in Sessions 6..8, sources 8 + 9 merged into Session 9 (keys 9a / 9b).
 
 Run:  python3 tools/build_skills.py   ->  writes ../skills.js
 """
@@ -56,43 +60,71 @@ CATEGORIES = [
 ]
 
 # --------------------------------------------------------------------------
-# sessions 0..9  (dates America/Chicago, from schedule.md + Canvas modules)
+# RESEQUENCE 2026-10-11 (instructor's decision): Week 5 (Fri Oct 30) is the
+# midterm only, no class and no new skills. Lecture content shifts down one
+# week: source week 5 (complexity) is taught in Session 6, 6 (big data) in 7,
+# 7 (ML) in 8, and 8 (CI/CD) + 9 (integration & finale) are merged into
+# Session 9, cited as "9a" (the CI/CD part) and "9b" (the finale part).
+# HW 8 is folded into HW 9. The graded live blocks do NOT shift (Oct 30 keeps
+# season week 5 in the evening, after the midterm).
+#
+# A "key" names one taught block: 0..4, 6, 7, 8, "9a", "9b".
+# SOURCE_WEEK maps it to the deck/lab material it was built from — the files
+# course/systematic-trading/weekN.pptx and labs/weekNN.md as they stand on
+# 2026-10-11 (tools/validate_*.py use the same table to check slide and part
+# numbers). If the course repo renumbers those files, update this table only.
 # --------------------------------------------------------------------------
+SOURCE_WEEK = {0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 6: 5, 7: 6, 8: 7, "9a": 8, "9b": 9}
+
+
+def session_of(key):
+    """The session a key is taught in: "9a"/"9b" -> 9."""
+    return int(str(key)[0])
+
+
+# Canvas cache (GET-only, fetched to raw/ — see DATA_README.md). Labels and
+# due dates of the hw/project links are read from it by assignment id, so a
+# Canvas rename or a moved due date is picked up by re-running this script.
+RAW = os.path.join(os.path.dirname(HERE), "raw")
+_ASSN = {a["id"]: a for a in json.load(open(os.path.join(RAW, "assignments.json"),
+                                            encoding="utf-8"))}
+
+
+def _due(aid):
+    """Canvas due_at (UTC) -> the America/Chicago calendar date."""
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    v = _ASSN[aid]["due_at"]
+    t = datetime.fromisoformat(v.replace("Z", "+00:00"))
+    return t.astimezone(ZoneInfo("America/Chicago")).date().isoformat()
+
+
+def _assn(aid):
+    return {"label": _ASSN[aid]["name"], "url": ASSN + str(aid), "due": _due(aid)}
+
+
+# labs: Canvas module-item URLs (they survive page renames and module moves;
+# the page slugs do not). Sessions 1-3 keep their live page URLs.
+ITEM = CANVAS + "/modules/items/"
 LABS = {
-    1: ("Lab 1 — UML & the Arena SDK", "lab-1-uml-and-the-arena-sdk"),
-    2: ("Lab 2 — Concurrency & the Event Loop", "lab-2-concurrency-and-the-event-loop"),
-    3: ("Lab 3 — Socket Streaming & Protocols", "lab-3-socket-streaming-and-protocols"),
-    4: ("Lab 4 — Backtesting and Its Data", "lab-4-the-tape-as-a-dataset"),
-    5: ("Lab 5 — Complexity & Data Structures", "lab-5-complexity-and-data-structures"),
-    6: ("Lab 6 — Big Data", "lab-6-big-data"),
-    7: ("Lab 7 — ML Signals & Model Ops", "lab-7-ml-signals-and-model-ops"),
-    8: ("Lab 8 — CI/CD, Testing & the Dashboard",
-        "lab-8-ci-slash-cd-testing-and-the-dashboard"),
-    9: ("Lab 9 — Integration, Failure Drills & the Demo",
-        "lab-9-integration-failure-drills-and-the-demo"),
+    1: ("Lab 1 — UML & the Arena SDK", PAGES + "lab-1-uml-and-the-arena-sdk"),
+    2: ("Lab 2 — Concurrency & the Event Loop", PAGES + "lab-2-concurrency-and-the-event-loop"),
+    3: ("Lab 3 — Socket Streaming & Protocols", PAGES + "lab-3-socket-streaming-and-protocols"),
+    4: ("Lab 4 — Backtesting and Its Data", ITEM + "3189590"),
+    6: ("Lab 6 — Complexity & Data Structures", ITEM + "3189593"),
+    7: ("Lab 7 — Big Data", ITEM + "3189596"),
+    8: ("Lab 8 — ML Signals & Model Ops", ITEM + "3189599"),
+    "9a": ("Lab 9a — CI/CD, Testing & the Dashboard", ITEM + "3189602"),
+    "9b": ("Lab 9b — Integration, Failure Drills & the Demo", ITEM + "3189605"),
 }
 
-HW = {
-    0: ("Welcome Survey - Your Background & Goals", "901640", "2026-10-05"),
-    1: ("HW 1 — UML & your first bot", "901643", "2026-10-10"),
-    2: ("HW 2 — Async concurrency with asyncio", "901644", "2026-10-17"),
-    3: ("HW 3 — Protocols & pydantic message schemas", "901645", "2026-10-24"),
-    4: ("HW 4 — Your tapes in SQL and Parquet, and a backtest you can trust", "901646", "2026-10-31"),
-    5: ("HW 5 — Complexity & the order book data structure", "901647", "2026-11-07"),
-    6: ("HW 6 — Big data: vectorize your signal", "901648", "2026-11-14"),
-    7: ("HW 7 — ML signals & model ops", "901649", "2026-11-21"),
-    8: ("HW 8 — CI/CD, testing & a bot you trust", "901650", "2026-11-28"),
-    9: ("HW 9 — Integration & season-finale demo", "901651", "2026-12-12"),
-}
+# homework assignment id per session (HW 8, 901650, is folded into HW 9)
+HW = {0: 901640, 1: 901643, 2: 901644, 3: 901645, 4: 901646,
+      6: 901647, 7: 901648, 8: 901649, 9: 901651}
 
-PROJECT = {
-    1: ("Phase 0 — Team, Role & Capital Allocation", "901652", "2026-10-10"),
-    3: ("Phase 1 — Connect & Trade for Real", "901653", "2026-10-24"),
-    5: ("Phase 2 — A Real Edge, Backtested", "901654", "2026-11-07"),
-    7: ("Phase 3 — Risk & Robustness", "901655", "2026-11-21"),
-    8: ("Phase 4 — Scale & Operations", "901656", "2026-12-04"),
-    9: ("Phase 5 — Season Finale: Demo & Postmortem", "901657", "2026-12-12"),
-}
+# project phase -> assignment id, and the session each phase is attached to
+PHASES = {0: 901652, 1: 901653, 2: 901654, 3: 901655, 4: 901656, 5: 901657}
+PHASE_SESSION = {0: 1, 1: 3, 2: 6, 3: 8, 4: 9, 5: 9}
 
 SESSION_META = [
     (0, "2026-09-18", "Setup & the Green Smoke Test", None),
@@ -100,40 +132,43 @@ SESSION_META = [
     (2, "2026-10-09", "Concurrency & Async in Python", None),
     (3, "2026-10-16", "Socket Streaming & Protocols", None),
     (4, "2026-10-23", "Backtesting and Its Data", None),
-    (5, "2026-10-30", "Algorithmic Complexity & Data Structures", "midterm"),
-    (6, "2026-11-06", "Big Data & Distributed Computing", None),
-    (7, "2026-11-13", "Machine Learning Signals & Model Ops", None),
-    (8, "2026-11-20", "CI/CD, Testing & UI", None),
-    (9, "2026-12-04", "Integration & Demo — Season Finale", "final"),
+    (5, "2026-10-30", "Midterm Week — No Class", "midterm"),
+    (6, "2026-11-06", "Algorithmic Complexity & Data Structures", None),
+    (7, "2026-11-13", "Big Data & Distributed Computing", None),
+    (8, "2026-11-20", "Machine Learning Signals & Model Ops", None),
+    (9, "2026-12-04", "CI/CD, Testing & UI · Integration & Demo — Season Finale", "final"),
 ]
+
+# the decks each session teaches (session 5 has none: midterm only)
+SESSION_DECKS = {0: ["w0"], 1: ["w1"], 2: ["w2"], 3: ["w3"], 4: ["w4"], 5: [],
+                 6: ["w6"], 7: ["w7"], 8: ["w8"], 9: ["w9a", "w9b"]}
 
 
 # --------------------------------------------------------------------------
 # where-link helpers
 # --------------------------------------------------------------------------
-def deck(session, slides):
+def deck(key, slides):
     """Deck evidence. `slides` is '11' or '9-11' or '9, 12'."""
     word = "slide" if ("-" not in slides and "," not in slides) else "slides"
-    return {"type": "deck", "session": session,
-            "label": "Deck Week %d · %s %s" % (session, word,
+    return {"type": "deck", "session": session_of(key),
+            "label": "Deck Week %s · %s %s" % (key, word,
                                                     slides.replace("-", "–"))}
 
 
-def lab(session, part, title):
-    n = session  # lab N is taught in session N
-    return {"type": "lab", "session": session,
-            "label": "Lab %d · part %d — %s" % (n, part, title),
-            "url": PAGES + LABS[n][1]}
+def lab(key, part, title):
+    return {"type": "lab", "session": session_of(key),
+            "label": "Lab %s · part %d — %s" % (key, part, title),
+            "url": LABS[key][1]}
 
 
 def hw(session):
-    label, aid, _due = HW[session]
-    return {"type": "hw", "label": label, "url": ASSN + aid}
+    a = _assn(HW[session])
+    return {"type": "hw", "label": a["label"], "url": a["url"]}
 
 
-def project(session):
-    label, aid, _due = PROJECT[session]
-    return {"type": "project", "label": label, "url": ASSN + aid}
+def phase(p):
+    a = _assn(PHASES[p])
+    return {"type": "project", "label": a["label"], "url": a["url"]}
 
 
 def midterm(group):
@@ -164,6 +199,14 @@ FN_LIVE = "Live Systems: Risk, Reconciliation & Failure Modes"
 
 
 def S(sid, cat, name, can, introduced, practised, depth, where, interview):
+    # 2026-10-11: HW 8 folded into HW 9 can make two where items identical
+    seen, uniq = set(), []
+    for w in where:
+        k = json.dumps(w, sort_keys=True)
+        if k not in seen:
+            seen.add(k)
+            uniq.append(w)
+    where = uniq
     return {"id": sid, "category": cat, "name": name, "can": can,
             "introduced": introduced, "practised": practised, "depth": depth,
             "where": where, "interview": interview}
@@ -179,10 +222,10 @@ SKILLS = [
       "You can read a two-sided limit order book and compute best bid, best ask, "
       "spread, mid and available depth from it, and say where a market order "
       "fills.",
-      0, [5], 3,
+      0, [6], 3,
       [deck(0, "11"),
-       deck(5, "11"),
-       lab(5, 1, "Time the CLOB against n"),
+       deck(6, "11"),
+       lab(6, 1, "Time the CLOB against n"),
        final(FN_BOOK)], True),
 
     S("trading.order-types", "trading", "Order types & the execution trade-off",
@@ -199,7 +242,7 @@ SKILLS = [
       "inventory and informed flow are the two things that kill the P&L.",
       0, [], 3,
       [deck(0, "13-14"),
-       project(3)], True),
+       phase(1)], True),
 
     S("trading.market-impact", "trading", "Market impact & price discovery",
       "You can explain why your own order moves the price against you, estimate "
@@ -221,7 +264,7 @@ SKILLS = [
       " or loss belongs to.",
       0, [], 3,
       [deck(0, "16"),
-       project(9),
+       phase(5),
        final(FN_LIVE)], True),
 
     S("tools.venv", "tools", "A pinned Python 3.11 environment",
@@ -315,17 +358,17 @@ SKILLS = [
        deck(2, "27"),
        lab(1, 4, "Sketch the UML — on the board, then in your repo"),
        hw(1),
-       project(1)], False),
+       phase(0)], False),
 
     S("tools.git-branching", "tools", "Git feature branches & a readable history",
       "You can work a week on its own feature branch, keep commits small and "
       "legible, and explain why a repository history that shows how a system was "
       "built is itself a deliverable.",
-      1, [8], 2,
+      1, [9], 2,
       [deck(1, "25-26"),
-       deck(8, "21"),
+       deck("9a", "21"),
        hw(1),
-       project(1)], False),
+       phase(0)], False),
 
 
     # ================= session 2 =================
@@ -334,9 +377,9 @@ SKILLS = [
       "time and is released around blocking I/O, classify a piece of work as "
       "I/O-bound or CPU-bound, and predict from that whether threads will speed "
       "it up.",
-      2, [6], 3,
+      2, [7], 3,
       [deck(2, "5-7, 14"),
-       deck(6, "12"),
+       deck(7, "12"),
        lab(2, 2, "Concurrency is not parallelism — prove it"),
        lab(2, 8, "Threads vs processes vs one core"),
        hw(2),
@@ -408,7 +451,7 @@ SKILLS = [
        lab(2, 7, "Survive a drop (this is what kills student bots)"),
        {"type": "lab", "session": 3, "label": "Lab 3 · step 5 — WebSockets", "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-3-socket-streaming-and-protocols"},
        hw(2),
-       project(3),
+       phase(1),
        final(FN_LIVE)], True),
 
     S("python.threading", "python", "threading: Thread, Lock, Queue & Event",
@@ -531,7 +574,7 @@ SKILLS = [
       [deck(3, "24-30"),
        {"type": "lab", "session": 3, "label": "Lab 3 · step 5 — WebSockets", "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-3-socket-streaming-and-protocols"},
        hw(3),
-       project(3),
+       phase(1),
        midterm(MT_SOC),
        final(FN_ASY)], True),
 
@@ -577,7 +620,7 @@ SKILLS = [
       [deck(3, "31, 34"),
        {"type": "lab", "session": 3, "label": "Lab 3 · step 6 — The contract: what may be said, and what the venue does with junk", "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-3-socket-streaming-and-protocols"},
        hw(3),
-       project(3),
+       phase(1),
        midterm(MT_SOC)], True),
 
 
@@ -596,7 +639,7 @@ SKILLS = [
       "an equity curve, and explain why a high Sharpe with a deep drawdown is "
       "untradeable.",
       4, [9], 3,
-      [deck(9, "12"),
+      [deck("9b", "12"),
        hw(4),
        final(FN_BKT)], True),
 
@@ -627,9 +670,9 @@ SKILLS = [
       "You can replay a recorded tape or a seeded simulation in one process with "
       "no sockets, drive every decision from the logical clock instead of the "
       "machine's, and prove it with the same fill digest at any replay speed.",
-      4, [6, 7, 8], 3,
-      [deck(6, "18"),
-       deck(7, "19"),
+      4, [7, 8, 9], 3,
+      [deck(7, "18"),
+       deck(8, "19"),
        hw(4),
        final(FN_CI)], False),
 
@@ -638,8 +681,8 @@ SKILLS = [
       "decision time — an unlagged signal, a forward as-of match, a peek at the "
       "next book — fix it on the logical clock, and quantify how much of the edge"
       " was the leak.",
-      4, [7], 3,
-      [deck(7, "11"),
+      4, [8], 3,
+      [deck(8, "11"),
        hw(4),
        midterm(MT_BKT),
        final(FN_BKT)], True),
@@ -654,39 +697,36 @@ SKILLS = [
        final(FN_BKT)], True),
 
 
-    # ================= session 7 =================
+    # ================= session 8 (source week 7) =================
     S("quant.overfitting", "quant", "Overfitting, data snooping & bias-variance",
       "You can explain test error as bias plus variance plus irreducible noise, "
       "recognise that keeping the best of 500 variants fits noise, and defend "
       "against it with fewer parameters, counted trials and a held-out block.",
-      7, [], 3,
-      [deck(7, "9, 13"),
-       hw(7),
-       midterm(MT_BKT),
+      8, [], 3,
+      [deck(8, "9, 13"),
+       hw(8),
        final(FN_ML)], True),
 
 
-    # ================= session 5 =================
+    # ================= session 6 (source week 5) =================
     S("python.bigo", "python", "Big-O, amortized cost & space/time trade-offs",
       "You can place an operation on the O(1) / O(log n) / O(n) / O(n log n) / "
       "O(n squared) ladder, distinguish worst from average and amortized cost, "
       "and name the memory you spent to buy the speed.",
-      5, [], 3,
-      [deck(5, "5-6"),
-       lab(5, 3, "The Big-O ladder, measured"),
-       hw(5),
-       midterm(MT_BKT),
+      6, [], 3,
+      [deck(6, "5-6"),
+       lab(6, 3, "The Big-O ladder, measured"),
+       hw(6),
        final(FN_CPX)], True),
 
     S("python.containers", "python", "dict, set, deque & heapq and their costs",
       "You can pick the container from the operation you repeat most — dict for "
       "keyed lookup, set for membership, deque(maxlen) for a rolling window, "
       "heapq for best-of-many — and quote each one's cost.",
-      5, [], 3,
-      [deck(5, "7-8"),
-       lab(5, 2, "Heap + dict vs sorted list"),
-       hw(5),
-       midterm(MT_BKT),
+      6, [], 3,
+      [deck(6, "7-8"),
+       lab(6, 2, "Heap + dict vs sorted list"),
+       hw(6),
        final(FN_CPX)], True),
 
     S("python.hot-loop", "python", "Speeding up a Python hot loop",
@@ -694,20 +734,20 @@ SKILLS = [
       "structure, hoisting allocation out of the loop, binding a method to a "
       "local name, vectorising batch maths — and stop once the code is no longer "
       "hot.",
-      5, [], 2,
-      [deck(5, "15"),
-       lab(5, 2, "Heap + dict vs sorted list"),
-       hw(5),
+      6, [], 2,
+      [deck(6, "15"),
+       lab(6, 2, "Heap + dict vs sorted list"),
+       hw(6),
        final(FN_CPX)], True),
 
     S("quant.rolling-stats", "quant", "O(1) rolling statistics with Welford",
       "You can replace an O(n)-per-tick mean or variance with incremental state, "
       "implement Welford's update for a numerically stable running variance, and "
       "bound the window with a deque so per-tick cost stops growing.",
-      5, [], 3,
-      [deck(5, "9-10, 19"),
-       lab(5, 4, "O(1) rolling statistics — Welford vs recompute"),
-       hw(5),
+      6, [], 3,
+      [deck(6, "9-10, 19"),
+       lab(6, 4, "O(1) rolling statistics — Welford vs recompute"),
+       hw(6),
        final(FN_CPX)], True),
 
     S("trading.price-time-priority", "trading", "Price-time priority & the matching engine",
@@ -715,140 +755,140 @@ SKILLS = [
       "first, and explain the heap-plus-dict order book design: a monotonic "
       "sequence for true time priority, a dict as the canonical set, and lazy "
       "deletion on cancel.",
-      5, [], 3,
-      [deck(5, "11, 18"),
-       lab(5, 2, "Heap + dict vs sorted list"),
-       hw(5),
-       project(5),
+      6, [], 3,
+      [deck(6, "11, 18"),
+       lab(6, 2, "Heap + dict vs sorted list"),
+       hw(6),
+       phase(2),
        final(FN_BOOK)], True),
 
     S("tools.profiling", "tools", "Profiling and microbenchmarking honestly",
       "You can find the function that dominates a run with cProfile, then time "
       "the hot path with perf_counter using warm-up, repeats and the minimum, and"
       " refuse to optimise code that is called twice a session.",
-      5, [], 3,
-      [deck(5, "13-14, 20"),
-       lab(5, 1, "Time the CLOB against n"),
-       hw(5),
-       project(5),
+      6, [], 3,
+      [deck(6, "13-14, 20"),
+       lab(6, 1, "Time the CLOB against n"),
+       hw(6),
+       phase(2),
        final(FN_CPX)], True),
 
     S("tools.latency-tail", "tools", "Latency, throughput & the tail",
       "You can separate per-operation latency from operations per second, report "
       "p50/p95/p99 instead of a mean, and set a per-tick budget that the tail — "
       "not the average — has to fit inside.",
-      5, [7], 3,
-      [deck(5, "16, 20"),
-       deck(7, "18"),
-       lab(5, 5, "Tail latency of your own on_tick"),
-       hw(5),
+      6, [8], 3,
+      [deck(6, "16, 20"),
+       deck(8, "18"),
+       lab(6, 5, "Tail latency of your own on_tick"),
+       hw(6),
        final(FN_CPX)], True),
 
 
-    # ================= session 6 =================
+    # ================= session 7 (source week 6) =================
     S("python.pandas-memory", "python", "The DataFrame memory bill & dtypes",
       "You can measure what a frame really costs with memory_usage(deep=True), "
       "downcast float64 to float32 and object to category, and recognise the "
       "symptoms of crossing physical memory.",
-      6, [], 3,
-      [deck(6, "5"),
-       lab(6, 2, "Load it into pandas — and look at the memory bill"),
-       hw(6),
+      7, [], 3,
+      [deck(7, "5"),
+       lab(7, 2, "Load it into pandas — and look at the memory bill"),
+       hw(7),
        final(FN_NP)], True),
 
     S("python.numpy-vectorize", "python", "Vectorising with numpy & pandas",
       "You can replace a per-row Python loop with whole-array numpy and pandas "
       "operations, check the two agree with allclose, and explain where the order"
       " of magnitude comes from.",
-      6, [], 3,
-      [deck(6, "7, 19"),
-       lab(6, 3, "Python loop vs vectorised, timed and checked"),
-       hw(6),
+      7, [], 3,
+      [deck(7, "7, 19"),
+       lab(7, 3, "Python loop vs vectorised, timed and checked"),
+       hw(7),
        final(FN_NP)], True),
 
     S("python.chunking", "python", "Chunked, bounded-memory processing",
       "You can process a file larger than memory as a stream of chunks with a "
       "running reduction, and show that peak memory stays flat while a "
       "load-it-all version scales with the file.",
-      6, [], 3,
-      [deck(6, "8"),
-       lab(6, 4, "Chunked processing — bounded memory"),
-       hw(6),
+      7, [], 3,
+      [deck(7, "8"),
+       lab(7, 4, "Chunked processing — bounded memory"),
+       hw(7),
        final(FN_NP)], True),
 
     S("python.multiprocessing", "python", "Process pools & the map-reduce fan-out",
       "You can shard an embarrassingly parallel workload by symbol or parameter, "
       "fan it out with ProcessPoolExecutor under a __main__ guard, and reduce the"
       " partial results into one answer.",
-      6, [], 3,
-      [deck(6, "12-14, 20"),
-       lab(6, 5, "Map-reduce across processes"),
-       hw(6),
-       project(7),
-       midterm(MT_GIL),
+      7, [], 3,
+      [deck(7, "12-14, 20"),
+       lab(7, 5, "Map-reduce across processes"),
+       hw(7),
+       phase(3),
        final(FN_NP)], True),
 
 
     # ================= session 4 =================
     # Week 4 is a short intro (why columns, row groups, column chunks, min/max
     # statistics, DuckDB on the files); partitioning depth, Polars and Spark
-    # are Week 6 (course/systematic-trading/MIGRATION.md).
+    # are Week 7 (was Week 6 before the 2026-10-11 resequence;
+    # course/systematic-trading/MIGRATION.md).
     S("tools.parquet", "tools", "Parquet: columns, row groups & predicate pushdown",
       "You can convert a tape to Parquet, explain how columns, row groups and the "
       "min/max statistics of each column chunk let a reader skip data, query the "
-      "file in place with DuckDB, and by Week 6 partition it and reuse it as a "
+      "file in place with DuckDB, and by Week 7 partition it and reuse it as a "
       "feature cache.",
-      4, [6], 3,
-      [deck(6, "6, 9"),
-       lab(6, 6, "Columnar vs row storage"),
+      4, [7], 3,
+      [deck(7, "6, 9"),
+       lab(7, 6, "Columnar vs row storage"),
        hw(4),
-       hw(6),
-       project(7),
+       hw(7),
+       phase(3),
        final(FN_NP)], True),
 
 
-    # ================= session 6 =================
+    # ================= session 7 (source week 6) =================
     S("tools.determinism", "tools", "Deterministic, network-free runs",
       "You can make a run reproducible by pinning the seed, injecting the clock "
       "and ids, and keeping the network out of it, and explain why an idempotent "
       "task keyed by its inputs is safe to retry.",
-      6, [8], 3,
-      [deck(6, "15"),
-       deck(8, "9"),
-       lab(8, 5, "Determinism: same seed, same result"),
-       hw(6),
+      7, [9], 3,
+      [deck(7, "15"),
+       deck("9a", "9"),
+       lab("9a", 5, "Determinism: same seed, same result"),
+       hw(7),
        final(FN_CI)], True),
 
     S("trading.multi-venue", "trading", "Multi-venue connection & routing",
       "You can connect one bot to several venues at once from a comma-separated "
       "URL list, and explain why the same symbol on two books creates a routing "
       "decision and a cross-venue arbitrage.",
-      6, [], 2,
-      [deck(6, "17"),
-       hw(6),
-       project(7)], False),
+      7, [], 2,
+      [deck(7, "17"),
+       hw(7),
+       phase(3)], False),
 
 
-    # ================= session 7 =================
+    # ================= session 8 (source week 7) =================
     S("quant.supervised-setup", "quant", "The supervised setup: X, y and the horizon",
       "You can frame a trading signal as supervised learning — features knowable "
       "at t, a label about t+h — and choose classification or regression with a "
       "horizon that matches the holding period you intend.",
-      7, [], 3,
-      [deck(7, "5"),
-       lab(7, 3, "Features known at t, label about t + h"),
-       hw(7),
+      8, [], 3,
+      [deck(8, "5"),
+       lab(8, 3, "Features known at t, label about t + h"),
+       hw(8),
        final(FN_ML)], True),
 
     S("quant.feature-engineering", "quant", "Features from prices & the order book",
       "You can build momentum, volatility, spread and order-book-imbalance "
       "features from a price history and a book snapshot, standardise them, and "
       "justify why fewer, better features win in low signal-to-noise data.",
-      7, [], 3,
-      [deck(7, "6"),
-       lab(7, 3, "Features known at t, label about t + h"),
-       hw(7),
-       project(7),
+      8, [], 3,
+      [deck(8, "6"),
+       lab(8, 3, "Features known at t, label about t + h"),
+       hw(8),
+       phase(3),
        final(FN_ML)], True),
 
     S("quant.walk-forward", "quant", "Walk-forward validation & leakage control",
@@ -856,11 +896,11 @@ SKILLS = [
       "untouched test block, roll the split forward over expanding or rolling "
       "windows, and embargo the boundary so horizon-h labels cannot leak across "
       "it.",
-      7, [], 3,
-      [deck(7, "11-12"),
-       lab(7, 5, "Walk-forward, and the shuffled-label control"),
-       hw(7),
-       project(7),
+      8, [], 3,
+      [deck(8, "11-12"),
+       lab(8, 5, "Walk-forward, and the shuffled-label control"),
+       hw(8),
+       phase(3),
        final(FN_ML)], True),
 
     S("quant.signal-scoring", "quant", "Scoring a signal after costs",
@@ -868,75 +908,75 @@ SKILLS = [
       "sufficient, read hit rate together with average win over average loss, and"
       " judge a signal on out-of-sample Sharpe and P&L net of fees, spread and "
       "turnover.",
-      7, [], 3,
-      [deck(7, "14"),
-       lab(7, 5, "Walk-forward, and the shuffled-label control"),
-       hw(7),
+      8, [], 3,
+      [deck(8, "14"),
+       lab(8, 5, "Walk-forward, and the shuffled-label control"),
+       hw(8),
        final(FN_ML)], True),
 
     S("quant.model-ops", "quant", "Persist, serve, monitor & retrain a model",
       "You can train offline, serialise the fitted model with its feature list "
       "and version, load it once outside the hot path, time predict against the "
       "per-tick budget, and monitor drift to decide when to retrain or roll back.",
-      7, [], 3,
-      [deck(7, "15, 18"),
-       lab(7, 6, "Freeze the model, then load it in on_tick"),
-       hw(7),
-       project(7),
+      8, [], 3,
+      [deck(8, "15, 18"),
+       lab(8, 6, "Freeze the model, then load it in on_tick"),
+       hw(8),
+       phase(3),
        final(FN_ML)], True),
 
 
-    # ================= session 8 =================
+    # ================= session 9a (source week 8) =================
     S("tools.test-pyramid", "tools", "The testing pyramid & integration tests",
       "You can place a test at the unit, integration or end-to-end layer, push "
       "logic down so bugs are caught by fast unit tests, and explain why every "
       "part passing its own tests does not mean the system works.",
-      8, [9], 3,
-      [deck(8, "5"),
-       deck(9, "5, 7"),
-       lab(8, 4, "An integration test — the bot inside the simulator"),
-       hw(8),
+      9, [], 3,
+      [deck("9a", "5"),
+       deck("9b", "5, 7"),
+       lab("9a", 4, "An integration test — the bot inside the simulator"),
+       hw(9),
        final(FN_CI)], True),
 
     S("tools.pytest", "tools", "pytest: tests, fixtures, parametrize & coverage",
       "You can write test_* functions with plain asserts, factor setup into "
       "fixtures, drive many cases from one @parametrize, and read a coverage "
       "report as a map of untested code rather than a number to chase.",
-      8, [], 3,
-      [deck(8, "6-7, 10"),
-       lab(8, 3, "Fixtures and parametrize instead of copy-paste"),
-       hw(8),
+      9, [], 3,
+      [deck("9a", "6-7, 10"),
+       lab("9a", 3, "Fixtures and parametrize instead of copy-paste"),
+       hw(9),
        final(FN_CI)], True),
 
     S("tools.mocking-async", "tools", "Fakes, monkeypatch & testing coroutines",
       "You can replace a network or market-data dependency with a hand-written "
       "fake or a monkeypatched attribute, and test a coroutine with "
       "pytest-asyncio instead of hitting a live feed.",
-      8, [], 3,
-      [deck(8, "8"),
-       lab(8, 6, "One async test"),
-       hw(8),
+      9, [], 3,
+      [deck("9a", "8"),
+       lab("9a", 6, "One async test"),
+       hw(9),
        final(FN_CI)], True),
 
     S("tools.github-actions", "tools", "CI with GitHub Actions",
       "You can write a workflow that installs and runs the suite on every push, "
       "explain triggers, jobs, steps and a version matrix, and use a required "
       "check as the gate on what enters main.",
-      8, [], 3,
-      [deck(8, "12-13"),
-       lab(8, 8, "The CI workflow you will commit in HW 8"),
-       hw(8),
-       project(8),
+      9, [], 3,
+      [deck("9a", "12-13"),
+       lab("9a", 8, "The CI workflow you will commit in HW 9"),
+       hw(9),
+       phase(4),
        final(FN_CI)], True),
 
     S("tools.docker", "tools", "Containers & pinned reproducibility",
       "You can pin exact dependency versions, write a Dockerfile whose layers go "
       "stable-to-volatile so the install layer caches, and argue that the image "
       "is what makes 'works on my machine' a testable claim.",
-      8, [], 3,
-      [deck(8, "14"),
-       hw(8),
-       project(8),
+      9, [], 3,
+      [deck("9a", "14"),
+       hw(9),
+       phase(4),
        final(FN_CI)], True),
 
     S("tools.observability", "tools", "Logs, metrics & a live dashboard",
@@ -944,24 +984,24 @@ SKILLS = [
       "metrics (numbers over time), split plain config from secrets that never "
       "enter the image, and read a dashboard for the vital signs of a running "
       "session.",
-      8, [], 3,
-      [deck(8, "15, 18"),
-       lab(8, 9, "Read the dashboard against a local exchange"),
-       hw(8),
-       project(8),
+      9, [], 3,
+      [deck("9a", "15, 18"),
+       lab("9a", 9, "Read the dashboard against a local exchange"),
+       hw(9),
+       phase(4),
        final(FN_LIVE)], True),
 
 
-    # ================= session 9 =================
+    # ================= session 9b (source week 9) =================
     S("quant.risk-controls", "quant", "Position limits, stops & graceful de-risking",
       "You can put a pre-trade veto in front of every order — position limit, "
       "stop-loss, margin check — and design the failure path so losing a signal "
       "flattens the book instead of emitting garbage orders.",
       9, [], 2,
-      [deck(9, "3, 8, 18"),
-       lab(9, 2, "Drill 1 — kill the feed"),
+      [deck("9b", "3, 8, 18"),
+       lab("9b", 2, "Drill 1 — kill the feed"),
        hw(9),
-       project(7),
+       phase(3),
        final(FN_LIVE)], True),
 
     S("quant.tearsheet", "quant", "The performance tearsheet",
@@ -969,10 +1009,10 @@ SKILLS = [
       "drawdown, Calmar, turnover, exposure — and read the shape of the curve "
       "before quoting any single number from it.",
       9, [], 3,
-      [deck(9, "12, 19"),
-       lab(9, 5, "Why the season score is risk-adjusted"),
+      [deck("9b", "12, 19"),
+       lab("9b", 5, "Why the season score is risk-adjusted"),
        hw(9),
-       project(9),
+       phase(5),
        final(FN_BKT)], True),
 
     S("quant.risk-adjusted-score", "quant", "Risk-adjusted scoring & the drawdown penalty",
@@ -980,10 +1020,10 @@ SKILLS = [
       "excess-return-over-volatility ratio, and show how a multiplicative "
       "drawdown penalty makes the steady book beat the lucky one.",
       9, [], 3,
-      [deck(9, "13, 17"),
-       lab(9, 5, "Why the season score is risk-adjusted"),
+      [deck("9b", "13, 17"),
+       lab("9b", 5, "Why the season score is risk-adjusted"),
        hw(9),
-       project(9),
+       phase(5),
        final(FN_BKT)], True),
 
     S("trading.portfolio-pnl", "trading", "Realized & unrealized P&L marked to mid",
@@ -991,8 +1031,8 @@ SKILLS = [
       "fills, split realized from unrealized P&L, and mark a book to the venue "
       "mid to get net worth.",
       9, [], 3,
-      [deck(9, "3, 18"),
-       lab(9, 4, "Reconcile your ledger against the exchange's"),
+      [deck("9b", "3, 18"),
+       lab("9b", 4, "Reconcile your ledger against the exchange's"),
        hw(9),
        final(FN_LIVE)], True),
 
@@ -1001,9 +1041,9 @@ SKILLS = [
       "exchange's record, and treat any break as a bug to explain rather than a "
       "rounding difference to ignore.",
       9, [], 2,
-      [lab(9, 4, "Reconcile your ledger against the exchange's"),
+      [lab("9b", 4, "Reconcile your ledger against the exchange's"),
        hw(9),
-       project(9),
+       phase(5),
        final(FN_LIVE)], True),
 
     S("tools.failure-modes", "tools", "Partial failure in a live system",
@@ -1011,8 +1051,8 @@ SKILLS = [
       "stale feed behind a healthy socket, a dropped venue, an unbounded queue — "
       "and design detection and a fail-safe response for each.",
       9, [], 3,
-      [deck(9, "8"),
-       lab(9, 3, "Drill 2 — kill the venue, then bring it back"),
+      [deck("9b", "8"),
+       lab("9b", 3, "Drill 2 — kill the venue, then bring it back"),
        hw(9),
        final(FN_LIVE)], True),
 
@@ -1021,10 +1061,10 @@ SKILLS = [
       " write a blameless postmortem with timeline, root cause and fixes "
       "afterwards, and turn each incident into a regression test.",
       9, [], 2,
-      [deck(9, "9, 14"),
-       lab(9, 7, "The postmortem skeleton"),
+      [deck("9b", "9, 14"),
+       lab("9b", 7, "The postmortem skeleton"),
        hw(9),
-       project(9),
+       phase(5),
        final(FN_LIVE)], False),
 ]
 
@@ -1038,11 +1078,15 @@ SESSION_SKILLS = {
     2: ["python.abc", "tools.uml", "python.gil", "python.coroutines", "python.event-loop", "python.asyncio-queue", "python.non-blocking", "python.async-races", "python.threading", "python.executors", "python.start-methods", "python.concurrency-choice", "python.to-thread", "python.reconnect"],
     3: ["tools.osi-stack", "tools.udp-tcp", "python.sockets", "python.socket-examples", "trading.fix-itch", "python.websockets", "python.reconnect", "python.asyncio-queue", "python.pydantic", "python.discriminated-union", "python.error-boundary", "tools.protocol-contract"],
     4: ["quant.event-driven-backtest", "quant.performance-metrics", "tools.sql-tick-store", "tools.column-store", "tools.as-of-join", "tools.parquet", "tools.headless-sim", "quant.look-ahead", "quant.fill-simulation"],
-    5: ["trading.clob", "python.bigo", "python.containers", "python.hot-loop", "quant.rolling-stats", "trading.price-time-priority", "tools.profiling", "tools.latency-tail"],
-    6: ["python.gil", "tools.headless-sim", "python.pandas-memory", "python.numpy-vectorize", "python.chunking", "python.multiprocessing", "tools.parquet", "tools.determinism", "trading.multi-venue"],
-    7: ["quant.look-ahead", "quant.overfitting", "tools.headless-sim", "tools.latency-tail", "quant.supervised-setup", "quant.feature-engineering", "quant.walk-forward", "quant.signal-scoring", "quant.model-ops"],
-    8: ["tools.git-branching", "tools.headless-sim", "tools.determinism", "tools.test-pyramid", "tools.pytest", "tools.mocking-async", "tools.github-actions", "tools.docker", "tools.observability"],
-    9: ["quant.performance-metrics", "tools.test-pyramid", "quant.risk-controls", "quant.tearsheet", "quant.risk-adjusted-score", "trading.portfolio-pnl", "trading.reconciliation", "tools.failure-modes", "tools.runbook"],
+    # 2026-10-11: the midterm week teaches nothing new (review = weeks 1-4)
+    5: [],
+    6: ["trading.clob", "python.bigo", "python.containers", "python.hot-loop", "quant.rolling-stats", "trading.price-time-priority", "tools.profiling", "tools.latency-tail"],
+    7: ["python.gil", "tools.headless-sim", "python.pandas-memory", "python.numpy-vectorize", "python.chunking", "python.multiprocessing", "tools.parquet", "tools.determinism", "trading.multi-venue"],
+    8: ["quant.look-ahead", "quant.overfitting", "tools.headless-sim", "tools.latency-tail", "quant.supervised-setup", "quant.feature-engineering", "quant.walk-forward", "quant.signal-scoring", "quant.model-ops"],
+    # 2026-10-11: the old Session 8 (CI/CD) and Session 9 (finale) checklists,
+    # merged in teaching order (part 9a, then part 9b; tools.test-pyramid once)
+    9: ["tools.git-branching", "tools.headless-sim", "tools.determinism", "tools.test-pyramid", "tools.pytest", "tools.mocking-async", "tools.github-actions", "tools.docker", "tools.observability",
+        "quant.performance-metrics", "quant.risk-controls", "quant.tearsheet", "quant.risk-adjusted-score", "trading.portfolio-pnl", "trading.reconciliation", "tools.failure-modes", "tools.runbook"],
 }
 
 # a session whose student-facing page is a combined companion page: the skills
@@ -1054,27 +1098,26 @@ def build_sessions():
     out = []
     for n, date, title, exam in SESSION_META:
         ids = SESSION_SKILLS[n]
+        labs = [{"label": v[0], "url": v[1]} for k, v in LABS.items()
+                if session_of(k) == n]
+        phases = [_assn(PHASES[p]) for p in sorted(PHASES)
+                  if PHASE_SESSION[p] == n]
         s = {
             "n": n,
             "date": date,
             "title": title,
-            "decks": ["w%d" % n],
-            "lab": ({"label": LABS[n][0], "url": PAGES + LABS[n][1]}
-                    if n in LABS else None),
-            "hw": None,
-            "project": None,
+            "decks": SESSION_DECKS[n],
+            # one lab -> an object (the shell's original shape); the merged
+            # Session 9 has two -> a list (app.js accepts both)
+            "lab": (labs[0] if len(labs) == 1 else (labs or None)),
+            "hw": _assn(HW[n]) if n in HW else None,
+            "project": (phases[0] if len(phases) == 1 else (phases or None)),
             "exam": exam,
             "companion_url": (COMPANION if n == 0 else COMPANION + "week%d.html" % n),
             "skills": ids,
         }
         if n in COMBINED:
             s["combined_url"] = COMBINED[n]
-        if n in HW:
-            label, aid, due = HW[n]
-            s["hw"] = {"label": label, "url": ASSN + aid, "due": due}
-        if n in PROJECT:
-            label, aid, due = PROJECT[n]
-            s["project"] = {"label": label, "url": ASSN + aid, "due": due}
         out.append(s)
     return out
 
