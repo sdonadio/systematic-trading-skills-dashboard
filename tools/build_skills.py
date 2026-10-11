@@ -406,10 +406,10 @@ SKILLS = [
       [deck(2, "25, 31"),
        deck(3, "28, 34"),
        lab(2, 7, "Survive a drop (this is what kills student bots)"),
-       hw(2),
        {"type": "lab", "session": 3, "label": "Lab 3 · step 5 — WebSockets", "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-3-socket-streaming-and-protocols"},
-       final(FN_LIVE),
-       project(3)], True),
+       hw(2),
+       project(3),
+       final(FN_LIVE)], True),
 
     S("python.threading", "python", "threading: Thread, Lock, Queue & Event",
       "You can start and join threading.Thread workers, hand data between them "
@@ -428,7 +428,7 @@ SKILLS = [
       "ProcessPoolExecutor, time sequential vs threads vs processes, and justify "
       "the pool you pick from that measurement, including when start-up and "
       "pickling make a process pool slower than one core.",
-      2, [6], 3,
+      2, [], 3,
       [deck(2, "17-18, 23"),
        lab(2, 8, "Threads vs processes vs one core"),
        midterm(MT_GIL),
@@ -449,7 +449,7 @@ SKILLS = [
       "reference-price poll, light and heavy signals, order gateway, logging) and"
       " choose asyncio, a thread or a process from where its time goes, "
       "defaulting to asyncio and measuring before you add a process.",
-      2, [6], 3,
+      2, [], 3,
       [deck(2, "6, 21"),
        lab(2, 8, "Threads vs processes vs one core"),
        hw(2),

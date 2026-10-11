@@ -1105,24 +1105,24 @@ window.SKILLS = {
           "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-2-concurrency-and-the-event-loop"
         },
         {
-          "type": "hw",
-          "label": "HW 2 — Async concurrency with asyncio",
-          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901644"
-        },
-        {
           "type": "lab",
           "session": 3,
           "label": "Lab 3 · step 5 — WebSockets",
           "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-3-socket-streaming-and-protocols"
         },
         {
-          "type": "exam",
-          "label": "Final · group: Live Systems: Risk, Reconciliation & Failure Modes"
+          "type": "hw",
+          "label": "HW 2 — Async concurrency with asyncio",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901644"
         },
         {
           "type": "project",
           "label": "Phase 1 — Connect & Trade for Real",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901653"
+        },
+        {
+          "type": "exam",
+          "label": "Final · group: Live Systems: Risk, Reconciliation & Failure Modes"
         }
       ],
       "interview": true
@@ -1169,9 +1169,7 @@ window.SKILLS = {
       "name": "ThreadPoolExecutor vs ProcessPoolExecutor, measured",
       "can": "You can run the same job through ThreadPoolExecutor and ProcessPoolExecutor, time sequential vs threads vs processes, and justify the pool you pick from that measurement, including when start-up and pickling make a process pool slower than one core.",
       "introduced": 2,
-      "practised": [
-        6
-      ],
+      "practised": [],
       "depth": 3,
       "where": [
         {
@@ -1229,9 +1227,7 @@ window.SKILLS = {
       "name": "Threads vs processes vs asyncio, per component",
       "can": "You can take each component of a trading system (feed handler, reference-price poll, light and heavy signals, order gateway, logging) and choose asyncio, a thread or a process from where its time goes, defaulting to asyncio and measuring before you add a process.",
       "introduced": 2,
-      "practised": [
-        6
-      ],
+      "practised": [],
       "depth": 3,
       "where": [
         {

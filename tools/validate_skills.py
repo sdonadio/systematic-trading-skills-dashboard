@@ -171,8 +171,8 @@ for k in skills:
     chk(len(set(k["practised"])) == len(k["practised"]), "%s practised has dups" % sid)
     for p in k["practised"]:
         chk(0 <= p <= NSESS - 1, "%s practised session %r out of range" % (sid, p))
-    chk(1 <= len(k["where"]) <= 6,
-        "%s where must have 1..6 items, has %d" % (sid, len(k["where"])))
+    chk(1 <= len(k["where"]) <= 7,  # raised 2026-10-11 at the instructor's request (was 6; python.gil and python.reconnect have 7)
+        "%s where must have 1..7 items, has %d" % (sid, len(k["where"])))
     homes = {k["introduced"]} | set(k["practised"])
 
     for w in k["where"]:
@@ -238,8 +238,8 @@ for s in sess:
         "session %d has duplicate skill ids" % s["n"])
     for sid in s["skills"]:
         chk(sid in by_id, "session %d lists unknown skill %s" % (s["n"], sid))
-    chk(5 <= len(s["skills"]) <= 9,
-        "session %d has %d skills (want 5-9)" % (s["n"], len(s["skills"])))
+    chk(5 <= len(s["skills"]) <= 14,  # raised 2026-10-11 at the instructor's request (was 9; Session 2 has 14, Session 3 has 12)
+        "session %d has %d skills (want 5-14)" % (s["n"], len(s["skills"])))
 for k in skills:
     want = {k["introduced"]} | set(k["practised"])
     got = {s["n"] for s in sess if k["id"] in s["skills"]}

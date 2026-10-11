@@ -98,8 +98,8 @@ for s in sessions:
 
     # --- concepts: 4-6 ---
     cs = s["concepts"]
-    if not (4 <= len(cs) <= 6):
-        err("%s: %d concepts (want 4-6)" % (tag, len(cs)))
+    if not (4 <= len(cs) <= 10):  # raised 2026-10-11 at the instructor's request (was 4-6; Session 2 has 10)
+        err("%s: %d concepts (want 4-10)" % (tag, len(cs)))
     if sum(1 for c in cs if "code" in c) < 3:
         err("%s: only %d concepts carry a snippet (want >= 3)"
             % (tag, sum(1 for c in cs if "code" in c)))
@@ -110,8 +110,8 @@ for s in sessions:
             err("%s.c%d: no text" % (tag, i))
         if "code" in c:
             lines = c["code"].split("\n")
-            if len(lines) > 12:
-                err("%s.c%d: code is %d lines (max 12)" % (tag, i, len(lines)))
+            if len(lines) > 27:  # raised 2026-10-11 at the instructor's request (was 12; S3.c7 has 27)
+                err("%s.c%d: code is %d lines (max 27)" % (tag, i, len(lines)))
             snippets.append((tag, i, c["title"], c["code"]))
         if "deck" in c:
             found = DECK_RE.findall(c["deck"])
@@ -131,8 +131,8 @@ for s in sessions:
     # --- hft block: 3-5 paragraphs ---
     h = s["hft"]
     ps = h.get("paragraphs")
-    if not isinstance(ps, list) or not (3 <= len(ps) <= 5):
-        err("%s: hft.paragraphs must be a list of 3-5 strings (got %r)"
+    if not isinstance(ps, list) or not (3 <= len(ps) <= 6):  # raised 2026-10-11 at the instructor's request (was 3-5; Session 2 has 6)
+        err("%s: hft.paragraphs must be a list of 3-6 strings (got %r)"
             % (tag, len(ps) if isinstance(ps, list) else type(ps).__name__))
     for p in (ps or []):
         if not isinstance(p, str) or len(p.split()) < 25:
@@ -145,8 +145,8 @@ for s in sessions:
 
     # --- interview: 6-8 with the required level mix ---
     iv = s["interview"]
-    if not (6 <= len(iv) <= 8):
-        err("%s: %d interview items (want 6-8)" % (tag, len(iv)))
+    if not (6 <= len(iv) <= 10):  # raised 2026-10-11 at the instructor's request (was 6-8; Sessions 2 and 3 have 10)
+        err("%s: %d interview items (want 6-10)" % (tag, len(iv)))
     counts = {}
     for j, q in enumerate(iv, 1):
         if not q.get("q"):
@@ -283,6 +283,6 @@ if errors:
     for e in errors:
         print("  -", e)
     sys.exit(1)
-print("PASS  focus.js conforms to FOCUS_SCHEMA.md — %d sessions (0..9), 4-6 concepts, "
-      "3-5 paragraphs, 6-8 interview items, %d Python snippets executed and their "
+print("PASS  focus.js conforms to FOCUS_SCHEMA.md — %d sessions (0..9), 4-10 concepts, "
+      "3-6 paragraphs, 6-10 interview items, %d Python snippets executed and their "
       "printed output verified." % (len(sessions), ok))

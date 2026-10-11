@@ -149,13 +149,12 @@ for raw in ('{"type":"place_order","symbol":"AAPL","side":"buy","quantity":5}',
             '{"type":"cancel_order","order_id":"a1"}',
             '{"type":"place_order","symbol":"AAPL","side":"long","quantity":5}',
             '{"type":"place_ordr"}', 'nope'):
-    try:
+    try:                                         # continue, never raise: one bad frame must not end the session
         print("ok      ", type(parse(json.loads(raw))).__name__)
     except json.JSONDecodeError:
         print("rejected unparseable bytes")
     except ValidationError as e:
         err = e.errors()[0]; print("rejected", err["type"], err["loc"])
-    # continue, never raise: one bad frame must not end the session
 # ok       PlaceOrder
 # ok       CancelOrder
 # rejected literal_error ('place_order', 'side')
