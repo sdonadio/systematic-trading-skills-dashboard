@@ -184,7 +184,7 @@ window.SKILLS = {
       ],
       "lab": {
         "label": "Lab 4 — Backtesting and Its Data",
-        "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-4-the-tape-as-a-dataset"
+        "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189590"
       },
       "hw": {
         "label": "HW 4 — Your tapes in SQL and Parquet, and a backtest you can trust",
@@ -210,13 +210,25 @@ window.SKILLS = {
     {
       "n": 5,
       "date": "2026-10-30",
+      "title": "Midterm Week — No Class",
+      "decks": [],
+      "lab": null,
+      "hw": null,
+      "project": null,
+      "exam": "midterm",
+      "companion_url": "https://sdonadio.github.io/systematic-trading-arena/week5.html",
+      "skills": []
+    },
+    {
+      "n": 6,
+      "date": "2026-11-06",
       "title": "Algorithmic Complexity & Data Structures",
       "decks": [
-        "w5"
+        "w6"
       ],
       "lab": {
-        "label": "Lab 5 — Complexity & Data Structures",
-        "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-5-complexity-and-data-structures"
+        "label": "Lab 6 — Complexity & Data Structures",
+        "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189593"
       },
       "hw": {
         "label": "HW 5 — Complexity & the order book data structure",
@@ -228,8 +240,8 @@ window.SKILLS = {
         "url": "https://canvas.uchicago.edu/courses/74211/assignments/901654",
         "due": "2026-11-07"
       },
-      "exam": "midterm",
-      "companion_url": "https://sdonadio.github.io/systematic-trading-arena/week5.html",
+      "exam": null,
+      "companion_url": "https://sdonadio.github.io/systematic-trading-arena/week6.html",
       "skills": [
         "trading.clob",
         "python.bigo",
@@ -242,15 +254,15 @@ window.SKILLS = {
       ]
     },
     {
-      "n": 6,
-      "date": "2026-11-06",
+      "n": 7,
+      "date": "2026-11-13",
       "title": "Big Data & Distributed Computing",
       "decks": [
-        "w6"
+        "w7"
       ],
       "lab": {
-        "label": "Lab 6 — Big Data",
-        "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-6-big-data"
+        "label": "Lab 7 — Big Data",
+        "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189596"
       },
       "hw": {
         "label": "HW 6 — Big data: vectorize your signal",
@@ -259,7 +271,7 @@ window.SKILLS = {
       },
       "project": null,
       "exam": null,
-      "companion_url": "https://sdonadio.github.io/systematic-trading-arena/week6.html",
+      "companion_url": "https://sdonadio.github.io/systematic-trading-arena/week7.html",
       "skills": [
         "python.gil",
         "tools.headless-sim",
@@ -273,15 +285,15 @@ window.SKILLS = {
       ]
     },
     {
-      "n": 7,
-      "date": "2026-11-13",
+      "n": 8,
+      "date": "2026-11-20",
       "title": "Machine Learning Signals & Model Ops",
       "decks": [
-        "w7"
+        "w8"
       ],
       "lab": {
-        "label": "Lab 7 — ML Signals & Model Ops",
-        "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-7-ml-signals-and-model-ops"
+        "label": "Lab 8 — ML Signals & Model Ops",
+        "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189599"
       },
       "hw": {
         "label": "HW 7 — ML signals & model ops",
@@ -294,7 +306,7 @@ window.SKILLS = {
         "due": "2026-11-21"
       },
       "exam": null,
-      "companion_url": "https://sdonadio.github.io/systematic-trading-arena/week7.html",
+      "companion_url": "https://sdonadio.github.io/systematic-trading-arena/week8.html",
       "skills": [
         "quant.look-ahead",
         "quant.overfitting",
@@ -308,28 +320,42 @@ window.SKILLS = {
       ]
     },
     {
-      "n": 8,
-      "date": "2026-11-20",
-      "title": "CI/CD, Testing & UI",
+      "n": 9,
+      "date": "2026-12-04",
+      "title": "CI/CD, Testing & UI · Integration & Demo — Season Finale",
       "decks": [
-        "w8"
+        "w9a",
+        "w9b"
       ],
-      "lab": {
-        "label": "Lab 8 — CI/CD, Testing & the Dashboard",
-        "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-8-ci-slash-cd-testing-and-the-dashboard"
-      },
+      "lab": [
+        {
+          "label": "Lab 9a — CI/CD, Testing & the Dashboard",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189602"
+        },
+        {
+          "label": "Lab 9b — Integration, Failure Drills & the Demo",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189605"
+        }
+      ],
       "hw": {
-        "label": "HW 8 — CI/CD, testing & a bot you trust",
-        "url": "https://canvas.uchicago.edu/courses/74211/assignments/901650",
-        "due": "2026-11-28"
+        "label": "HW 9 — Integration & season-finale demo",
+        "url": "https://canvas.uchicago.edu/courses/74211/assignments/901651",
+        "due": "2026-12-12"
       },
-      "project": {
-        "label": "Phase 4 — Scale & Operations",
-        "url": "https://canvas.uchicago.edu/courses/74211/assignments/901656",
-        "due": "2026-12-04"
-      },
-      "exam": null,
-      "companion_url": "https://sdonadio.github.io/systematic-trading-arena/week8.html",
+      "project": [
+        {
+          "label": "Phase 4 — Scale & Operations",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901656",
+          "due": "2026-12-04"
+        },
+        {
+          "label": "Phase 5 — Season Finale: Demo & Postmortem",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901657",
+          "due": "2026-12-12"
+        }
+      ],
+      "exam": "final",
+      "companion_url": "https://sdonadio.github.io/systematic-trading-arena/week9.html",
       "skills": [
         "tools.git-branching",
         "tools.headless-sim",
@@ -339,35 +365,8 @@ window.SKILLS = {
         "tools.mocking-async",
         "tools.github-actions",
         "tools.docker",
-        "tools.observability"
-      ]
-    },
-    {
-      "n": 9,
-      "date": "2026-12-04",
-      "title": "Integration & Demo — Season Finale",
-      "decks": [
-        "w9"
-      ],
-      "lab": {
-        "label": "Lab 9 — Integration, Failure Drills & the Demo",
-        "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-9-integration-failure-drills-and-the-demo"
-      },
-      "hw": {
-        "label": "HW 9 — Integration & season-finale demo",
-        "url": "https://canvas.uchicago.edu/courses/74211/assignments/901651",
-        "due": "2026-12-12"
-      },
-      "project": {
-        "label": "Phase 5 — Season Finale: Demo & Postmortem",
-        "url": "https://canvas.uchicago.edu/courses/74211/assignments/901657",
-        "due": "2026-12-12"
-      },
-      "exam": "final",
-      "companion_url": "https://sdonadio.github.io/systematic-trading-arena/week9.html",
-      "skills": [
+        "tools.observability",
         "quant.performance-metrics",
-        "tools.test-pyramid",
         "quant.risk-controls",
         "quant.tearsheet",
         "quant.risk-adjusted-score",
@@ -386,7 +385,7 @@ window.SKILLS = {
       "can": "You can read a two-sided limit order book and compute best bid, best ask, spread, mid and available depth from it, and say where a market order fills.",
       "introduced": 0,
       "practised": [
-        5
+        6
       ],
       "depth": 3,
       "where": [
@@ -397,14 +396,14 @@ window.SKILLS = {
         },
         {
           "type": "deck",
-          "session": 5,
-          "label": "Deck Week 5 · slide 11"
+          "session": 6,
+          "label": "Deck Week 6 · slide 11"
         },
         {
           "type": "lab",
-          "session": 5,
-          "label": "Lab 5 · part 1 — Time the CLOB against n",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-5-complexity-and-data-structures"
+          "session": 6,
+          "label": "Lab 6 · part 1 — Time the CLOB against n",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189593"
         },
         {
           "type": "exam",
@@ -820,7 +819,7 @@ window.SKILLS = {
       "can": "You can work a week on its own feature branch, keep commits small and legible, and explain why a repository history that shows how a system was built is itself a deliverable.",
       "introduced": 1,
       "practised": [
-        8
+        9
       ],
       "depth": 2,
       "where": [
@@ -831,8 +830,8 @@ window.SKILLS = {
         },
         {
           "type": "deck",
-          "session": 8,
-          "label": "Deck Week 8 · slide 21"
+          "session": 9,
+          "label": "Deck Week 9a · slide 21"
         },
         {
           "type": "hw",
@@ -854,7 +853,7 @@ window.SKILLS = {
       "can": "You can explain that CPython's GIL lets one thread execute bytecode at a time and is released around blocking I/O, classify a piece of work as I/O-bound or CPU-bound, and predict from that whether threads will speed it up.",
       "introduced": 2,
       "practised": [
-        6
+        7
       ],
       "depth": 3,
       "where": [
@@ -865,8 +864,8 @@ window.SKILLS = {
         },
         {
           "type": "deck",
-          "session": 6,
-          "label": "Deck Week 6 · slide 12"
+          "session": 7,
+          "label": "Deck Week 7 · slide 12"
         },
         {
           "type": "lab",
@@ -1664,7 +1663,7 @@ window.SKILLS = {
         {
           "type": "deck",
           "session": 9,
-          "label": "Deck Week 9 · slide 12"
+          "label": "Deck Week 9b · slide 12"
         },
         {
           "type": "hw",
@@ -1736,21 +1735,21 @@ window.SKILLS = {
       "can": "You can replay a recorded tape or a seeded simulation in one process with no sockets, drive every decision from the logical clock instead of the machine's, and prove it with the same fill digest at any replay speed.",
       "introduced": 4,
       "practised": [
-        6,
         7,
-        8
+        8,
+        9
       ],
       "depth": 3,
       "where": [
         {
           "type": "deck",
-          "session": 6,
-          "label": "Deck Week 6 · slide 18"
+          "session": 7,
+          "label": "Deck Week 7 · slide 18"
         },
         {
           "type": "deck",
-          "session": 7,
-          "label": "Deck Week 7 · slide 19"
+          "session": 8,
+          "label": "Deck Week 8 · slide 19"
         },
         {
           "type": "hw",
@@ -1771,14 +1770,14 @@ window.SKILLS = {
       "can": "You can find where a backtest used information that did not exist at decision time — an unlagged signal, a forward as-of match, a peek at the next book — fix it on the logical clock, and quantify how much of the edge was the leak.",
       "introduced": 4,
       "practised": [
-        7
+        8
       ],
       "depth": 3,
       "where": [
         {
           "type": "deck",
-          "session": 7,
-          "label": "Deck Week 7 · slide 11"
+          "session": 8,
+          "label": "Deck Week 8 · slide 11"
         },
         {
           "type": "hw",
@@ -1826,23 +1825,19 @@ window.SKILLS = {
       "category": "quant",
       "name": "Overfitting, data snooping & bias-variance",
       "can": "You can explain test error as bias plus variance plus irreducible noise, recognise that keeping the best of 500 variants fits noise, and defend against it with fewer parameters, counted trials and a held-out block.",
-      "introduced": 7,
+      "introduced": 8,
       "practised": [],
       "depth": 3,
       "where": [
         {
           "type": "deck",
-          "session": 7,
-          "label": "Deck Week 7 · slides 9, 13"
+          "session": 8,
+          "label": "Deck Week 8 · slides 9, 13"
         },
         {
           "type": "hw",
           "label": "HW 7 — ML signals & model ops",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901649"
-        },
-        {
-          "type": "exam",
-          "label": "Midterm · group: Backtester Design, Look-Ahead & Complexity"
         },
         {
           "type": "exam",
@@ -1856,29 +1851,25 @@ window.SKILLS = {
       "category": "python",
       "name": "Big-O, amortized cost & space/time trade-offs",
       "can": "You can place an operation on the O(1) / O(log n) / O(n) / O(n log n) / O(n squared) ladder, distinguish worst from average and amortized cost, and name the memory you spent to buy the speed.",
-      "introduced": 5,
+      "introduced": 6,
       "practised": [],
       "depth": 3,
       "where": [
         {
           "type": "deck",
-          "session": 5,
-          "label": "Deck Week 5 · slides 5–6"
+          "session": 6,
+          "label": "Deck Week 6 · slides 5–6"
         },
         {
           "type": "lab",
-          "session": 5,
-          "label": "Lab 5 · part 3 — The Big-O ladder, measured",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-5-complexity-and-data-structures"
+          "session": 6,
+          "label": "Lab 6 · part 3 — The Big-O ladder, measured",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189593"
         },
         {
           "type": "hw",
           "label": "HW 5 — Complexity & the order book data structure",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901647"
-        },
-        {
-          "type": "exam",
-          "label": "Midterm · group: Backtester Design, Look-Ahead & Complexity"
         },
         {
           "type": "exam",
@@ -1892,29 +1883,25 @@ window.SKILLS = {
       "category": "python",
       "name": "dict, set, deque & heapq and their costs",
       "can": "You can pick the container from the operation you repeat most — dict for keyed lookup, set for membership, deque(maxlen) for a rolling window, heapq for best-of-many — and quote each one's cost.",
-      "introduced": 5,
+      "introduced": 6,
       "practised": [],
       "depth": 3,
       "where": [
         {
           "type": "deck",
-          "session": 5,
-          "label": "Deck Week 5 · slides 7–8"
+          "session": 6,
+          "label": "Deck Week 6 · slides 7–8"
         },
         {
           "type": "lab",
-          "session": 5,
-          "label": "Lab 5 · part 2 — Heap + dict vs sorted list",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-5-complexity-and-data-structures"
+          "session": 6,
+          "label": "Lab 6 · part 2 — Heap + dict vs sorted list",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189593"
         },
         {
           "type": "hw",
           "label": "HW 5 — Complexity & the order book data structure",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901647"
-        },
-        {
-          "type": "exam",
-          "label": "Midterm · group: Backtester Design, Look-Ahead & Complexity"
         },
         {
           "type": "exam",
@@ -1928,20 +1915,20 @@ window.SKILLS = {
       "category": "python",
       "name": "Speeding up a Python hot loop",
       "can": "You can apply the standard levers in order of payoff — the right data structure, hoisting allocation out of the loop, binding a method to a local name, vectorising batch maths — and stop once the code is no longer hot.",
-      "introduced": 5,
+      "introduced": 6,
       "practised": [],
       "depth": 2,
       "where": [
         {
           "type": "deck",
-          "session": 5,
-          "label": "Deck Week 5 · slide 15"
+          "session": 6,
+          "label": "Deck Week 6 · slide 15"
         },
         {
           "type": "lab",
-          "session": 5,
-          "label": "Lab 5 · part 2 — Heap + dict vs sorted list",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-5-complexity-and-data-structures"
+          "session": 6,
+          "label": "Lab 6 · part 2 — Heap + dict vs sorted list",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189593"
         },
         {
           "type": "hw",
@@ -1960,20 +1947,20 @@ window.SKILLS = {
       "category": "quant",
       "name": "O(1) rolling statistics with Welford",
       "can": "You can replace an O(n)-per-tick mean or variance with incremental state, implement Welford's update for a numerically stable running variance, and bound the window with a deque so per-tick cost stops growing.",
-      "introduced": 5,
+      "introduced": 6,
       "practised": [],
       "depth": 3,
       "where": [
         {
           "type": "deck",
-          "session": 5,
-          "label": "Deck Week 5 · slides 9–10, 19"
+          "session": 6,
+          "label": "Deck Week 6 · slides 9–10, 19"
         },
         {
           "type": "lab",
-          "session": 5,
-          "label": "Lab 5 · part 4 — O(1) rolling statistics — Welford vs recompute",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-5-complexity-and-data-structures"
+          "session": 6,
+          "label": "Lab 6 · part 4 — O(1) rolling statistics — Welford vs recompute",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189593"
         },
         {
           "type": "hw",
@@ -1992,20 +1979,20 @@ window.SKILLS = {
       "category": "trading",
       "name": "Price-time priority & the matching engine",
       "can": "You can apply price-then-time priority to say which resting order fills first, and explain the heap-plus-dict order book design: a monotonic sequence for true time priority, a dict as the canonical set, and lazy deletion on cancel.",
-      "introduced": 5,
+      "introduced": 6,
       "practised": [],
       "depth": 3,
       "where": [
         {
           "type": "deck",
-          "session": 5,
-          "label": "Deck Week 5 · slides 11, 18"
+          "session": 6,
+          "label": "Deck Week 6 · slides 11, 18"
         },
         {
           "type": "lab",
-          "session": 5,
-          "label": "Lab 5 · part 2 — Heap + dict vs sorted list",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-5-complexity-and-data-structures"
+          "session": 6,
+          "label": "Lab 6 · part 2 — Heap + dict vs sorted list",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189593"
         },
         {
           "type": "hw",
@@ -2029,20 +2016,20 @@ window.SKILLS = {
       "category": "tools",
       "name": "Profiling and microbenchmarking honestly",
       "can": "You can find the function that dominates a run with cProfile, then time the hot path with perf_counter using warm-up, repeats and the minimum, and refuse to optimise code that is called twice a session.",
-      "introduced": 5,
+      "introduced": 6,
       "practised": [],
       "depth": 3,
       "where": [
         {
           "type": "deck",
-          "session": 5,
-          "label": "Deck Week 5 · slides 13–14, 20"
+          "session": 6,
+          "label": "Deck Week 6 · slides 13–14, 20"
         },
         {
           "type": "lab",
-          "session": 5,
-          "label": "Lab 5 · part 1 — Time the CLOB against n",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-5-complexity-and-data-structures"
+          "session": 6,
+          "label": "Lab 6 · part 1 — Time the CLOB against n",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189593"
         },
         {
           "type": "hw",
@@ -2066,27 +2053,27 @@ window.SKILLS = {
       "category": "tools",
       "name": "Latency, throughput & the tail",
       "can": "You can separate per-operation latency from operations per second, report p50/p95/p99 instead of a mean, and set a per-tick budget that the tail — not the average — has to fit inside.",
-      "introduced": 5,
+      "introduced": 6,
       "practised": [
-        7
+        8
       ],
       "depth": 3,
       "where": [
         {
           "type": "deck",
-          "session": 5,
-          "label": "Deck Week 5 · slides 16, 20"
+          "session": 6,
+          "label": "Deck Week 6 · slides 16, 20"
         },
         {
           "type": "deck",
-          "session": 7,
-          "label": "Deck Week 7 · slide 18"
+          "session": 8,
+          "label": "Deck Week 8 · slide 18"
         },
         {
           "type": "lab",
-          "session": 5,
-          "label": "Lab 5 · part 5 — Tail latency of your own on_tick",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-5-complexity-and-data-structures"
+          "session": 6,
+          "label": "Lab 6 · part 5 — Tail latency of your own on_tick",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189593"
         },
         {
           "type": "hw",
@@ -2105,20 +2092,20 @@ window.SKILLS = {
       "category": "python",
       "name": "The DataFrame memory bill & dtypes",
       "can": "You can measure what a frame really costs with memory_usage(deep=True), downcast float64 to float32 and object to category, and recognise the symptoms of crossing physical memory.",
-      "introduced": 6,
+      "introduced": 7,
       "practised": [],
       "depth": 3,
       "where": [
         {
           "type": "deck",
-          "session": 6,
-          "label": "Deck Week 6 · slide 5"
+          "session": 7,
+          "label": "Deck Week 7 · slide 5"
         },
         {
           "type": "lab",
-          "session": 6,
-          "label": "Lab 6 · part 2 — Load it into pandas — and look at the memory bill",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-6-big-data"
+          "session": 7,
+          "label": "Lab 7 · part 2 — Load it into pandas — and look at the memory bill",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189596"
         },
         {
           "type": "hw",
@@ -2137,20 +2124,20 @@ window.SKILLS = {
       "category": "python",
       "name": "Vectorising with numpy & pandas",
       "can": "You can replace a per-row Python loop with whole-array numpy and pandas operations, check the two agree with allclose, and explain where the order of magnitude comes from.",
-      "introduced": 6,
+      "introduced": 7,
       "practised": [],
       "depth": 3,
       "where": [
         {
           "type": "deck",
-          "session": 6,
-          "label": "Deck Week 6 · slides 7, 19"
+          "session": 7,
+          "label": "Deck Week 7 · slides 7, 19"
         },
         {
           "type": "lab",
-          "session": 6,
-          "label": "Lab 6 · part 3 — Python loop vs vectorised, timed and checked",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-6-big-data"
+          "session": 7,
+          "label": "Lab 7 · part 3 — Python loop vs vectorised, timed and checked",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189596"
         },
         {
           "type": "hw",
@@ -2169,20 +2156,20 @@ window.SKILLS = {
       "category": "python",
       "name": "Chunked, bounded-memory processing",
       "can": "You can process a file larger than memory as a stream of chunks with a running reduction, and show that peak memory stays flat while a load-it-all version scales with the file.",
-      "introduced": 6,
+      "introduced": 7,
       "practised": [],
       "depth": 3,
       "where": [
         {
           "type": "deck",
-          "session": 6,
-          "label": "Deck Week 6 · slide 8"
+          "session": 7,
+          "label": "Deck Week 7 · slide 8"
         },
         {
           "type": "lab",
-          "session": 6,
-          "label": "Lab 6 · part 4 — Chunked processing — bounded memory",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-6-big-data"
+          "session": 7,
+          "label": "Lab 7 · part 4 — Chunked processing — bounded memory",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189596"
         },
         {
           "type": "hw",
@@ -2201,20 +2188,20 @@ window.SKILLS = {
       "category": "python",
       "name": "Process pools & the map-reduce fan-out",
       "can": "You can shard an embarrassingly parallel workload by symbol or parameter, fan it out with ProcessPoolExecutor under a __main__ guard, and reduce the partial results into one answer.",
-      "introduced": 6,
+      "introduced": 7,
       "practised": [],
       "depth": 3,
       "where": [
         {
           "type": "deck",
-          "session": 6,
-          "label": "Deck Week 6 · slides 12–14, 20"
+          "session": 7,
+          "label": "Deck Week 7 · slides 12–14, 20"
         },
         {
           "type": "lab",
-          "session": 6,
-          "label": "Lab 6 · part 5 — Map-reduce across processes",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-6-big-data"
+          "session": 7,
+          "label": "Lab 7 · part 5 — Map-reduce across processes",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189596"
         },
         {
           "type": "hw",
@@ -2228,10 +2215,6 @@ window.SKILLS = {
         },
         {
           "type": "exam",
-          "label": "Midterm · group: Threads, the GIL & Concurrency Pitfalls"
-        },
-        {
-          "type": "exam",
           "label": "Final · group: numpy & pandas: Vectorisation, Indexing & Memory"
         }
       ],
@@ -2241,23 +2224,23 @@ window.SKILLS = {
       "id": "tools.parquet",
       "category": "tools",
       "name": "Parquet: columns, row groups & predicate pushdown",
-      "can": "You can convert a tape to Parquet, explain how columns, row groups and the min/max statistics of each column chunk let a reader skip data, query the file in place with DuckDB, and by Week 6 partition it and reuse it as a feature cache.",
+      "can": "You can convert a tape to Parquet, explain how columns, row groups and the min/max statistics of each column chunk let a reader skip data, query the file in place with DuckDB, and by Week 7 partition it and reuse it as a feature cache.",
       "introduced": 4,
       "practised": [
-        6
+        7
       ],
       "depth": 3,
       "where": [
         {
           "type": "deck",
-          "session": 6,
-          "label": "Deck Week 6 · slides 6, 9"
+          "session": 7,
+          "label": "Deck Week 7 · slides 6, 9"
         },
         {
           "type": "lab",
-          "session": 6,
-          "label": "Lab 6 · part 6 — Columnar vs row storage",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-6-big-data"
+          "session": 7,
+          "label": "Lab 7 · part 6 — Columnar vs row storage",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189596"
         },
         {
           "type": "hw",
@@ -2286,27 +2269,27 @@ window.SKILLS = {
       "category": "tools",
       "name": "Deterministic, network-free runs",
       "can": "You can make a run reproducible by pinning the seed, injecting the clock and ids, and keeping the network out of it, and explain why an idempotent task keyed by its inputs is safe to retry.",
-      "introduced": 6,
+      "introduced": 7,
       "practised": [
-        8
+        9
       ],
       "depth": 3,
       "where": [
         {
           "type": "deck",
-          "session": 6,
-          "label": "Deck Week 6 · slide 15"
+          "session": 7,
+          "label": "Deck Week 7 · slide 15"
         },
         {
           "type": "deck",
-          "session": 8,
-          "label": "Deck Week 8 · slide 9"
+          "session": 9,
+          "label": "Deck Week 9a · slide 9"
         },
         {
           "type": "lab",
-          "session": 8,
-          "label": "Lab 8 · part 5 — Determinism: same seed, same result",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-8-ci-slash-cd-testing-and-the-dashboard"
+          "session": 9,
+          "label": "Lab 9a · part 5 — Determinism: same seed, same result",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189602"
         },
         {
           "type": "hw",
@@ -2325,14 +2308,14 @@ window.SKILLS = {
       "category": "trading",
       "name": "Multi-venue connection & routing",
       "can": "You can connect one bot to several venues at once from a comma-separated URL list, and explain why the same symbol on two books creates a routing decision and a cross-venue arbitrage.",
-      "introduced": 6,
+      "introduced": 7,
       "practised": [],
       "depth": 2,
       "where": [
         {
           "type": "deck",
-          "session": 6,
-          "label": "Deck Week 6 · slide 17"
+          "session": 7,
+          "label": "Deck Week 7 · slide 17"
         },
         {
           "type": "hw",
@@ -2352,20 +2335,20 @@ window.SKILLS = {
       "category": "quant",
       "name": "The supervised setup: X, y and the horizon",
       "can": "You can frame a trading signal as supervised learning — features knowable at t, a label about t+h — and choose classification or regression with a horizon that matches the holding period you intend.",
-      "introduced": 7,
+      "introduced": 8,
       "practised": [],
       "depth": 3,
       "where": [
         {
           "type": "deck",
-          "session": 7,
-          "label": "Deck Week 7 · slide 5"
+          "session": 8,
+          "label": "Deck Week 8 · slide 5"
         },
         {
           "type": "lab",
-          "session": 7,
-          "label": "Lab 7 · part 3 — Features known at t, label about t + h",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-7-ml-signals-and-model-ops"
+          "session": 8,
+          "label": "Lab 8 · part 3 — Features known at t, label about t + h",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189599"
         },
         {
           "type": "hw",
@@ -2384,20 +2367,20 @@ window.SKILLS = {
       "category": "quant",
       "name": "Features from prices & the order book",
       "can": "You can build momentum, volatility, spread and order-book-imbalance features from a price history and a book snapshot, standardise them, and justify why fewer, better features win in low signal-to-noise data.",
-      "introduced": 7,
+      "introduced": 8,
       "practised": [],
       "depth": 3,
       "where": [
         {
           "type": "deck",
-          "session": 7,
-          "label": "Deck Week 7 · slide 6"
+          "session": 8,
+          "label": "Deck Week 8 · slide 6"
         },
         {
           "type": "lab",
-          "session": 7,
-          "label": "Lab 7 · part 3 — Features known at t, label about t + h",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-7-ml-signals-and-model-ops"
+          "session": 8,
+          "label": "Lab 8 · part 3 — Features known at t, label about t + h",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189599"
         },
         {
           "type": "hw",
@@ -2421,20 +2404,20 @@ window.SKILLS = {
       "category": "quant",
       "name": "Walk-forward validation & leakage control",
       "can": "You can split a time series chronologically into train, validation and an untouched test block, roll the split forward over expanding or rolling windows, and embargo the boundary so horizon-h labels cannot leak across it.",
-      "introduced": 7,
+      "introduced": 8,
       "practised": [],
       "depth": 3,
       "where": [
         {
           "type": "deck",
-          "session": 7,
-          "label": "Deck Week 7 · slides 11–12"
+          "session": 8,
+          "label": "Deck Week 8 · slides 11–12"
         },
         {
           "type": "lab",
-          "session": 7,
-          "label": "Lab 7 · part 5 — Walk-forward, and the shuffled-label control",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-7-ml-signals-and-model-ops"
+          "session": 8,
+          "label": "Lab 8 · part 5 — Walk-forward, and the shuffled-label control",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189599"
         },
         {
           "type": "hw",
@@ -2458,20 +2441,20 @@ window.SKILLS = {
       "category": "quant",
       "name": "Scoring a signal after costs",
       "can": "You can explain why classification accuracy is necessary but not sufficient, read hit rate together with average win over average loss, and judge a signal on out-of-sample Sharpe and P&L net of fees, spread and turnover.",
-      "introduced": 7,
+      "introduced": 8,
       "practised": [],
       "depth": 3,
       "where": [
         {
           "type": "deck",
-          "session": 7,
-          "label": "Deck Week 7 · slide 14"
+          "session": 8,
+          "label": "Deck Week 8 · slide 14"
         },
         {
           "type": "lab",
-          "session": 7,
-          "label": "Lab 7 · part 5 — Walk-forward, and the shuffled-label control",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-7-ml-signals-and-model-ops"
+          "session": 8,
+          "label": "Lab 8 · part 5 — Walk-forward, and the shuffled-label control",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189599"
         },
         {
           "type": "hw",
@@ -2490,20 +2473,20 @@ window.SKILLS = {
       "category": "quant",
       "name": "Persist, serve, monitor & retrain a model",
       "can": "You can train offline, serialise the fitted model with its feature list and version, load it once outside the hot path, time predict against the per-tick budget, and monitor drift to decide when to retrain or roll back.",
-      "introduced": 7,
+      "introduced": 8,
       "practised": [],
       "depth": 3,
       "where": [
         {
           "type": "deck",
-          "session": 7,
-          "label": "Deck Week 7 · slides 15, 18"
+          "session": 8,
+          "label": "Deck Week 8 · slides 15, 18"
         },
         {
           "type": "lab",
-          "session": 7,
-          "label": "Lab 7 · part 6 — Freeze the model, then load it in on_tick",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-7-ml-signals-and-model-ops"
+          "session": 8,
+          "label": "Lab 8 · part 6 — Freeze the model, then load it in on_tick",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189599"
         },
         {
           "type": "hw",
@@ -2527,32 +2510,30 @@ window.SKILLS = {
       "category": "tools",
       "name": "The testing pyramid & integration tests",
       "can": "You can place a test at the unit, integration or end-to-end layer, push logic down so bugs are caught by fast unit tests, and explain why every part passing its own tests does not mean the system works.",
-      "introduced": 8,
-      "practised": [
-        9
-      ],
+      "introduced": 9,
+      "practised": [],
       "depth": 3,
       "where": [
         {
           "type": "deck",
-          "session": 8,
-          "label": "Deck Week 8 · slide 5"
+          "session": 9,
+          "label": "Deck Week 9a · slide 5"
         },
         {
           "type": "deck",
           "session": 9,
-          "label": "Deck Week 9 · slides 5, 7"
+          "label": "Deck Week 9b · slides 5, 7"
         },
         {
           "type": "lab",
-          "session": 8,
-          "label": "Lab 8 · part 4 — An integration test — the bot inside the simulator",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-8-ci-slash-cd-testing-and-the-dashboard"
+          "session": 9,
+          "label": "Lab 9a · part 4 — An integration test — the bot inside the simulator",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189602"
         },
         {
           "type": "hw",
-          "label": "HW 8 — CI/CD, testing & a bot you trust",
-          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901650"
+          "label": "HW 9 — Integration & season-finale demo",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901651"
         },
         {
           "type": "exam",
@@ -2566,25 +2547,25 @@ window.SKILLS = {
       "category": "tools",
       "name": "pytest: tests, fixtures, parametrize & coverage",
       "can": "You can write test_* functions with plain asserts, factor setup into fixtures, drive many cases from one @parametrize, and read a coverage report as a map of untested code rather than a number to chase.",
-      "introduced": 8,
+      "introduced": 9,
       "practised": [],
       "depth": 3,
       "where": [
         {
           "type": "deck",
-          "session": 8,
-          "label": "Deck Week 8 · slides 6–7, 10"
+          "session": 9,
+          "label": "Deck Week 9a · slides 6–7, 10"
         },
         {
           "type": "lab",
-          "session": 8,
-          "label": "Lab 8 · part 3 — Fixtures and parametrize instead of copy-paste",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-8-ci-slash-cd-testing-and-the-dashboard"
+          "session": 9,
+          "label": "Lab 9a · part 3 — Fixtures and parametrize instead of copy-paste",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189602"
         },
         {
           "type": "hw",
-          "label": "HW 8 — CI/CD, testing & a bot you trust",
-          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901650"
+          "label": "HW 9 — Integration & season-finale demo",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901651"
         },
         {
           "type": "exam",
@@ -2598,25 +2579,25 @@ window.SKILLS = {
       "category": "tools",
       "name": "Fakes, monkeypatch & testing coroutines",
       "can": "You can replace a network or market-data dependency with a hand-written fake or a monkeypatched attribute, and test a coroutine with pytest-asyncio instead of hitting a live feed.",
-      "introduced": 8,
+      "introduced": 9,
       "practised": [],
       "depth": 3,
       "where": [
         {
           "type": "deck",
-          "session": 8,
-          "label": "Deck Week 8 · slide 8"
+          "session": 9,
+          "label": "Deck Week 9a · slide 8"
         },
         {
           "type": "lab",
-          "session": 8,
-          "label": "Lab 8 · part 6 — One async test",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-8-ci-slash-cd-testing-and-the-dashboard"
+          "session": 9,
+          "label": "Lab 9a · part 6 — One async test",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189602"
         },
         {
           "type": "hw",
-          "label": "HW 8 — CI/CD, testing & a bot you trust",
-          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901650"
+          "label": "HW 9 — Integration & season-finale demo",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901651"
         },
         {
           "type": "exam",
@@ -2630,25 +2611,25 @@ window.SKILLS = {
       "category": "tools",
       "name": "CI with GitHub Actions",
       "can": "You can write a workflow that installs and runs the suite on every push, explain triggers, jobs, steps and a version matrix, and use a required check as the gate on what enters main.",
-      "introduced": 8,
+      "introduced": 9,
       "practised": [],
       "depth": 3,
       "where": [
         {
           "type": "deck",
-          "session": 8,
-          "label": "Deck Week 8 · slides 12–13"
+          "session": 9,
+          "label": "Deck Week 9a · slides 12–13"
         },
         {
           "type": "lab",
-          "session": 8,
-          "label": "Lab 8 · part 8 — The CI workflow you will commit in HW 8",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-8-ci-slash-cd-testing-and-the-dashboard"
+          "session": 9,
+          "label": "Lab 9a · part 8 — The CI workflow you will commit in HW 9",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189602"
         },
         {
           "type": "hw",
-          "label": "HW 8 — CI/CD, testing & a bot you trust",
-          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901650"
+          "label": "HW 9 — Integration & season-finale demo",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901651"
         },
         {
           "type": "project",
@@ -2667,19 +2648,19 @@ window.SKILLS = {
       "category": "tools",
       "name": "Containers & pinned reproducibility",
       "can": "You can pin exact dependency versions, write a Dockerfile whose layers go stable-to-volatile so the install layer caches, and argue that the image is what makes 'works on my machine' a testable claim.",
-      "introduced": 8,
+      "introduced": 9,
       "practised": [],
       "depth": 3,
       "where": [
         {
           "type": "deck",
-          "session": 8,
-          "label": "Deck Week 8 · slide 14"
+          "session": 9,
+          "label": "Deck Week 9a · slide 14"
         },
         {
           "type": "hw",
-          "label": "HW 8 — CI/CD, testing & a bot you trust",
-          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901650"
+          "label": "HW 9 — Integration & season-finale demo",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901651"
         },
         {
           "type": "project",
@@ -2698,25 +2679,25 @@ window.SKILLS = {
       "category": "tools",
       "name": "Logs, metrics & a live dashboard",
       "can": "You can separate structured logs (discrete events with context) from metrics (numbers over time), split plain config from secrets that never enter the image, and read a dashboard for the vital signs of a running session.",
-      "introduced": 8,
+      "introduced": 9,
       "practised": [],
       "depth": 3,
       "where": [
         {
           "type": "deck",
-          "session": 8,
-          "label": "Deck Week 8 · slides 15, 18"
+          "session": 9,
+          "label": "Deck Week 9a · slides 15, 18"
         },
         {
           "type": "lab",
-          "session": 8,
-          "label": "Lab 8 · part 9 — Read the dashboard against a local exchange",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-8-ci-slash-cd-testing-and-the-dashboard"
+          "session": 9,
+          "label": "Lab 9a · part 9 — Read the dashboard against a local exchange",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189602"
         },
         {
           "type": "hw",
-          "label": "HW 8 — CI/CD, testing & a bot you trust",
-          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901650"
+          "label": "HW 9 — Integration & season-finale demo",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901651"
         },
         {
           "type": "project",
@@ -2742,13 +2723,13 @@ window.SKILLS = {
         {
           "type": "deck",
           "session": 9,
-          "label": "Deck Week 9 · slides 3, 8, 18"
+          "label": "Deck Week 9b · slides 3, 8, 18"
         },
         {
           "type": "lab",
           "session": 9,
-          "label": "Lab 9 · part 2 — Drill 1 — kill the feed",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-9-integration-failure-drills-and-the-demo"
+          "label": "Lab 9b · part 2 — Drill 1 — kill the feed",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189605"
         },
         {
           "type": "hw",
@@ -2779,13 +2760,13 @@ window.SKILLS = {
         {
           "type": "deck",
           "session": 9,
-          "label": "Deck Week 9 · slides 12, 19"
+          "label": "Deck Week 9b · slides 12, 19"
         },
         {
           "type": "lab",
           "session": 9,
-          "label": "Lab 9 · part 5 — Why the season score is risk-adjusted",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-9-integration-failure-drills-and-the-demo"
+          "label": "Lab 9b · part 5 — Why the season score is risk-adjusted",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189605"
         },
         {
           "type": "hw",
@@ -2816,13 +2797,13 @@ window.SKILLS = {
         {
           "type": "deck",
           "session": 9,
-          "label": "Deck Week 9 · slides 13, 17"
+          "label": "Deck Week 9b · slides 13, 17"
         },
         {
           "type": "lab",
           "session": 9,
-          "label": "Lab 9 · part 5 — Why the season score is risk-adjusted",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-9-integration-failure-drills-and-the-demo"
+          "label": "Lab 9b · part 5 — Why the season score is risk-adjusted",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189605"
         },
         {
           "type": "hw",
@@ -2853,13 +2834,13 @@ window.SKILLS = {
         {
           "type": "deck",
           "session": 9,
-          "label": "Deck Week 9 · slides 3, 18"
+          "label": "Deck Week 9b · slides 3, 18"
         },
         {
           "type": "lab",
           "session": 9,
-          "label": "Lab 9 · part 4 — Reconcile your ledger against the exchange's",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-9-integration-failure-drills-and-the-demo"
+          "label": "Lab 9b · part 4 — Reconcile your ledger against the exchange's",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189605"
         },
         {
           "type": "hw",
@@ -2885,8 +2866,8 @@ window.SKILLS = {
         {
           "type": "lab",
           "session": 9,
-          "label": "Lab 9 · part 4 — Reconcile your ledger against the exchange's",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-9-integration-failure-drills-and-the-demo"
+          "label": "Lab 9b · part 4 — Reconcile your ledger against the exchange's",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189605"
         },
         {
           "type": "hw",
@@ -2917,13 +2898,13 @@ window.SKILLS = {
         {
           "type": "deck",
           "session": 9,
-          "label": "Deck Week 9 · slide 8"
+          "label": "Deck Week 9b · slide 8"
         },
         {
           "type": "lab",
           "session": 9,
-          "label": "Lab 9 · part 3 — Drill 2 — kill the venue, then bring it back",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-9-integration-failure-drills-and-the-demo"
+          "label": "Lab 9b · part 3 — Drill 2 — kill the venue, then bring it back",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189605"
         },
         {
           "type": "hw",
@@ -2949,13 +2930,13 @@ window.SKILLS = {
         {
           "type": "deck",
           "session": 9,
-          "label": "Deck Week 9 · slides 9, 14"
+          "label": "Deck Week 9b · slides 9, 14"
         },
         {
           "type": "lab",
           "session": 9,
-          "label": "Lab 9 · part 7 — The postmortem skeleton",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-9-integration-failure-drills-and-the-demo"
+          "label": "Lab 9b · part 7 — The postmortem skeleton",
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189605"
         },
         {
           "type": "hw",

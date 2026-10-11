@@ -68,7 +68,9 @@ missing, or is missing a particular session, that session page still renders its
      and of a catalogue dot is the category's own `color`.
    - `sessions` — one per class meeting, `{ n, date (YYYY-MM-DD), title, decks[], lab, hw, project,
      exam, companion_url, skills[] }` where `skills` holds skill ids in teaching order. **`n` may start at
-     0** (or anywhere), dates may be any ISO dates, and there may be any number of sessions.
+     0** (or anywhere), dates may be any ISO dates, and there may be any number of sessions. `lab`, `hw`
+     and `project` are one object or a list of them (a merged session can carry two labs), and a
+     session may have no decks and no skills (an exam-only week).
    - `skills` — `{ id, category, name, can, introduced, practised[], depth (1–3), where[], interview }`
 
 2. **Data file 2 — `focus.js`.** Must define exactly one global, `window.FOCUS`:
@@ -91,6 +93,7 @@ missing, or is missing a particular session, that session page still renders its
        `course.lang` when there is no deck), `deck` is a small chip
      - `hft` — `{ paragraphs[] (or text), example?: { title, code, text } }` → the
        *"why this matters"* section, closing with the optional *"In the arena"* card
+       (`example` may also be a list: one card each)
      - `interview[]` — 6–8 items, `{ q, a, level: "warm-up" | "core" | "senior", skill? }`.
        `a` is plain text; a fenced block delimited by ``` inside it is rendered as a code block.
        `skill` is a skill id from `skills.js` and adds a *related skill* link that jumps to that row of

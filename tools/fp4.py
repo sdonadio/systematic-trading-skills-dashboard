@@ -1,4 +1,8 @@
-"""focus.js session objects for FINM 33500 — sessions 8 and 9.
+"""focus.js session objects for FINM 33500 — the two parts of Session 9.
+
+Resequenced 2026-10-11: the old Sessions 8 (CI/CD, s8 = part 9a, cited as
+"Deck Week 9a") and 9 (integration & finale, s9 = part 9b, "Deck Week 9b") are
+taught together on Fri Dec 4; tools/build_focus.py merges them into one entry.
 
 Grounded in deck_w8.txt / deck_w9.txt, labs/week08.md / week09.md, the
 session 8 and 9 speaker guides, and the AlgoArena repo itself.
@@ -7,14 +11,14 @@ are the real captured stdout.
 """
 
 s8 = {
-    "n": 8,
+    "n": 9,  # part 9a (source week 8)
     "focus": "CI/CD, testing & reproducibility",
     "tagline": "A green run on your laptop proves nothing — the bar is 1,286 tests in twenty seconds, seeded, network-free, and running the same way on a clean runner.",
     "concepts": [
         {
             "title": "Push the logic down the pyramid, and read the coverage report",
             "text": "Many fast unit tests at the base, a few integration tests above them, a handful of end-to-end runs at the top. A unit test drives one function with no I/O in milliseconds; an integration test wires a couple of pieces together with no network; an end-to-end run drives a whole session and tells you that something broke rather than what. The numbers make the argument: the platform's suite is 1,286 tests in about 20 seconds, and test_orderbook.py plus test_arena_sdk.py alone is 82 tests in 0.13 seconds. Coverage then tells you where the holes are, not how good the tests are — it proves execution, not correctness, so the Missing column is the useful part. Where to aim high is a design decision: shared/orderbook.py is held at 100% because a wrong fill corrupts every downstream P&L.",
-            "deck": "Deck Week 8 · slides 5, 10",
+            "deck": "Deck Week 9a · slides 5, 10",
         },
         {
             "title": "A test is a function, an assert, and a name",
@@ -31,7 +35,7 @@ for name, fn in sorted(globals().items()):
     if name.startswith("test_"): fn(); print(name, "passed")
 # test_flat_on_no_trend passed
 # test_long_on_uptrend passed""",
-            "deck": "Deck Week 8 · slide 6",
+            "deck": "Deck Week 9a · slide 6",
         },
         {
             "title": "Fixtures and parametrize make the input space visible",
@@ -46,7 +50,7 @@ cases = [([100 + i * .5 for i in range(30)], 1), ([100.0] * 30, 0),
 bad = [(p[:2], want, momentum(p)) for p, want in cases if momentum(p) != want]
 print(f"{len(cases) - len(bad)}/{len(cases)} cases pass", bad)
 # 5/5 cases pass []""",
-            "deck": "Deck Week 8 · slide 7",
+            "deck": "Deck Week 9a · slide 7",
         },
         {
             "title": "Mock the boundary, test the logic",
@@ -63,7 +67,7 @@ async def test_no_order_on_a_dead_book():
     assert edge(FakeMarket(), "AAPL") is None; print("dead book -> no order")
 asyncio.run(test_no_order_on_a_dead_book())
 # dead book -> no order""",
-            "deck": "Deck Week 8 · slide 8",
+            "deck": "Deck Week 9a · slide 8",
         },
         {
             "title": "Determinism is what makes CI possible",
@@ -79,7 +83,7 @@ random.seed(0); a, b = session(), session()
 print("unseeded runs agree:", a == b)
 # seeded runs agree : True
 # unseeded runs agree: False""",
-            "deck": "Deck Week 8 · slide 9",
+            "deck": "Deck Week 9a · slide 9",
         },
         {
             "title": "Pin, isolate, containerise — and the pipeline is the gate",
@@ -92,7 +96,7 @@ print(len(jobs), "runners from one job definition")
 # runner: {'python': '3.11', 'os': 'ubuntu-latest'}
 # runner: {'python': '3.12', 'os': 'ubuntu-latest'}
 # 2 runners from one job definition""",
-            "deck": "Deck Week 8 · slides 12–15",
+            "deck": "Deck Week 9a · slides 12–15",
         },
     ],
     "hft": {
@@ -177,14 +181,14 @@ class TestResting:
 }
 
 s9 = {
-    "n": 9,
+    "n": 9,  # part 9b (source week 9)
     "focus": "Integration & the live system",
     "tagline": "Every part passed its own tests; integration asks whether they honour each other's contracts while the leaderboard scores risk rather than return.",
     "concepts": [
         {
             "title": "Integration correctness is a different claim",
             "text": "Unit correctness says each object honours its own contract in isolation, and 1,286 tests establish that here. Integration correctness says the objects honour each other's contracts, wired together, live, under load. The properties that decide it — timing, ordering, back-pressure, shared state — are emergent and invisible to any single unit test. The classic seam bugs are ordering bugs: the signal fires faster than risk can veto it, a fill arrives before its ack, two messages race on the book, one side sends price as a float while the other rounds to ticks and both are individually correct. Test the conversation, not just the speakers.",
-            "deck": "Deck Week 9 · slide 5",
+            "deck": "Deck Week 9b · slide 5",
         },
         {
             "title": "The wire contract is the integration contract",
@@ -201,7 +205,7 @@ sent = PortfolioUpdate(team_id="t1", positions={"AAPL": 3},
 back = PortfolioUpdate.model_validate(json.loads(sent.model_dump_json()))
 print("round-trip identical:", back == sent, back.positions)
 # round-trip identical: True {'AAPL': 3}""",
-            "deck": "Deck Week 9 · slide 6",
+            "deck": "Deck Week 9b · slide 6",
         },
         {
             "title": "Live systems fail partially, not all at once",
@@ -216,7 +220,7 @@ f, ticks = Feed(), [100.0, 100.2, 100.2, 100.2, 100.2, 100.2]
 ages = [f.see(px, t) for t, px in enumerate(ticks, start=1)]
 print("ages", ages, "| stale from tick", 1 + next(i for i, a in enumerate(ages) if a > 2))
 # ages [1, 0, 1, 2, 3, 4] | stale from tick 5""",
-            "deck": "Deck Week 9 · slide 8",
+            "deck": "Deck Week 9b · slide 8",
         },
         {
             "title": "Reconnect, then re-sync: the venue owns the truth",
@@ -233,7 +237,7 @@ print("after re-sync, agree:", shadow == venue)
 # before the drop, agree: True
 # RECON MISMATCH AAPL: shadow=0 venue=3
 # after re-sync, agree: True""",
-            "deck": "Deck Week 9 · slides 8–9",
+            "deck": "Deck Week 9b · slides 8–9",
         },
         {
             "title": "The tearsheet: read the curve, then the numbers",
@@ -248,7 +252,7 @@ print(f"return {ret:+.2%} vol {pstdev(r):.4f} sharpe {mean(r) / pstdev(r):.2f}")
 print(f"maxDD {mdd:.2%} calmar {ret / mdd:.1f}")
 # return +5.20% vol 0.0090 sharpe 0.94
 # maxDD 0.40% calmar 13.2""",
-            "deck": "Deck Week 9 · slide 12",
+            "deck": "Deck Week 9b · slide 12",
         },
         {
             "title": "Risk-adjusted scoring: the steady book wins",
@@ -265,7 +269,7 @@ jagged = [100_000, 118_000, 96_000, 121_000, 99_000, 125_000, 101_000,
 for n, e in (("steady", steady), ("jagged", jagged)): s, d = score(e); print(f"{n} score {s:+.3f} maxDD {d:.2%} ret {e[-1] / e[0] - 1:+.2%}")
 # steady score +10.000 maxDD 0.00% ret +12.68%
 # jagged score +0.091 maxDD 19.20% ret +12.68%""",
-            "deck": "Deck Week 9 · slides 13, 17",
+            "deck": "Deck Week 9b · slides 13, 17",
         },
     ],
     "hft": {

@@ -1,11 +1,14 @@
-"""Focus content for FINM 33500 sessions 6 and 7 (window.FOCUS slice).
+"""Focus content for FINM 33500 sessions 7 and 8 (window.FOCUS slice).
 
-Session 6 — Big data & distributed compute   (deck week 6, 22 slides)
-Session 7 — Machine-learning signals & model ops (deck week 7, 22 slides)
+Session 7 — Big data & distributed compute   (source deck week 6, 22 slides)
+Session 8 — Machine-learning signals & model ops (source deck week 7, 22 slides)
+
+Resequenced 2026-10-11: these were Sessions 6 and 7; the variable names s6/s7
+keep the source week. Deck labels cite the new week numbers (Deck Week 7/8).
 """
 
 s6 = {
-    "n": 6,
+    "n": 7,
     "focus": "Big data & distributed compute",
     "tagline": "Store data in columns, process it in chunks, and fan the backtest out over processes — so you can search a strategy space instead of running one config.",
     "concepts": [
@@ -21,7 +24,7 @@ print("rows", len(wide), "| lean at least 3x smaller:", w > 3 * l)
 print("dtypes", lean.symbol.dtype, lean.mid.dtype, "| codes", lean.symbol.cat.codes.dtype)
 # rows 100000 | lean at least 3x smaller: True
 # dtypes category float32 | codes int8""",
-            "deck": "Deck Week 6 · slide 5",
+            "deck": "Deck Week 7 · slide 5",
         },
         {
             "title": "Rows versus columns — CSV against Parquet",
@@ -38,7 +41,7 @@ with tempfile.TemporaryDirectory() as d:
     print("columns touched:", list(two.columns))
 # parquet smaller: True | csv returns float64 | parquet keeps float32
 # columns touched: ['ts', 'mid']""",
-            "deck": "Deck Week 6 · slide 6",
+            "deck": "Deck Week 7 · slide 6",
         },
         {
             "title": "Chunk it, reduce as you go, carry the state",
@@ -54,7 +57,7 @@ while blk := list(itertools.islice(src, 4_096)):       # bounded chunks
             tot += sum(win) / 20; n += 1
 print("sma samples", n, "| mean of 20-bar SMA", round(tot / n, 4))
 # sma samples 19981 | mean of 20-bar SMA 103.0""",
-            "deck": "Deck Week 6 · slides 8–9",
+            "deck": "Deck Week 7 · slides 8–9",
         },
         {
             "title": "Scale up first, then out — and use processes",
@@ -71,12 +74,12 @@ if __name__ == "__main__":         # mandatory: every worker re-imports this fil
     print("parallel == sequential:", par == dict(map(cycles, [5, 10, 20, 40])))
 # {5: 12733, 10: 6367, 20: 3184, 40: 1592}
 # parallel == sequential: True""",
-            "deck": "Deck Week 6 · slides 11–12",
+            "deck": "Deck Week 7 · slides 11–12",
         },
         {
             "title": "Map, reduce, shard — and what will not shard",
             "text": "The mental model behind every scale-out: apply the same function to each independent piece (map), then combine the partials (reduce), with a shard key chosen so the pieces really are independent — per symbol, per date range, per parameter. Parameter sweeps and per-symbol backtests are embarrassingly parallel: nothing is shared, so you just collect results. A stateful order book is not. Matching depends on the order of arrivals, so sharding it blindly changes the answer; dependencies force coordination. Measure the win rather than assuming n_cores: the lab's byte-range map-reduce over ten shards returned 2.1x, because process start-up, pickling partials and one shared disk all take their cut.",
-            "deck": "Deck Week 6 · slides 13–14",
+            "deck": "Deck Week 7 · slides 13–14",
         },
         {
             "title": "Idempotency and reproducibility under fan-out",
@@ -92,7 +95,7 @@ print(a)
 print("re-run is a no-op:", a == b, "| new config, new file:", a != c)
 # sweep_b2945585.parquet
 # re-run is a no-op: True | new config, new file: True""",
-            "deck": "Deck Week 6 · slide 15",
+            "deck": "Deck Week 7 · slide 15",
         },
     ],
     "hft": {
@@ -100,7 +103,7 @@ print("re-run is a no-op:", a == b, "| new config, new file:", a != c)
         "paragraphs": [
             "Scale is what separates a strategy from a search. One backtest tells you whether one lookback worked on one tape; a sweep tells you whether the edge exists across a neighbourhood of parameters, which is the only version worth trading. That is why the week-6 deliverable is a parallel sweep with one run per configuration and a Sharpe collected per point, and why the headless sim is built to be fanned out: SimSession().run() is pure and in-process with no sockets, so twenty of them can run at once.",
             "The pipeline splits in two at a hard seam. Offline you build features — returns, rolling means, rolling vol — and cache them to Parquet; online your signal function reads the freshest rows of that frame and does arithmetic only. Get the seam wrong and you pay twice: a groupby-rolling inside on_tick blows the per-tick budget, and features computed differently offline and live give you a bot that was validated on numbers it never sees again.",
-            "Reproducibility is what makes an offline result believable. A sweep that cannot be re-run to the same numbers cannot be defended: pin seed=, pin the data version, pin the dtypes, and key every output on a hash of its inputs so a retried worker overwrites itself instead of double-counting. Log every configuration you tried, too — that count is what week 7 uses to deflate the best Sharpe you found, and a sweep is a very efficient way to try hundreds of things.",
+            "Reproducibility is what makes an offline result believable. A sweep that cannot be re-run to the same numbers cannot be defended: pin seed=, pin the data version, pin the dtypes, and key every output on a hash of its inputs so a retried worker overwrites itself instead of double-counting. Log every configuration you tried, too — that count is what week 8 uses to deflate the best Sharpe you found, and a sweep is a very efficient way to try hundreds of things.",
             "Costs are the reason you keep the whole tape rather than a sample. Fees, spread and slippage only show up when you replay every fill: the lab's stretch step ran the template's Level-1 random strategy over 250 000 snapshots and finished at $51,617 — a 48% loss, almost all of it fees. Column pruning is what makes that affordable; you read price, size and fee columns out of a multi-gigabyte recording and leave the rest on disk.",
             "Scaling out also means more sockets. Multi-venue has been live since week 1: set EXCHANGE_URLS to a comma-separated list and one bot connects to every venue. The broker's answer to that is one pricing brain and N execution gateways — the external reference is shared, while each venue's mark, resting orders and positions stay local. Live risk lives in that split, because a position is per venue but your exposure is not.",
         ],
@@ -182,7 +185,7 @@ if __name__ == "__main__":                 # required for multiprocessing
 }
 
 s7 = {
-    "n": 7,
+    "n": 8,
     "focus": "Machine-learning signals & model ops",
     "tagline": "A model is just another signal function: learn it offline, split in time so it cannot see the future, and load it once so predicting fits inside the per-tick budget.",
     "concepts": [
@@ -200,7 +203,7 @@ print("X", X.shape, "y", y.shape, "up-rate", round(float(y.mean()), 3))
 print("last labelled t", int(t[-1]), "of", len(mid) - 1, "- the tail has no label yet")
 # X (575, 2) y (575,) up-rate 0.386
 # last labelled t 594 of 599 - the tail has no label yet""",
-            "deck": "Deck Week 7 · slide 5",
+            "deck": "Deck Week 8 · slide 5",
         },
         {
             "title": "Features from prices and the book",
@@ -217,7 +220,7 @@ rows = np.array([X, X * 1.1, X * 0.9]); rows[:, 4] = 0.60   # one broker: obi ne
 print("dead features:", [n for n, s in zip(names, rows.std(0)) if s < 1e-12])
 # {'ret1': 0.0049, 'mom9': 0.016, 'vol9': 0.0031, 'spread_bps': 9.8425, 'obi': 0.6}
 # dead features: ['obi']""",
-            "deck": "Deck Week 7 · slide 6",
+            "deck": "Deck Week 8 · slide 6",
         },
         {
             "title": "Split in time, with an embargo",
@@ -234,7 +237,7 @@ shuf = nn1(X[p[:cut]], y[p[:cut]], X[p[cut:]], y[p[cut:]])
 hon = nn1(X[:cut - h], y[:cut - h], X[cut:], y[cut:])
 print(f"1-NN shuffled {shuf:.3f}  time+embargo {hon:.3f}  fake edge {shuf - hon:+.3f}")
 # 1-NN shuffled 0.602 time+embargo 0.526 fake edge +0.077""",
-            "deck": "Deck Week 7 · slide 11",
+            "deck": "Deck Week 8 · slide 11",
         },
         {
             "title": "Walk-forward validation is the only score to trust",
@@ -251,7 +254,7 @@ for i in range(1, 5):                                        # 4 expanding folds
     accs.append(round(float((np.sign(X[a:b] @ w) == y[a:b]).mean()), 3))
 print("folds", accs, "| mean", round(sum(accs) / 4, 3))
 # folds [0.527, 0.54, 0.593, 0.557] | mean 0.554""",
-            "deck": "Deck Week 7 · slide 12",
+            "deck": "Deck Week 8 · slide 12",
         },
         {
             "title": "Metrics that matter — accuracy is a trap",
@@ -267,7 +270,7 @@ print(f"hit {hit:.3f}  payoff {payoff:.2f}  gross {edge.mean() * 1e4:+.1f}bp"
 print("survives costs:", bool(edge.mean() > cost))
 # hit 0.550 payoff 1.09 gross +4.5bp net -25.5bp
 # survives costs: False""",
-            "deck": "Deck Week 7 · slide 14",
+            "deck": "Deck Week 8 · slide 14",
         },
         {
             "title": "Model ops — persist, serve, monitor, retrain",
@@ -284,7 +287,7 @@ z = ((np.array([0.001, 0.012, 0.005]) - mu) / sd) @ w + a["b"]
 print("v%d %s h=%d" % (a["version"], a["features"], a["horizon"]),
       "p_up %.4f" % (1 / (1 + np.exp(-z))), "| contract ok:", len(a["features"]) == len(w))
 # v1 ['ret1', 'mom10', 'vol20'] h=5 p_up 0.5379 | contract ok: True""",
-            "deck": "Deck Week 7 · slide 15 · Deck Week 7 · slide 18",
+            "deck": "Deck Week 8 · slide 15 · Deck Week 8 · slide 18",
         },
     ],
     "hft": {
@@ -293,7 +296,7 @@ print("v%d %s h=%d" % (a["version"], a["features"], a["horizon"]),
             "Machine learning replaces the signal, not the system. The model emits one number; your sizing, stop-loss, position limit and routing are unchanged, and the seam is the same one you have used all quarter — a signal_fn with the registry signature, or on_tick in the SDK. That is the whole integration: compute features from market and portfolio, call the model, and turn a probability into a Signal above a threshold or into None below it. Everything expensive stays offline, because the pipeline that produced last week's cached features is what trains it.",
             "Honesty is the entire deliverable here. Financial returns are mostly noise, so a 52% out-of-sample model can be excellent while a 90% in-sample one is worthless. Split in time, embargo the horizon, walk forward, report mean and dispersion, and look at the final test block once. Run the two controls the lab gives you: a shuffled-label run, which should collapse to a coin flip, and a random-walk symbol, where the honest answer is no edge. If the score survives both, you have something; if you tuned on the test block, you have a number with no meaning.",
             "Costs decide whether the edge is real. A model that is right 55% of the time and flips its view every tick pays the taker fee and half the spread on both legs, which on the arena's schedule is 15 bp each way against an edge measured in single basis points. So make the label fee-aware — only call the move up if it clears the round-trip cost — and score turnover alongside Sharpe. Many machine-learning signals are pure alpha in a backtest and pure transaction cost in a live session.",
-            "Live risk is mostly serving discipline. Load the artifact once in __init__ and do arithmetic per tick; if the file is missing or its feature list does not match what you compute, trade nothing and log it rather than crashing mid-session. Measure predict() against the per-tick budget and against the order quota — eight messages per tick in week 7 — because a model that blocks the loop misses the market it just predicted. Then monitor drift: score your own predictions h ticks later and log a rolling live hit rate. Two standard errors below the training number for a whole session means the artifact is stale.",
+            "Live risk is mostly serving discipline. Load the artifact once in __init__ and do arithmetic per tick; if the file is missing or its feature list does not match what you compute, trade nothing and log it rather than crashing mid-session. Measure predict() against the per-tick budget and against the order quota — eight messages per tick from season week 7 on — because a model that blocks the loop misses the market it just predicted. Then monitor drift: score your own predictions h ticks later and log a rolling live hit rate. Two standard errors below the training number for a whole session means the artifact is stale.",
             "Features have to be identical offline and live or you have leaked. The lab drops obi for exactly that reason: it has zero variance in the simulated tape and MarketData cannot hand it to you live anyway. Write the feature function once, call it from both the training script and on_tick, and validate the recorded feature list on load. The bot you walk-forward validate in sim/session.py is the bot that competes in the season, unchanged.",
         ],
         "example": {

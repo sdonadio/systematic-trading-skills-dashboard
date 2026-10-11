@@ -1,4 +1,7 @@
-"""FOCUS slices for FINM 33500 sessions 3, 4 and 5.
+"""FOCUS slices for FINM 33500 sessions 3, 4 and 6.
+
+Resequenced 2026-10-11: the complexity session (source week 5) is taught in
+Session 6; its deck labels cite "Deck Week 6".
 
 Every `code` snippet in this module was executed with python3 (3.13) and its
 trailing `#` comment lines are the real captured stdout.
@@ -434,9 +437,9 @@ print(f"FIX  sig[t-1] * ret[t]  Sharpe {sharpe(sig.shift(1) * ret):+.2f}")
     ],
 },
 
-# ─────────────────────────────────────────────────────────────── session 5 ──
+# ─────────────────────────────────────────────────────────────── session 6 ──
 {
-    "n": 5,
+    "n": 6,
     "focus": "Algorithmic complexity & data structures",
     "tagline": "Choose the container by the operation you repeat most: a heap plus a dict answers 'best bid?' in O(1) while a re-sorted list burns 475 times more for the identical answer.",
     "concepts": [
@@ -451,12 +454,12 @@ t_scan = per("n in xs", 200)           # O(n) linear scan, worst case
 print(f"dict {t_dict * 1e6:.3f} us   list scan {t_scan * 1e6:.1f} us   ~{t_scan / t_dict:.0f}x")
 print("O(1) beats O(n) at n=100k:", t_dict < t_scan)
 # O(1) beats O(n) at n=100k: True""",
-            "deck": "Deck Week 5 · slides 5–7",
+            "deck": "Deck Week 6 · slides 5–7",
         },
         {
             "title": "Pick the container by the question you ask most",
             "text": "Four structures carry most trading code. A dict answers 'what is X?' — order id to Order, symbol to price — in O(1) average, and it is the canonical live set. A set answers 'have I seen X?' with the same hashing and no values. A deque appends and pops at both ends in O(1), and deque(maxlen=k) gives a fixed rolling window that evicts the oldest for free. A heap answers 'best of many': O(log n) push and pop, O(1) peek at the minimum. Know the trade against space as well — a lookup table buys time with memory — and that list.append is O(1) amortised because the occasional resize averages out over cheap appends.",
-            "deck": "Deck Week 5 · slides 7–8",
+            "deck": "Deck Week 6 · slides 7–8",
         },
         {
             "title": "O(1) rolling statistics beat recomputing",
@@ -473,7 +476,7 @@ px = [100 + (i % 97) * 0.01 for i in range(5_000)]; w = Welford()
 for p in px: w.update(p)
 print("ticks:", w.n, "| var matches recompute:", abs(w.var() - statistics.variance(px)) < 1e-9)
 # ticks: 5000 | var matches recompute: True""",
-            "deck": "Deck Week 5 · slides 9–10",
+            "deck": "Deck Week 6 · slides 9–10",
         },
         {
             "title": "The order book is a heap plus a dict",
@@ -490,7 +493,7 @@ del orders[1]                                  # cancel == one O(1) dict delete
 print("after cancel:", best_bid(), "| heap entries left:", len(bids))
 # best bid, front order: (100.03, 1)
 # after cancel: (100.03, 2) | heap entries left: 2""",
-            "deck": "Deck Week 5 · slide 11 · slide 18",
+            "deck": "Deck Week 6 · slide 11 · slide 18",
         },
         {
             "title": "Measure, then optimise",
@@ -502,7 +505,7 @@ per = [t / 20_000 * 1e6 for t in runs]
 print(f"min {min(per):.3f} us   mean {sum(per) / len(per):.3f} us   max {max(per):.3f} us")
 print("min <= mean (noise only ever adds time):", min(per) <= sum(per) / len(per))
 # min <= mean (noise only ever adds time): True""",
-            "deck": "Deck Week 5 · slides 13–14",
+            "deck": "Deck Week 6 · slides 13–14",
         },
         {
             "title": "Latency, throughput and the tail that gets you picked off",
@@ -518,7 +521,7 @@ print(f"mean {statistics.mean(lat):6.2f} us   p50 {pct(.50):5.2f} us"
 print("mean hides the tail:", statistics.mean(lat) < pct(.99) / 10)
 # mean 5.15 us p50 3.77 us p95 4.26 us p99 140.04 us
 # mean hides the tail: True""",
-            "deck": "Deck Week 5 · slide 16",
+            "deck": "Deck Week 6 · slide 16",
         },
     ],
     "hft": {
@@ -527,7 +530,7 @@ print("mean hides the tail:", statistics.mean(lat) < pct(.99) / 10)
             "A slow signal is not a signal. Prices move while you compute, so the per-tick budget is the real constraint on the signal-to-order pipeline: whatever on_tick spends is time the book had to move against the decision it is about to produce. The lab makes the cost visible without changing a single trading rule. FastBot keeps its statistics over a fixed window and runs at p50 3.33 microseconds, p99 7.38; SlowBot computes the same signal by rescanning full history and runs at p50 71.58, p99 145.04. Same fills, same edge, twenty times the latency — and SlowBot's median keeps climbing all session because its cost is O(n) in history.",
             "The order book is where the theory is load-bearing. shared/orderbook.py holds two min-heaps of (price, seq, order_id) plus a canonical dict, so best_bid measured 0.075 microseconds and stayed dead flat from 1,000 to 100,000 resting orders — a lazy heap clean followed by an O(1) peek, on the operation the venue repeats most. get_snapshot is the counterexample: it aggregates price levels by iterating _orders, so it went from 96 microseconds to 8,461 across the same range, exactly linear, and the exchange calls it on every broadcast. Knowing which of your reads is which separates a venue that holds up under load from one that does not.",
             "Tail latency is a live-risk control, not a vanity metric. The p99 arrives during a shock burst, when ticks come fastest and the book is moving most, which is precisely when a stale quote gets taken. For a market maker that is adverse selection, and it shows up in TCA as fills that sit systematically on the wrong side of the next mid: a rebate does not cover a spread you quoted against a price that no longer exists. Cancel latency has the same shape — a requote you cannot land in time is a free option you have written to the fastest taker in the session.",
-            "Complexity also decides what you can honestly test. An O(n squared) per-session statistic makes a 20,000-tick backtest take twelve seconds, which is enough to stop you running the parameter sweeps and walk-forward windows that would have caught the overfit. Welford and the full recompute agree on the variance to floating-point precision; the only difference is the curve. Fast, correct hot paths are what buy you the number of honest runs, and they are the same paths week 6 goes on to distribute.",
+            "Complexity also decides what you can honestly test. An O(n squared) per-session statistic makes a 20,000-tick backtest take twelve seconds, which is enough to stop you running the parameter sweeps and walk-forward windows that would have caught the overfit. Welford and the full recompute agree on the variance to floating-point precision; the only difference is the curve. Fast, correct hot paths are what buy you the number of honest runs, and they are the same paths week 7 goes on to distribute.",
             "This session also carries the midterm: 30 multiple-choice questions in 90 minutes, one attempt, closed book, drawn from weeks 1 to 5. It rewards exactly the vocabulary above — naming the complexity class of an operation, choosing the container that matches the question you repeat most, and reading a percentile table rather than a mean. The homework that follows has you build an order book from scratch and defend it with a written complexity table and a benchmark, so treat tonight's measurements as the reference you will be held to.",
         ],
         "example": {

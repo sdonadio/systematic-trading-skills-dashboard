@@ -10,6 +10,12 @@ Deviations from the Columbia reference validator:
   * labs are Canvas PAGES (verified against the live pages listing) and the
     cited part number must exist in the lab's markdown source
   * hw / project urls must be a published Canvas assignment on course 74211
+
+Resequence 2026-10-11: Session 5 is the midterm only (no deck, no lab, no
+skills); Sessions 6..8 teach source weeks 5..7; Session 9 merges source weeks
+8 and 9 as parts "9a" and "9b". SOURCE_WEEK maps each cited deck/lab key to
+the weekN.pptx / labs/weekNN.md it was built from (same table as
+tools/build_skills.py). Lab urls may be Canvas module-item urls.
 """
 import collections
 import json
@@ -55,12 +61,31 @@ for f in os.listdir(ROOT):
             re.findall(r"^--- %s slide (\d+) ---$" % m.group(1), txt, re.M)]
     deck_len[m.group(1)] = max(nums)
 
+# cited key -> source week of the material (2026-10-11 resequence)
+SOURCE_WEEK = {"0": 0, "1": 1, "2": 2, "3": 3, "4": 4, "6": 5, "7": 6, "8": 7,
+               "9a": 8, "9b": 9}
+SESSION_DECKS = {0: ["w0"], 1: ["w1"], 2: ["w2"], 3: ["w3"], 4: ["w4"], 5: [],
+                 6: ["w6"], 7: ["w7"], 8: ["w8"], 9: ["w9a", "w9b"]}
+MIDTERM_ONLY = {5}               # no class, no deck, no lab, no new skills
+
+
+def src_deck(key):
+    """'9a' -> 'w8': the extracted deck text a citation is checked against."""
+    return "w%d" % SOURCE_WEEK[key]
+
+
 DECK_FILE = {"w0": "week0_smoketest.pptx"}
 for i in range(1, 10):
     DECK_FILE["w%d" % i] = "week%d.pptx" % i
 
 # live Canvas pages + published assignments (fetched to raw/)
 pages = {p["html_url"] for p in json.load(open(os.path.join(RAW, "pages.json")))}
+# module items that point at a live page (a lab link may be a module-item url)
+pages |= {it["html_url"]
+          for m in json.load(open(os.path.join(RAW, "modules.json")))
+          for it in m.get("items", [])
+          if it.get("type") == "Page" and
+          CANVAS + "/pages/" + str(it.get("page_url")) in pages}
 assns = {a["html_url"]: a["name"]
          for a in json.load(open(os.path.join(RAW, "assignments.json")))
          if a.get("published")}
@@ -110,29 +135,32 @@ for s in sess:
     chk(bool(re.fullmatch(r"20\d\d-\d\d-\d\d", s.get("date", ""))),
         "session %s bad date %r" % (n, s.get("date")))
     chk(bool(s.get("title")), "session %s missing title" % n)
-    chk(s.get("decks") == ["w%d" % n],
-        "session %s must teach deck w%d, got %r" % (n, n, s.get("decks")))
+    chk(s.get("decks") == SESSION_DECKS[n],
+        "session %s must teach decks %r, got %r" % (n, SESSION_DECKS[n], s.get("decks")))
     for d in s["decks"]:
-        chk(os.path.exists(os.path.join(DECK_DIR, DECK_FILE[d])),
+        chk(os.path.exists(os.path.join(DECK_DIR, DECK_FILE[src_deck(d[1:])])),
             "session %s deck file for %s missing" % (n, d))
     chk(s.get("exam") in (None, "midterm", "final"), "session %s bad exam" % n)
     want = ("https://sdonadio.github.io/systematic-trading-arena/"
             + ("" if n == 0 else "week%d.html" % n))
     chk(s["companion_url"] == want,
         "session %s companion_url %r != %r" % (n, s["companion_url"], want))
-    if s.get("lab") is not None:
-        chk(set(s["lab"]) == {"label", "url"}, "session %s lab odd keys" % n)
-        chk(s["lab"]["url"] in pages,
+    labs = s.get("lab")
+    labs = labs if isinstance(labs, list) else ([labs] if labs else [])
+    chk(not (labs and n in MIDTERM_ONLY), "session %s is the midterm only: no lab" % n)
+    for lb in labs:
+        chk(set(lb) == {"label", "url"}, "session %s lab odd keys" % n)
+        chk(lb["url"] in pages,
             "session %s lab url is not a live Canvas page" % n)
     for key in ("hw", "project"):
-        v = s.get(key)
-        if v is None:
-            continue
-        chk(set(v) == {"label", "url", "due"}, "session %s %s odd keys" % (n, key))
-        chk(v["url"] in assns,
-            "session %s %s url is not a published assignment" % (n, key))
-        chk(bool(re.fullmatch(r"20\d\d-\d\d-\d\d", v["due"])),
-            "session %s %s due %r malformed" % (n, key, v["due"]))
+        vs = s.get(key)
+        # the merged Session 9 carries two project phases -> a list
+        for v in (vs if isinstance(vs, list) else ([vs] if vs else [])):
+          chk(set(v) == {"label", "url", "due"}, "session %s %s odd keys" % (n, key))
+          chk(v["url"] in assns,
+              "session %s %s url is not a published assignment" % (n, key))
+          chk(bool(re.fullmatch(r"20\d\d-\d\d-\d\d", v["due"])),
+              "session %s %s due %r malformed" % (n, key, v["due"]))
 chk([s["exam"] for s in sess if s["exam"]] == ["midterm", "final"],
     "expected one midterm then one final")
 chk(sess[5]["exam"] == "midterm", "the midterm is in session 5")
@@ -145,8 +173,8 @@ chk(len(ids) == len(set(ids)), "duplicate skill ids: %r" %
 chk(50 <= len(skills) <= 80, "want 50-80 skills, got %d" % len(skills))
 by_id = {k["id"]: k for k in skills}
 ORDER = ["deck", "lab", "hw", "project", "exam"]
-DECK_RE = re.compile(r"^Deck Week (\d+) · (slide|slides) ([\d,– ]+)$")
-LAB_RE = re.compile(r"^Lab (\d+) · (?:part|step) (\d+) — .+$")
+DECK_RE = re.compile(r"^Deck Week (\d+[ab]?) · (slide|slides) ([\d,– ]+)$")
+LAB_RE = re.compile(r"^Lab (\d+[ab]?) · (?:part|step) (\d+) — .+$")
 
 for k in skills:
     sid = k["id"]
@@ -187,10 +215,11 @@ for k in skills:
                 "%s cites a deck from session %r, which is neither introduced "
                 "nor practised" % (sid, w.get("session")))
             if m:
-                chk(int(m.group(1)) == w["session"],
+                chk(int(m.group(1)[0]) == w["session"]
+                    and m.group(1) in SOURCE_WEEK,
                     "%s deck label week %s != where session %s"
                     % (sid, m.group(1), w["session"]))
-                dk = "w%s" % m.group(1)
+                dk = src_deck(m.group(1)) if m.group(1) in SOURCE_WEEK else "w?"
                 for part in m.group(3).split(","):
                     for num in part.strip().split("–"):
                         num = num.strip()
@@ -205,12 +234,13 @@ for k in skills:
                 "nor practised" % (sid, w.get("session")))
             chk(w["url"] in pages, "%s lab url is not a live Canvas page" % sid)
             if m:
-                ln, part = int(m.group(1)), int(m.group(2))
-                chk(ln == w["session"],
-                    "%s lab %d cited under session %s" % (sid, ln, w["session"]))
+                key, part = m.group(1), int(m.group(2))
+                ln = SOURCE_WEEK.get(key)
+                chk(int(key[0]) == w["session"] and ln is not None,
+                    "%s lab %s cited under session %s" % (sid, key, w["session"]))
                 chk(part in lab_parts.get(ln, set()),
-                    "%s cites Lab %d part %d, which does not exist (parts %r)"
-                    % (sid, ln, part, sorted(lab_parts.get(ln, []))))
+                    "%s cites Lab %s part %d, which does not exist (parts %r)"
+                    % (sid, key, part, sorted(lab_parts.get(ln, []))))
         elif t in ("hw", "project"):
             chk(w["url"] in assns,
                 "%s %s url %r is not a published assignment" % (sid, t, w["url"]))
@@ -238,8 +268,11 @@ for s in sess:
         "session %d has duplicate skill ids" % s["n"])
     for sid in s["skills"]:
         chk(sid in by_id, "session %d lists unknown skill %s" % (s["n"], sid))
-    chk(5 <= len(s["skills"]) <= 14,  # raised 2026-10-11 at the instructor's request (was 9; Session 2 has 14, Session 3 has 12)
-        "session %d has %d skills (want 5-14)" % (s["n"], len(s["skills"])))
+    if s["n"] in MIDTERM_ONLY:   # 2026-10-11: the midterm week teaches nothing new
+        chk(not s["skills"], "session %d is the midterm only: no skills" % s["n"])
+        continue
+    chk(5 <= len(s["skills"]) <= 17,  # raised 2026-10-11 at the instructor's request (was 9, then 14; Session 2 has 14, the merged Session 9 has 17)
+        "session %d has %d skills (want 5-17)" % (s["n"], len(s["skills"])))
 for k in skills:
     want = {k["introduced"]} | set(k["practised"])
     got = {s["n"] for s in sess if k["id"] in s["skills"]}
@@ -286,10 +319,10 @@ for s in sess:
     intro = [i for i in s["skills"] if by_id[i]["introduced"] == s["n"]]
     print("  S%-2d %s  deck=%-3s lab=%-5s hw=%-5s proj=%-5s %-6s total=%d "
           "(new %d, practised %d)"
-          % (s["n"], s["date"], s["decks"][0],
-             "yes" if s["lab"] else "—",
+          % (s["n"], s["date"], "+".join(s["decks"]) or "—",
+             ("%d" % len(s["lab"]) if isinstance(s["lab"], list) else "yes") if s["lab"] else "—",
              "yes" if s["hw"] else "—",
-             "yes" if s["project"] else "—",
+             ("%d" % len(s["project"]) if isinstance(s["project"], list) else "yes") if s["project"] else "—",
              s["exam"] or "", len(s["skills"]), len(intro),
              len(s["skills"]) - len(intro)))
 print()

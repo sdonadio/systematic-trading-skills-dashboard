@@ -597,6 +597,37 @@ window.FOCUS = {
     },
     {
       "n": 5,
+      "focus": "Midterm week: review Weeks 1–4",
+      "tagline": "No lecture and no new material this Friday: the midterm covers Weeks 1–4, and the graded live block still runs in the evening.",
+      "concepts": [
+        {
+          "title": "What the midterm covers",
+          "text": "Weeks 1 to 4, and nothing after them. Week 1: the Python object model, abstract base classes, dataclasses and the UML that describes them. Week 2: concurrency — coroutines and the event loop, threads and the GIL, process pools, and which one a given component needs. Week 3: the network stack, sockets, WebSockets, wire protocols and pydantic message schemas. Week 4: backtesting and its data — the event-driven backtester, look-ahead as a clock violation, fill simulation, SQL, time-series stores and Parquet, as-of joins. Algorithmic complexity and data structures are taught after the midterm, in Week 6, and are not examined on it. The window, the rules and the format are on the Midterm Exam page on Canvas."
+        },
+        {
+          "title": "Prepare from the checklists, not from the slides",
+          "text": "Open the Week 1 to Week 4 pages of this dashboard and read every \"You can…\" sentence as a question you might be asked. Tick only the ones that are true of you today; every unticked sentence is a review item, and the chips under it name the deck slides, lab parts and homework where it was taught. Re-reading a deck front to back feels productive and is not: retrieval is what the exam measures, so practise retrieving."
+        },
+        {
+          "title": "Then answer the interview questions out loud",
+          "text": "Each of the Week 1 to Week 4 pages ends with interview questions, from warm-up to senior. Answer each one before opening the model answer, then compare. Redo the part of HW 1 to HW 4 you were least sure of, without looking at your submission, and take the Mock Midterm on Canvas under exam conditions — one sitting, no notes, timed."
+        },
+        {
+          "title": "The live block still runs that evening",
+          "text": "The season does not pause for the exam. The graded live block for season week 5 runs on Friday Oct 30 in the evening: it starts at about 20:00 CT with the usual 10-minute pre-open, the market opens at about 20:10, and the block lasts 60 minutes in total. Week 5 is the risk week — circuit breakers, stops and liquidation are live — so have your bot's risk layer in place and tested before the midterm, not after it."
+        }
+      ],
+      "hft": {
+        "paragraphs": [
+          "The four weeks on the midterm are the four layers every systematic trading system is built from, in the order they depend on each other. The object model is how a strategy, a broker and a venue become interchangeable parts; concurrency is how one process listens to a market while it thinks; the wire is how those parts talk across machines; and the data and the backtester are how you decide, before risking capital, whether the thinking was any good.",
+          "A desk interview tests the same layers, in the same way: not whether you remember a definition, but whether you can say what breaks when one layer is wrong. A blocking call in the event loop, a message schema that accepts junk, a backtest that reads the wall clock — each one looks fine in isolation and costs money in a live session. The midterm questions are written in that spirit.",
+          "That is also why the evening's live block is not a distraction from the exam. The week-5 risk rules punish exactly the failures the midterm asks about: a bot that cannot keep up with the feed, cannot parse the venue's messages, or trades on a signal that was only ever profitable with look-ahead will meet a stop or a liquidation, and the season score records it."
+        ]
+      },
+      "interview": []
+    },
+    {
+      "n": 6,
       "focus": "Algorithmic complexity & data structures",
       "tagline": "Choose the container by the operation you repeat most: a heap plus a dict answers 'best bid?' in O(1) while a re-sorted list burns 475 times more for the identical answer.",
       "concepts": [
@@ -604,36 +635,36 @@ window.FOCUS = {
           "title": "The Big-O ladder, and where constants still matter",
           "text": "Big-O says how work grows with n, ignoring constants: O(1) for a dict lookup or a deque append, O(log n) for a binary search or a heap push, O(n) for a list scan, O(n log n) for a sort, and O(n squared) for nested loops that are fine at n=100 and fatal at a million. Read it as a curve, not a stopwatch: a fast O(n) can beat a heavy O(log n) at small n, but n grows. Know the worst case too — dict is O(1) average and O(n) under pathological collisions, so you design for the common case and guard the tail.",
           "code": "import timeit\nsetup = \"d = {k: k for k in range(100_000)}; xs = list(range(100_000)); n = 99_999\"\nper = lambda stmt, num: min(timeit.repeat(stmt, setup=setup, number=num, repeat=3)) / num\nt_dict = per(\"d[n]\", 200_000)          # O(1) hash lookup\nt_scan = per(\"n in xs\", 200)           # O(n) linear scan, worst case\nprint(f\"dict {t_dict * 1e6:.3f} us   list scan {t_scan * 1e6:.1f} us   ~{t_scan / t_dict:.0f}x\")\nprint(\"O(1) beats O(n) at n=100k:\", t_dict < t_scan)\n# O(1) beats O(n) at n=100k: True",
-          "deck": "Deck Week 5 · slides 5–7"
+          "deck": "Deck Week 6 · slides 5–7"
         },
         {
           "title": "Pick the container by the question you ask most",
           "text": "Four structures carry most trading code. A dict answers 'what is X?' — order id to Order, symbol to price — in O(1) average, and it is the canonical live set. A set answers 'have I seen X?' with the same hashing and no values. A deque appends and pops at both ends in O(1), and deque(maxlen=k) gives a fixed rolling window that evicts the oldest for free. A heap answers 'best of many': O(log n) push and pop, O(1) peek at the minimum. Know the trade against space as well — a lookup table buys time with memory — and that list.append is O(1) amortised because the occasional resize averages out over cheap appends.",
-          "deck": "Deck Week 5 · slides 7–8"
+          "deck": "Deck Week 6 · slides 7–8"
         },
         {
           "title": "O(1) rolling statistics beat recomputing",
           "text": "on_tick fires on every price update, so recomputing a mean and variance over the full history each call is O(n) per tick and O(n squared) over a session. Keep incremental state instead. A running sum gives an O(1) mean; Welford updates mean and variance together in one pass without storing history and without the sum-of-squares cancellation that wrecks a naive variance in floating point. The lab measures it: identical variance, 515 times faster at N=2000 and 6,093 times at N=20,000 — the speedup is not a constant, it grows with session length.",
           "code": "import statistics\nclass Welford:                                 # O(1) mean + variance, one pass\n    def __init__(self): self.n = 0; self.mean = 0.0; self.m2 = 0.0\n    def update(self, x):\n        self.n += 1; d = x - self.mean\n        self.mean += d / self.n                # O(1)\n        self.m2 += d * (x - self.mean)         # stable: no sum of squares\n    def var(self): return self.m2 / (self.n - 1)\npx = [100 + (i % 97) * 0.01 for i in range(5_000)]; w = Welford()\nfor p in px: w.update(p)\nprint(\"ticks:\", w.n, \"| var matches recompute:\", abs(w.var() - statistics.variance(px)) < 1e-9)\n# ticks: 5000 | var matches recompute: True",
-          "deck": "Deck Week 5 · slides 9–10"
+          "deck": "Deck Week 6 · slides 9–10"
         },
         {
           "title": "The order book is a heap plus a dict",
           "text": "A book must answer 'best price?' constantly and match by price first, then time. Scanning every resting order is O(n) on every incoming order. Two min-heaps keyed on (price, seq, order_id) give O(log n) insert and an O(1) peek at the extreme — bids negate the price, asks use it raw. seq is a monotonic arrival counter rather than a timestamp, because floats tie and counters never do, which is what makes queue position exact. A dict of live orders stays the canonical set; the heaps are only a fast index into it. Cancelling deletes from the dict alone and the stale heap entry is popped lazily on the next read, so cancels stay cheap and reads stay correct.",
           "code": "import heapq\nbids, orders = [], {}                          # min-heap index + canonical dict\nfor oid, px in enumerate([100.01, 100.03, 100.03]):\n    heapq.heappush(bids, (-px, oid, oid)); orders[oid] = px   # (-price, seq, id)\ndef best_bid():\n    while bids and bids[0][2] not in orders: heapq.heappop(bids)   # lazy delete\n    return (-bids[0][0], bids[0][2]) if bids else None\nprint(\"best bid, front order:\", best_bid())\ndel orders[1]                                  # cancel == one O(1) dict delete\nprint(\"after cancel:\", best_bid(), \"| heap entries left:\", len(bids))\n# best bid, front order: (100.03, 1)\n# after cancel: (100.03, 2) | heap entries left: 2",
-          "deck": "Deck Week 5 · slide 11 · slide 18"
+          "deck": "Deck Week 6 · slide 11 · slide 18"
         },
         {
           "title": "Measure, then optimise",
           "text": "Intuition about performance is famously wrong, so profile before you touch anything. cProfile finds which function dominates across a run; timeit compares two implementations over many loops; perf_counter measures a block in situ against your per-tick budget. A careless benchmark lies, so warm up and discard the first runs, repeat and report the minimum — the minimum is the least-contaminated sample while the mean drags in OS noise — and time only the hot path with allocation hoisted out of the loop. Never benchmark n=1, and never tune a function called twice per session.",
           "code": "import timeit\nsetup = \"xs = [100.0 + i * 0.01 for i in range(20_000)]\"\nruns = timeit.repeat(\"sum(xs[-20:]) / 20\", setup=setup, number=20_000, repeat=7)\nper = [t / 20_000 * 1e6 for t in runs]\nprint(f\"min {min(per):.3f} us   mean {sum(per) / len(per):.3f} us   max {max(per):.3f} us\")\nprint(\"min <= mean (noise only ever adds time):\", min(per) <= sum(per) / len(per))\n# min <= mean (noise only ever adds time): True",
-          "deck": "Deck Week 5 · slides 13–14"
+          "deck": "Deck Week 6 · slides 13–14"
         },
         {
           "title": "Latency, throughput and the tail that gets you picked off",
           "text": "Latency is the time for one operation end to end; throughput is operations per second. For a trader latency is edge, because slow means acting on stale prices; for an exchange throughput is capacity under load. They trade against each other — batching raises throughput and raises latency — so tune for the role you play. Averages hide the pain: a 5 microsecond mean with a 140 microsecond p99 means one tick in a hundred is catastrophic, and those are usually the volatile ticks that matter. Report p50, p95 and p99, and keep the p99 under your per-tick budget with room to spare.",
           "code": "import random, statistics\nrandom.seed(7)\nlat = [3.3 + random.random() for _ in range(990)]      # the quiet ticks\nlat += [140.0 + random.random() for _ in range(10)]    # the shock burst: 1 in 100\nlat.sort()\npct = lambda q: lat[min(int(q * len(lat)), len(lat) - 1)]\nprint(f\"mean {statistics.mean(lat):6.2f} us   p50 {pct(.50):5.2f} us\"\n      f\"   p95 {pct(.95):5.2f} us   p99 {pct(.99):6.2f} us\")\nprint(\"mean hides the tail:\", statistics.mean(lat) < pct(.99) / 10)\n# mean 5.15 us p50 3.77 us p95 4.26 us p99 140.04 us\n# mean hides the tail: True",
-          "deck": "Deck Week 5 · slide 16"
+          "deck": "Deck Week 6 · slide 16"
         }
       ],
       "hft": {
@@ -642,7 +673,7 @@ window.FOCUS = {
           "A slow signal is not a signal. Prices move while you compute, so the per-tick budget is the real constraint on the signal-to-order pipeline: whatever on_tick spends is time the book had to move against the decision it is about to produce. The lab makes the cost visible without changing a single trading rule. FastBot keeps its statistics over a fixed window and runs at p50 3.33 microseconds, p99 7.38; SlowBot computes the same signal by rescanning full history and runs at p50 71.58, p99 145.04. Same fills, same edge, twenty times the latency — and SlowBot's median keeps climbing all session because its cost is O(n) in history.",
           "The order book is where the theory is load-bearing. shared/orderbook.py holds two min-heaps of (price, seq, order_id) plus a canonical dict, so best_bid measured 0.075 microseconds and stayed dead flat from 1,000 to 100,000 resting orders — a lazy heap clean followed by an O(1) peek, on the operation the venue repeats most. get_snapshot is the counterexample: it aggregates price levels by iterating _orders, so it went from 96 microseconds to 8,461 across the same range, exactly linear, and the exchange calls it on every broadcast. Knowing which of your reads is which separates a venue that holds up under load from one that does not.",
           "Tail latency is a live-risk control, not a vanity metric. The p99 arrives during a shock burst, when ticks come fastest and the book is moving most, which is precisely when a stale quote gets taken. For a market maker that is adverse selection, and it shows up in TCA as fills that sit systematically on the wrong side of the next mid: a rebate does not cover a spread you quoted against a price that no longer exists. Cancel latency has the same shape — a requote you cannot land in time is a free option you have written to the fastest taker in the session.",
-          "Complexity also decides what you can honestly test. An O(n squared) per-session statistic makes a 20,000-tick backtest take twelve seconds, which is enough to stop you running the parameter sweeps and walk-forward windows that would have caught the overfit. Welford and the full recompute agree on the variance to floating-point precision; the only difference is the curve. Fast, correct hot paths are what buy you the number of honest runs, and they are the same paths week 6 goes on to distribute.",
+          "Complexity also decides what you can honestly test. An O(n squared) per-session statistic makes a 20,000-tick backtest take twelve seconds, which is enough to stop you running the parameter sweeps and walk-forward windows that would have caught the overfit. Welford and the full recompute agree on the variance to floating-point precision; the only difference is the curve. Fast, correct hot paths are what buy you the number of honest runs, and they are the same paths week 7 goes on to distribute.",
           "This session also carries the midterm: 30 multiple-choice questions in 90 minutes, one attempt, closed book, drawn from weeks 1 to 5. It rewards exactly the vocabulary above — naming the complexity class of an operation, choosing the container that matches the question you repeat most, and reading a percentile table rather than a mean. The homework that follows has you build an order book from scratch and defend it with a written complexity table and a benchmark, so treat tonight's measurements as the reference you will be held to."
         ],
         "example": {
@@ -703,7 +734,7 @@ window.FOCUS = {
       ]
     },
     {
-      "n": 6,
+      "n": 7,
       "focus": "Big data & distributed compute",
       "tagline": "Store data in columns, process it in chunks, and fan the backtest out over processes — so you can search a strategy space instead of running one config.",
       "concepts": [
@@ -711,36 +742,36 @@ window.FOCUS = {
           "title": "The memory wall — measure before you scale",
           "text": "pandas holds the whole frame in RAM, and the in-memory footprint is routinely 2-10x the file on disk. Cross physical memory and the OS swaps: everything falls off a cliff at roughly 1000x slower. Before you reach for a cluster, measure with df.info(memory_usage='deep') or df.memory_usage(deep=True) — without deep=True pandas reports the pointer array and hides the strings entirely. Then downcast: float64 to float32, object to category. In the week-6 lab that one step took a 250 000-row snapshot frame from 25.3 MB to 7.3 MB, 3.5x smaller, almost all of it from turning 250 000 Python strings into int8 category codes.",
           "code": "import pandas as pd\nsym = [\"AAPL\", \"MSFT\", \"NVDA\", \"TSLA\", \"AMZN\"] * 20_000\nwide = pd.DataFrame({\"symbol\": sym, \"mid\": [182.5] * len(sym), \"spread\": [0.02] * len(sym)})\nlean = wide.astype({\"symbol\": \"category\", \"mid\": \"float32\", \"spread\": \"float32\"})\nw = wide.memory_usage(deep=True).sum(); l = lean.memory_usage(deep=True).sum()\nprint(\"rows\", len(wide), \"| lean at least 3x smaller:\", w > 3 * l)\nprint(\"dtypes\", lean.symbol.dtype, lean.mid.dtype, \"| codes\", lean.symbol.cat.codes.dtype)\n# rows 100000 | lean at least 3x smaller: True\n# dtypes category float32 | codes int8",
-          "deck": "Deck Week 6 · slide 5"
+          "deck": "Deck Week 7 · slide 5"
         },
         {
           "title": "Rows versus columns — CSV against Parquet",
           "text": "How the bytes are laid out on disk decides how many of them you have to read. CSV is row-oriented text: no types, no column pruning, large on disk. Parquet is columnar, typed and compressed, so you read only the columns you touch and a column of near-identical floats compresses 5-20x with zstd or snappy. The lab measured the same tape at 61.6 MB as JSONL, 16.9 MB as CSV and 2.7 MB as Parquet, and pruning to two columns read ~28x faster than the CSV. Parquet also round-trips dtypes; CSV hands back float64 and silently undoes your downcasting. Rule: CSV to exchange with humans, Parquet for anything you re-read.",
           "code": "import os, tempfile, pandas as pd\ndf = pd.DataFrame({\"ts\": range(50_000), \"symbol\": [\"AAPL\"] * 50_000,\n                   \"mid\": [182.5] * 50_000}).astype({\"mid\": \"float32\"})\nwith tempfile.TemporaryDirectory() as d:\n    csv, pq = os.path.join(d, \"t.csv\"), os.path.join(d, \"t.parquet\")\n    df.to_csv(csv, index=False); df.to_parquet(pq, index=False)\n    two = pd.read_parquet(pq, columns=[\"ts\", \"mid\"])        # column pruning\n    print(\"parquet smaller:\", os.path.getsize(pq) < os.path.getsize(csv),\n          \"| csv returns\", pd.read_csv(csv).mid.dtype, \"| parquet keeps\", two.mid.dtype)\n    print(\"columns touched:\", list(two.columns))\n# parquet smaller: True | csv returns float64 | parquet keeps float32\n# columns touched: ['ts', 'mid']",
-          "deck": "Deck Week 6 · slide 6"
+          "deck": "Deck Week 7 · slide 6"
         },
         {
           "title": "Chunk it, reduce as you go, carry the state",
           "text": "If the file will not fit, do not load it. Read bounded pieces — pd.read_csv(chunksize=...) or your own line blocks — and reduce each piece into an accumulator, so memory is O(chunk + state) regardless of file size. The lab computed the same per-symbol statistic at 44 MB peak RSS chunked against 229 MB loading everything. The trap is the rolling window: a 100-bar SMA must survive chunk boundaries, so the deque per symbol is carried across chunks. Drop it and the first 99 rows of every chunk get a wrong window — a silent, wrong number, not a crash. And only statistics that compose survive this pattern: (sum, count) does, a median does not.",
           "code": "import itertools\nfrom collections import deque\nsrc = (100.0 + (i % 13) * 0.5 for i in range(20_000))  # a stream, never fully in RAM\nwin, tot, n = deque(maxlen=20), 0.0, 0\nwhile blk := list(itertools.islice(src, 4_096)):       # bounded chunks\n    for px in blk:\n        win.append(px)                                 # state CARRIED across chunks\n        if len(win) == 20:\n            tot += sum(win) / 20; n += 1\nprint(\"sma samples\", n, \"| mean of 20-bar SMA\", round(tot / n, 4))\n# sma samples 19981 | mean of 20-bar SMA 103.0",
-          "deck": "Deck Week 6 · slides 8–9"
+          "deck": "Deck Week 7 · slides 8–9"
         },
         {
           "title": "Scale up first, then out — and use processes",
           "text": "Vertical scaling needs no code change but has a ceiling and prices superlinearly; horizontal scaling is near-unlimited but you must partition the work and combine the results. More RAM plus smaller dtypes plus Parquet often removes the problem outright, so start there. When you do go parallel, remember the GIL: only one thread runs Python bytecode at a time, so threads buy nothing for a CPU-bound sweep. Use processes — ProcessPoolExecutor from the stdlib, with the __main__ guard, because each worker re-imports your module and without the guard it re-spawns the pool. joblib is the same idea in one line. Dask, Ray and Spark extend it across machines; this course names them and stays on one box.",
           "code": "from concurrent.futures import ProcessPoolExecutor\nimport numpy as np\ndef cycles(lookback):              # CPU-bound shard: one parameter, one process\n    s = np.sign(np.sin(np.arange(200_000) / lookback))\n    return lookback, int((np.diff(s) != 0).sum())    # deterministic per shard\nif __name__ == \"__main__\":         # mandatory: every worker re-imports this file\n    with ProcessPoolExecutor(max_workers=2) as pool:\n        par = dict(pool.map(cycles, [5, 10, 20, 40]))  # map\n    print(par)                                         # reduce\n    print(\"parallel == sequential:\", par == dict(map(cycles, [5, 10, 20, 40])))\n# {5: 12733, 10: 6367, 20: 3184, 40: 1592}\n# parallel == sequential: True",
-          "deck": "Deck Week 6 · slides 11–12"
+          "deck": "Deck Week 7 · slides 11–12"
         },
         {
           "title": "Map, reduce, shard — and what will not shard",
           "text": "The mental model behind every scale-out: apply the same function to each independent piece (map), then combine the partials (reduce), with a shard key chosen so the pieces really are independent — per symbol, per date range, per parameter. Parameter sweeps and per-symbol backtests are embarrassingly parallel: nothing is shared, so you just collect results. A stateful order book is not. Matching depends on the order of arrivals, so sharding it blindly changes the answer; dependencies force coordination. Measure the win rather than assuming n_cores: the lab's byte-range map-reduce over ten shards returned 2.1x, because process start-up, pickling partials and one shared disk all take their cut.",
-          "deck": "Deck Week 6 · slides 13–14"
+          "deck": "Deck Week 7 · slides 13–14"
         },
         {
           "title": "Idempotency and reproducibility under fan-out",
           "text": "Distributed jobs retry, reorder and run out of process, so correctness needs determinism and safe re-runs. Make each task idempotent by keying its output on a hash of its inputs: running it twice writes the same file and nothing is double-counted, and a resumed sweep skips what is already on disk. Make it reproducible by pinning the seed (SimSession takes seed=), the data version and the dtypes, so every worker computes the same numbers. Keep workers pure: inputs in, output out, no shared mutable state and no hidden globals. Note that the float32 win from downcasting costs you exactness — the lab's vectorised and loop versions agreed only to ~1.8e-3, so assert with a tolerance you can defend.",
           "code": "import hashlib, json\ndef key(params):                     # one output file per input set\n    blob = json.dumps(params, sort_keys=True).encode()\n    return \"sweep_\" + hashlib.sha256(blob).hexdigest()[:8] + \".parquet\"\na = key({\"lookback\": 20, \"spread\": 0.3, \"seed\": 7})\nb = key({\"seed\": 7, \"spread\": 0.3, \"lookback\": 20})   # same inputs, keys in any order\nc = key({\"lookback\": 40, \"spread\": 0.3, \"seed\": 7})\nprint(a)\nprint(\"re-run is a no-op:\", a == b, \"| new config, new file:\", a != c)\n# sweep_b2945585.parquet\n# re-run is a no-op: True | new config, new file: True",
-          "deck": "Deck Week 6 · slide 15"
+          "deck": "Deck Week 7 · slide 15"
         }
       ],
       "hft": {
@@ -748,7 +779,7 @@ window.FOCUS = {
         "paragraphs": [
           "Scale is what separates a strategy from a search. One backtest tells you whether one lookback worked on one tape; a sweep tells you whether the edge exists across a neighbourhood of parameters, which is the only version worth trading. That is why the week-6 deliverable is a parallel sweep with one run per configuration and a Sharpe collected per point, and why the headless sim is built to be fanned out: SimSession().run() is pure and in-process with no sockets, so twenty of them can run at once.",
           "The pipeline splits in two at a hard seam. Offline you build features — returns, rolling means, rolling vol — and cache them to Parquet; online your signal function reads the freshest rows of that frame and does arithmetic only. Get the seam wrong and you pay twice: a groupby-rolling inside on_tick blows the per-tick budget, and features computed differently offline and live give you a bot that was validated on numbers it never sees again.",
-          "Reproducibility is what makes an offline result believable. A sweep that cannot be re-run to the same numbers cannot be defended: pin seed=, pin the data version, pin the dtypes, and key every output on a hash of its inputs so a retried worker overwrites itself instead of double-counting. Log every configuration you tried, too — that count is what week 7 uses to deflate the best Sharpe you found, and a sweep is a very efficient way to try hundreds of things.",
+          "Reproducibility is what makes an offline result believable. A sweep that cannot be re-run to the same numbers cannot be defended: pin seed=, pin the data version, pin the dtypes, and key every output on a hash of its inputs so a retried worker overwrites itself instead of double-counting. Log every configuration you tried, too — that count is what week 8 uses to deflate the best Sharpe you found, and a sweep is a very efficient way to try hundreds of things.",
           "Costs are the reason you keep the whole tape rather than a sample. Fees, spread and slippage only show up when you replay every fill: the lab's stretch step ran the template's Level-1 random strategy over 250 000 snapshots and finished at $51,617 — a 48% loss, almost all of it fees. Column pruning is what makes that affordable; you read price, size and fee columns out of a multi-gigabyte recording and leave the rest on disk.",
           "Scaling out also means more sockets. Multi-venue has been live since week 1: set EXCHANGE_URLS to a comma-separated list and one bot connects to every venue. The broker's answer to that is one pricing brain and N execution gateways — the external reference is shared, while each venue's mark, resting orders and positions stay local. Live risk lives in that split, because a position is per venue but your exposure is not."
         ],
@@ -810,7 +841,7 @@ window.FOCUS = {
       ]
     },
     {
-      "n": 7,
+      "n": 8,
       "focus": "Machine-learning signals & model ops",
       "tagline": "A model is just another signal function: learn it offline, split in time so it cannot see the future, and load it once so predicting fits inside the per-tick budget.",
       "concepts": [
@@ -818,37 +849,37 @@ window.FOCUS = {
           "title": "The supervised setup — X at t, y about t+h",
           "text": "You learn a mapping from features to a label, and in trading the two live at different times. Every column of X must be knowable at t; y is about t+h. Classification predicts direction and is easy to size by confidence; regression predicts magnitude and is more informative but noisier. The horizon h has to match how long you actually hold — label a 5-tick move and then hold for an hour and you have validated a different strategy. The last h rows of any tape have no label yet, which is exactly the shape of the live problem: you always stand at the right-hand edge.",
           "code": "import numpy as np\nrng = np.random.default_rng(7)\nmid = 100 + np.cumsum(rng.normal(0, 0.05, 600))       # the tape\nh, t = 5, np.arange(20, 600 - 5)                      # horizon, usable rows\nret = np.r_[0.0, mid[1:] / mid[:-1] - 1]\nX = np.c_[ret[t], mid[t] / mid[t - 10] - 1]           # known AT t\ny = (mid[t + h] > mid[t]).astype(float)               # about t+h: the label only\nprint(\"X\", X.shape, \"y\", y.shape, \"up-rate\", round(float(y.mean()), 3))\nprint(\"last labelled t\", int(t[-1]), \"of\", len(mid) - 1, \"- the tail has no label yet\")\n# X (575, 2) y (575,) up-rate 0.386\n# last labelled t 594 of 599 - the tail has no label yet",
-          "deck": "Deck Week 7 · slide 5"
+          "deck": "Deck Week 8 · slide 5"
         },
         {
           "title": "Features from prices and the book",
           "text": "The model is only as good as X, and the useful families are the rolling statistics you already built: momentum over a lookback, volatility as recent dispersion of returns, the spread in basis points, and order-book imbalance as signed bid-versus-ask pressure. Standardise them, because a model that cares about magnitude will be dominated by whichever column has the largest scale. Fewer, better features win — each one costs a degree of freedom. Print X.std(0) before every fit: in the week-7 lab, obi came out with standard deviation 0.0, because a single broker quoting a symmetric ladder never moves the imbalance. A zero-variance feature cannot help, and a feature you cannot compute inside on_tick is not a feature.",
           "code": "import numpy as np\npx = np.array([100.0, 100.2, 100.1, 100.4, 100.9, 101.0, 100.7, 101.3, 101.1, 101.6])\nrets = px[1:] / px[:-1] - 1\nbid, ask, bidq, askq = 101.55, 101.65, 400, 100\nX = np.array([rets[-1], px[-1] / px[0] - 1, rets.std(),\n              (ask - bid) / ((ask + bid) / 2) * 1e4, (bidq - askq) / (bidq + askq)])\nnames = [\"ret1\", \"mom9\", \"vol9\", \"spread_bps\", \"obi\"]\nprint(dict(zip(names, np.round(X, 4).tolist())))\nrows = np.array([X, X * 1.1, X * 0.9]); rows[:, 4] = 0.60   # one broker: obi never moves\nprint(\"dead features:\", [n for n, s in zip(names, rows.std(0)) if s < 1e-12])\n# {'ret1': 0.0049, 'mom9': 0.016, 'vol9': 0.0031, 'spread_bps': 9.8425, 'obi': 0.6}\n# dead features: ['obi']",
-          "deck": "Deck Week 7 · slide 6"
+          "deck": "Deck Week 8 · slide 6"
         },
         {
           "title": "Split in time, with an embargo",
           "text": "Random shuffling leaks the future into training, so time-series data is split chronologically: an early train slice, a middle validation slice you tune on, and a latest test slice you look at once. Then embargo the wall — drop the last h training rows — because with horizon h the labels of adjacent rows overlap, so a shuffled split drops each test row's near-twin into training and a memoriser simply looks it up. The snippet runs a 1-nearest-neighbour model on a pure random walk, where the honest answer is 50%: the shuffled split invents almost eight accuracy points of edge on data that contains none. The lab measured the same effect at +0.095.",
           "code": "import numpy as np\nrng = np.random.default_rng(0)\nmid = 100 + np.cumsum(rng.normal(0, 0.05, 1500))   # a random walk: there is NO edge\nh, t = 20, np.arange(50, 1480)\nX = np.c_[mid[t] / mid[t - 20] - 1, mid[t] / mid[t - 50] - 1]\ny = (mid[t + h] > mid[t]).astype(int)              # labels of adjacent rows overlap\nnn1 = lambda A, a, B, b: float((a[((B[:, None] - A[None]) ** 2).sum(2).argmin(1)] == b).mean())\ncut, p = int(0.7 * len(X)), rng.permutation(len(X))\nshuf = nn1(X[p[:cut]], y[p[:cut]], X[p[cut:]], y[p[cut:]])\nhon = nn1(X[:cut - h], y[:cut - h], X[cut:], y[cut:])\nprint(f\"1-NN shuffled {shuf:.3f}  time+embargo {hon:.3f}  fake edge {shuf - hon:+.3f}\")\n# 1-NN shuffled 0.602 time+embargo 0.526 fake edge +0.077",
-          "deck": "Deck Week 7 · slide 11"
+          "deck": "Deck Week 8 · slide 11"
         },
         {
           "title": "Walk-forward validation is the only score to trust",
           "text": "Train on the past, test on the next unseen block, roll forward, repeat, and average the out-of-sample metric over the test blocks. An expanding window keeps all history; a rolling window forgets the distant past and copes better with drift. Report the dispersion as well as the mean — one lucky fold is not a result. Keep the embargo on every fold. The fit itself needs no framework: scikit-learn and joblib are not in requirements.txt and the graded week-7 lab is numpy-only, so a least-squares fit through numpy.linalg.lstsq is a perfectly respectable linear baseline, and the model ladder says beat that baseline before you climb to regularised linear or tree ensembles.",
           "code": "import numpy as np\nrng = np.random.default_rng(3)\nsig = np.sin(2 * np.pi * np.arange(2100) / 300); t = np.arange(10, 2090)\nX = np.c_[sig[t] - sig[t - 5] + rng.normal(0, .3, len(t)), np.ones(len(t))]\ny = np.sign(sig[t + 5] - sig[t])                             # label about t+5\naccs = []\nfor i in range(1, 5):                                        # 4 expanding folds\n    a, b = i * 400, (i + 1) * 400\n    w, *_ = np.linalg.lstsq(X[:a - 5], y[:a - 5], rcond=None)  # embargo the last 5 rows\n    accs.append(round(float((np.sign(X[a:b] @ w) == y[a:b]).mean()), 3))\nprint(\"folds\", accs, \"| mean\", round(sum(accs) / 4, 3))\n# folds [0.527, 0.54, 0.593, 0.557] | mean 0.554",
-          "deck": "Deck Week 7 · slide 12"
+          "deck": "Deck Week 8 · slide 12"
         },
         {
           "title": "Metrics that matter — accuracy is a trap",
           "text": "A signal is good only if it makes risk-adjusted money out-of-sample after costs. Accuracy is necessary and not sufficient: 51% on balanced up-and-down labels can be very profitable, and 99% on rare events can lose money. What decides it is hit rate together with payoff, the average win over the average loss. Then subtract the trading: fees, spread and slippage, which is where most backtested machine-learning alpha dies. The snippet gives a genuine 4 bp average edge that a 15 bp taker fee each way destroys. Turnover and capacity are part of the score — a signal that flips every tick pays the spread endlessly, and slower, surer signals often win the season.",
           "code": "import numpy as np\nrng = np.random.default_rng(11)\nedge = rng.normal(0.0004, 0.004, 4000)      # 4000 round trips, a real 4 bp edge\nhit = float((edge > 0).mean())\npayoff = float(edge[edge > 0].mean() / -edge[edge < 0].mean())\ncost = 2 * 0.0015                           # taker in, taker out\nprint(f\"hit {hit:.3f}  payoff {payoff:.2f}  gross {edge.mean() * 1e4:+.1f}bp\"\n      f\"  net {(edge.mean() - cost) * 1e4:+.1f}bp\")\nprint(\"survives costs:\", bool(edge.mean() > cost))\n# hit 0.550 payoff 1.09 gross +4.5bp net -25.5bp\n# survives costs: False",
-          "deck": "Deck Week 7 · slide 14"
+          "deck": "Deck Week 8 · slide 14"
         },
         {
           "title": "Model ops — persist, serve, monitor, retrain",
           "text": "A model is a live artifact with a lifecycle, and training is the small part. Serialise the fitted weights together with the feature list, the horizon, the scaler statistics and a version, so the bot can check that what it computes per tick is what the model was fitted on. Load it once in __init__, never in the hot path, and measure predict() against the per-tick budget — a model you cannot run live scores nothing. A missing or stale artifact must be a quiet no-trade, not a crash mid-session. Then monitor: live hit rate against the training number, feature distributions, P&L against the backtest. Decide the retraining cadence up front and keep every version so you can roll one back.",
           "code": "import json, os, tempfile, numpy as np\nart = {\"version\": 1, \"kind\": \"logistic\", \"horizon\": 5, \"b\": 0.02,\n       \"features\": [\"ret1\", \"mom10\", \"vol20\"], \"w\": [-0.84, 0.61, -0.18],\n       \"mu\": [0.0, 0.0, 0.004], \"sd\": [0.002, 0.01, 0.001]}\nwith tempfile.TemporaryDirectory() as d:\n    p = os.path.join(d, \"signal_v1.json\"); json.dump(art, open(p, \"w\"))\n    a = json.load(open(p))                       # load ONCE, in __init__\nw, mu, sd = (np.array(a[k]) for k in (\"w\", \"mu\", \"sd\"))\nz = ((np.array([0.001, 0.012, 0.005]) - mu) / sd) @ w + a[\"b\"]\nprint(\"v%d %s h=%d\" % (a[\"version\"], a[\"features\"], a[\"horizon\"]),\n      \"p_up %.4f\" % (1 / (1 + np.exp(-z))), \"| contract ok:\", len(a[\"features\"]) == len(w))\n# v1 ['ret1', 'mom10', 'vol20'] h=5 p_up 0.5379 | contract ok: True",
-          "deck": "Deck Week 7 · slide 15 · Deck Week 7 · slide 18"
+          "deck": "Deck Week 8 · slide 15 · Deck Week 8 · slide 18"
         }
       ],
       "hft": {
@@ -857,7 +888,7 @@ window.FOCUS = {
           "Machine learning replaces the signal, not the system. The model emits one number; your sizing, stop-loss, position limit and routing are unchanged, and the seam is the same one you have used all quarter — a signal_fn with the registry signature, or on_tick in the SDK. That is the whole integration: compute features from market and portfolio, call the model, and turn a probability into a Signal above a threshold or into None below it. Everything expensive stays offline, because the pipeline that produced last week's cached features is what trains it.",
           "Honesty is the entire deliverable here. Financial returns are mostly noise, so a 52% out-of-sample model can be excellent while a 90% in-sample one is worthless. Split in time, embargo the horizon, walk forward, report mean and dispersion, and look at the final test block once. Run the two controls the lab gives you: a shuffled-label run, which should collapse to a coin flip, and a random-walk symbol, where the honest answer is no edge. If the score survives both, you have something; if you tuned on the test block, you have a number with no meaning.",
           "Costs decide whether the edge is real. A model that is right 55% of the time and flips its view every tick pays the taker fee and half the spread on both legs, which on the arena's schedule is 15 bp each way against an edge measured in single basis points. So make the label fee-aware — only call the move up if it clears the round-trip cost — and score turnover alongside Sharpe. Many machine-learning signals are pure alpha in a backtest and pure transaction cost in a live session.",
-          "Live risk is mostly serving discipline. Load the artifact once in __init__ and do arithmetic per tick; if the file is missing or its feature list does not match what you compute, trade nothing and log it rather than crashing mid-session. Measure predict() against the per-tick budget and against the order quota — eight messages per tick in week 7 — because a model that blocks the loop misses the market it just predicted. Then monitor drift: score your own predictions h ticks later and log a rolling live hit rate. Two standard errors below the training number for a whole session means the artifact is stale.",
+          "Live risk is mostly serving discipline. Load the artifact once in __init__ and do arithmetic per tick; if the file is missing or its feature list does not match what you compute, trade nothing and log it rather than crashing mid-session. Measure predict() against the per-tick budget and against the order quota — eight messages per tick from season week 7 on — because a model that blocks the loop misses the market it just predicted. Then monitor drift: score your own predictions h ticks later and log a rolling live hit rate. Two standard errors below the training number for a whole session means the artifact is stale.",
           "Features have to be identical offline and live or you have leaked. The lab drops obi for exactly that reason: it has zero variance in the simulated tape and MarketData cannot hand it to you live anyway. Write the feature function once, call it from both the training script and on_tick, and validate the recorded feature list on load. The bot you walk-forward validate in sim/session.py is the bot that competes in the season, unchanged."
         ],
         "example": {
@@ -918,60 +949,106 @@ window.FOCUS = {
       ]
     },
     {
-      "n": 8,
-      "focus": "CI/CD, testing & reproducibility",
-      "tagline": "A green run on your laptop proves nothing — the bar is 1,286 tests in twenty seconds, seeded, network-free, and running the same way on a clean runner.",
+      "n": 9,
+      "focus": "CI/CD, testing & the live system",
+      "tagline": "A green run on your laptop proves nothing, and parts that pass their own tests prove little more: the bar is a seeded, network-free suite on a clean runner, then parts that honour each other's contracts while the leaderboard scores risk rather than return.",
       "concepts": [
         {
           "title": "Push the logic down the pyramid, and read the coverage report",
           "text": "Many fast unit tests at the base, a few integration tests above them, a handful of end-to-end runs at the top. A unit test drives one function with no I/O in milliseconds; an integration test wires a couple of pieces together with no network; an end-to-end run drives a whole session and tells you that something broke rather than what. The numbers make the argument: the platform's suite is 1,286 tests in about 20 seconds, and test_orderbook.py plus test_arena_sdk.py alone is 82 tests in 0.13 seconds. Coverage then tells you where the holes are, not how good the tests are — it proves execution, not correctness, so the Missing column is the useful part. Where to aim high is a design decision: shared/orderbook.py is held at 100% because a wrong fill corrupts every downstream P&L.",
-          "deck": "Deck Week 8 · slides 5, 10"
+          "deck": "Deck Week 9a · slides 5, 10"
         },
         {
           "title": "A test is a function, an assert, and a name",
           "text": "pytest collects files named test_*.py and functions named test_*, then runs them and rewrites plain asserts into rich failure diffs. Name the test after the behaviour it pins, not the function it calls: test_momentum_goes_long_on_uptrend tells you what broke from the failure line alone. One behaviour per test. The discovery loop below is the whole mechanism in two lines — find the callables whose names start with test_, call them, and let an AssertionError be the failure.",
           "code": "def momentum(prices, lookback=10, band=0.002):        # pure: no I/O, no clock\n    if len(prices) < lookback + 1: return 0\n    chg = prices[-1] / prices[-lookback - 1] - 1.0\n    return 1 if chg > band else (-1 if chg < -band else 0)\n\ndef test_long_on_uptrend(): assert momentum([100 + i * .5 for i in range(30)]) == 1\ndef test_flat_on_no_trend(): assert momentum([100.0] * 30) == 0\n\nfor name, fn in sorted(globals().items()):\n    if name.startswith(\"test_\"): fn(); print(name, \"passed\")\n# test_flat_on_no_trend passed\n# test_long_on_uptrend passed",
-          "deck": "Deck Week 8 · slide 6"
+          "deck": "Deck Week 9a · slide 6"
         },
         {
           "title": "Fixtures and parametrize make the input space visible",
           "text": "A fixture is reusable setup injected by argument name and torn down per test — use one instead of a module-level Portfolio(10_000), or test four fails because test two spent the cash and the failure moves when you reorder. @pytest.mark.parametrize runs one test over a table of inputs and reports each case as its own pass or fail, so a red run names the input that broke. Parametrize is not about saving typing; you read the coverage of a behaviour straight off the decorator. The cases that matter are the boring ones — [100.0, 101.0] for not enough history, [] for a cold start or an empty book.",
           "code": "def momentum(prices, lookback=10, band=0.002):\n    if len(prices) < lookback + 1: return 0          # cold start: no view\n    chg = prices[-1] / prices[-lookback - 1] - 1.0\n    return 1 if chg > band else (-1 if chg < -band else 0)\n\ncases = [([100 + i * .5 for i in range(30)], 1), ([100.0] * 30, 0),\n         ([100 - i * .5 for i in range(30)], -1), ([100.0, 101.0], 0), ([], 0)]\nbad = [(p[:2], want, momentum(p)) for p, want in cases if momentum(p) != want]\nprint(f\"{len(cases) - len(bad)}/{len(cases)} cases pass\", bad)\n# 5/5 cases pass []",
-          "deck": "Deck Week 8 · slide 7"
+          "deck": "Deck Week 9a · slide 7"
         },
         {
           "title": "Mock the boundary, test the logic",
           "text": "Never touch the real network in a unit test. A mock records calls and returns whatever you configured, a fake is a small working implementation, and monkeypatch swaps an attribute at runtime and puts it back afterwards. Prefer the hand-written fake at a boundary you own: nine lines, no library, and it fails loudly when the real interface changes, whereas a mock that return_values everything passes forever — including after you break the code. Coroutines need an explicit @pytest.mark.asyncio in this repo, because there is no pytest.ini and therefore no asyncio_mode; without the marker pytest calls the function, gets a coroutine it never awaits, and reports a pass.",
           "code": "import asyncio\nclass FakeMarket:                              # a hand-written fake, not a mock\n    def best_bid(self, s): return None         # the market maker just died\n    def best_ask(self, s): return None\ndef edge(market, sym):\n    bid, ask = market.best_bid(sym), market.best_ask(sym)\n    return None if not (bid and ask) else ask - bid\nasync def test_no_order_on_a_dead_book():\n    await asyncio.sleep(0)                     # a real await\n    assert edge(FakeMarket(), \"AAPL\") is None; print(\"dead book -> no order\")\nasyncio.run(test_no_order_on_a_dead_book())\n# dead book -> no order",
-          "deck": "Deck Week 8 · slide 8"
+          "deck": "Deck Week 9a · slide 8"
         },
         {
           "title": "Determinism is what makes CI possible",
           "text": "A flaky test is worse than no test: one failure in twenty runs trains the team to ignore red, which defeats the point of having a gate. Three sources, three fixes — seed the randomness, keep the network out, and pass the clock and the ids in rather than calling datetime.now() or uuid4() deep in a decision path. SimSession.run(seed=3) does the first of those for a whole season, which is why two runs must produce identical leaderboards. And this is not hygiene for its own sake: a CI runner has no internet by design, so a deterministic, network-free session is the only end-to-end test the pipeline can execute.",
           "code": "import random\n\ndef session(seed=None):\n    if seed is not None: random.seed(seed)\n    return [round(100 + random.gauss(0, 1), 4) for _ in range(5)]\n\nprint(\"seeded runs agree :\", session(3) == session(3))\nrandom.seed(0); a, b = session(), session()\nprint(\"unseeded runs agree:\", a == b)\n# seeded runs agree : True\n# unseeded runs agree: False",
-          "deck": "Deck Week 8 · slide 9"
+          "deck": "Deck Week 9a · slide 9"
         },
         {
           "title": "Pin, isolate, containerise — and the pipeline is the gate",
           "text": "CI runs the suite on every push and pull request on a clean machine, and merge is blocked until the checks pass: the tests you wrote become the contract for what enters main. A workflow is YAML under .github/workflows/ — on: triggers it, jobs: run in parallel, steps: run in order, matrix: fans one job across versions, uses: reuses an action and run: runs a shell command. Then make the runner's answer match yours: pin with == rather than >=, isolate in a venv, and freeze OS plus deps plus code in an image with layers ordered stable to volatile, so COPY requirements.txt and pip install sit above COPY . . and a code change does not reinstall the world. Config (ports, poll interval) is plain env vars; secrets are injected at runtime and never enter git or the image.",
           "code": "import itertools\nmatrix = {\"python\": [\"3.11\", \"3.12\"], \"os\": [\"ubuntu-latest\"]}\njobs = [dict(zip(matrix, combo)) for combo in itertools.product(*matrix.values())]\nfor j in jobs: print(\"runner:\", j)\nprint(len(jobs), \"runners from one job definition\")\n# runner: {'python': '3.11', 'os': 'ubuntu-latest'}\n# runner: {'python': '3.12', 'os': 'ubuntu-latest'}\n# 2 runners from one job definition",
-          "deck": "Deck Week 8 · slides 12–15"
+          "deck": "Deck Week 9a · slides 12–15"
+        },
+        {
+          "title": "Integration correctness is a different claim",
+          "text": "Unit correctness says each object honours its own contract in isolation, and 1,286 tests establish that here. Integration correctness says the objects honour each other's contracts, wired together, live, under load. The properties that decide it — timing, ordering, back-pressure, shared state — are emergent and invisible to any single unit test. The classic seam bugs are ordering bugs: the signal fires faster than risk can veto it, a fill arrives before its ack, two messages race on the book, one side sends price as a float while the other rounds to ticks and both are individually correct. Test the conversation, not just the speakers.",
+          "deck": "Deck Week 9b · slide 5"
+        },
+        {
+          "title": "The wire contract is the integration contract",
+          "text": "Three independent processes — broker, exchange, trader — speak only Pydantic models from shared/messages.py, with a type discriminator that parse_message dispatches on. Every arrow between them is a seam, so the natural unit test for a seam is a round trip: dump to JSON, parse back, assert the object is identical. If it round-trips, the two sides agree about the payload; what remains to test is the timing and the ordering. This is also a responsibility diagram rather than a data-flow diagram — the exchange owns the truth, the broker owns liquidity, your bot owns its decisions — and confusion about who owns what is the root cause of most live incidents.",
+          "code": "import json\nfrom typing import Literal\nfrom pydantic import BaseModel\n\nclass PortfolioUpdate(BaseModel):                  # the seam's contract\n    type: Literal[\"portfolio_update\"] = \"portfolio_update\"\n    team_id: str; positions: dict[str, int]; realized_pnl: float; net_worth: float\nsent = PortfolioUpdate(team_id=\"t1\", positions={\"AAPL\": 3},\n                       realized_pnl=-0.95, net_worth=163296.40)\nback = PortfolioUpdate.model_validate(json.loads(sent.model_dump_json()))\nprint(\"round-trip identical:\", back == sent, back.positions)\n# round-trip identical: True {'AAPL': 3}",
+          "deck": "Deck Week 9b · slide 6"
+        },
+        {
+          "title": "Live systems fail partially, not all at once",
+          "text": "The socket stays up while the price behind it dies. The broker's Yahoo poll stalls, the mark stops moving, and you keep quoting confidently around a number nobody stands behind. Kill the market maker and the touch goes one of two ways depending on the venue: with CANCEL_ON_DISCONNECT the venue pulls the dead seat's orders and best_bid, best_ask and spread start returning None within a tick, so any arithmetic on the touch raises; without it the dead quotes persist and your arithmetic succeeds against a corpse. Handle both — guard the touch before it reaches a Signal, and keep a last-change tick per symbol so a price that stopped moving stops your quoting.",
+          "code": "class Feed:\n    def __init__(self): self.px, self.moved_at = 100.0, 0\n    def see(self, px, tick):\n        if px != self.px: self.px, self.moved_at = px, tick\n        return tick - self.moved_at            # ticks since the price last moved\n\nf, ticks = Feed(), [100.0, 100.2, 100.2, 100.2, 100.2, 100.2]\nages = [f.see(px, t) for t, px in enumerate(ticks, start=1)]\nprint(\"ages\", ages, \"| stale from tick\", 1 + next(i for i, a in enumerate(ages) if a > 2))\n# ages [1, 0, 1, 2, 3, 4] | stale from tick 5",
+          "deck": "Deck Week 9b · slide 8"
+        },
+        {
+          "title": "Reconnect, then re-sync: the venue owns the truth",
+          "text": "On ConnectionClosed you back off and reconnect — trader/trader.py retries every three seconds and clears its stale book — but reconnecting is not recovering. Positions self-heal, because the client assigns self.positions = dict(update.positions) on every PortfolioUpdate. Anything you accumulate yourself does not: in the lab the bot rejoins at Tick 0 believing it holds $100,000, net worth snaps back to $163,315 one tick later, and realized_pnl stays at +0.00 for the rest of the session. So keep a shadow ledger from on_fill, compare it against the exchange's positions every tick, log the mismatch loudly, and reset from portfolio.positions on rejoin. A retried order also needs an id, or retry logic is a double-fill machine.",
+          "code": "shadow = {}                                    # accumulated from on_fill only\ndef on_fill(side, sym, qty):\n    shadow[sym] = shadow.get(sym, 0) + (qty if side == \"buy\" else -qty)\non_fill(\"buy\", \"AAPL\", 5); on_fill(\"sell\", \"AAPL\", 2); venue = {\"AAPL\": 3}\nprint(\"before the drop, agree:\", shadow == venue)\nshadow.clear()                                 # the reconnect wiped local state\nprint(\"RECON MISMATCH AAPL: shadow=%d venue=%d\" % (shadow.get(\"AAPL\", 0), venue[\"AAPL\"]))\nshadow.update(venue)                           # re-sync from the source of truth\nprint(\"after re-sync, agree:\", shadow == venue)\n# before the drop, agree: True\n# RECON MISMATCH AAPL: shadow=0 venue=3\n# after re-sync, agree: True",
+          "deck": "Deck Week 9b · slides 8–9"
+        },
+        {
+          "title": "The tearsheet: read the curve, then the numbers",
+          "text": "One page answers two questions: did this make money, and how much risk did it take to do it. The equity curve comes first because the shape tells the story before any number does — a smooth 20% beats a jagged 40%, which is one bad tick from a blow-up. Then the numbers: Sharpe as mean excess return over the volatility of returns, max drawdown as the largest peak-to-trough fall and therefore the worst pain an investor sat through, Calmar as return over that drawdown, turnover as how much you traded to get there, and exposure as how much capital was at risk and on which side. Turnover is a cost, not a measure of effort.",
+          "code": "from statistics import mean, pstdev\neq = [100_000, 101_200, 100_800, 102_500, 102_100, 103_900, 105_200]\nr = [b / a - 1 for a, b in zip(eq, eq[1:])]\npeak = mdd = 0.0\nfor v in eq: peak = max(peak, v); mdd = max(mdd, (peak - v) / peak)\nret = eq[-1] / eq[0] - 1\nprint(f\"return {ret:+.2%} vol {pstdev(r):.4f} sharpe {mean(r) / pstdev(r):.2f}\")\nprint(f\"maxDD {mdd:.2%} calmar {ret / mdd:.1f}\")\n# return +5.20% vol 0.0090 sharpe 0.94\n# maxDD 0.40% calmar 13.2",
+          "deck": "Deck Week 9b · slide 12"
+        },
+        {
+          "title": "Risk-adjusted scoring: the steady book wins",
+          "text": "Raw return is the most misleading number in finance — the same +30% can be an edge or a coin flip that landed right, and maximum leverage on one bet wins the year it works and ends the season it does not at zero. So exchange/scoring.py ranks on a risk-adjusted score, per role, announced in week one: mean excess return over max(vol, VOL_FLOOR), multiplied by max(0, 1 - 2·max_drawdown) and clamped. Two details do real work. Returns are measured net of the risk-free cash drift, so parking cash scores about zero instead of dominating; and the denominator is floored, so a near-flat curve cannot produce an astronomical ratio. The snippet reproduces the lab's two curves exactly.",
+          "code": "from statistics import mean, pstdev\ndef score(eq, rf=1.000002 ** 60 - 1, floor=1.2e-4, pen=2.0):\n    r = [b / a - 1 for a, b in zip(eq, eq[1:])]\n    mdd = max((max(eq[:i + 1]) - v) / max(eq[:i + 1]) for i, v in enumerate(eq))\n    ratio = min(10.0, (mean(r) - rf) / max(pstdev(r), floor))   # Sharpe-like\n    return ratio * max(0.0, 1 - pen * mdd), mdd                 # drawdown always hurts\nsteady = [100_000 * 1.01 ** k for k in range(13)]\njagged = [100_000, 118_000, 96_000, 121_000, 99_000, 125_000, 101_000,\n          128_000, 104_000, 130_000, 108_000, 126_000, steady[-1]]\nfor n, e in ((\"steady\", steady), (\"jagged\", jagged)): s, d = score(e); print(f\"{n} score {s:+.3f} maxDD {d:.2%} ret {e[-1] / e[0] - 1:+.2%}\")\n# steady score +10.000 maxDD 0.00% ret +12.68%\n# jagged score +0.091 maxDD 19.20% ret +12.68%",
+          "deck": "Deck Week 9b · slides 13, 17"
         }
       ],
       "hft": {
-        "text": "Why this matters in systematic trading",
         "paragraphs": [
           "Testing a strategy starts by cutting it in two. The decision becomes a pure function of prices — momentum(prices, lookback, band), no I/O, no clock, no globals — and on_tick shrinks to an adapter that reads the book, calls it, and returns a Signal. The pure half runs in microseconds, so a hundred cases cost nothing; the adapter half only needs the seams: empty book, one-sided book, insufficient cash, a None return. The lab builds exactly that split, then as_signal_fn hands the same object to the simulator, so the code you tested is the code that trades.",
           "An offline result is believable only when it reproduces. Seed the session and two runs must produce identical leaderboards; if they do not, you have unseeded randomness, a datetime.now(), a uuid4(), or iteration over an unstably-hashed set somewhere in the decision path. That is not cosmetic. A number you cannot reproduce cannot be debugged, defended in a demo, or compared against the next version of the signal — so every backtest claim you make rests on determinism first and on the strategy second.",
           "The tests that protect capital are the ugly ones. Drive on_tick with a fake market whose best_ask returns None and whose price history is all NaN, and assert it returns None instead of raising — a raising on_tick in a live session is a bot that has silently stopped trading while the dashboard watches. Then pin the kill switch: push realised P&L past the daily-loss threshold and assert on_tick returns None from then on. Pinned dependencies belong in the same category, because a floating version that shipped an API change is a bot that fails to import at 6 p.m.",
           "Fee arithmetic is where money leaks quietly, which is why the matching engine is held at 100% coverage: one wrong fill corrupts every P&L downstream. The sign convention is the thing to assert. Under the default maker/taker schedule the aggressor pays TAKER_FEE_RATE, 0.0015 of notional, and the resting side earns MAKER_REBATE_RATE, 0.0010 — so a bot that flips every tick is a fee machine with a strategy attached. A test that a taker fill debits cash and a maker fill credits it kills a whole class of accounting bug.",
-          "Shipping ends at observability, not at a green badge. Give yourself one surface — a rich table or an equity plot written on exit showing position, cash, P&L and whether the kill switch is armed — because you cannot fix what you cannot see. The venue-level version is the dashboard's STATS tab, where MAKER % and NET FEES are the two most diagnostic numbers on the platform. Neither helps unless you wrote down the healthy baseline while the market was calm: fills per ten seconds, net worth, maker share."
+          "Shipping ends at observability, not at a green badge. Give yourself one surface — a rich table or an equity plot written on exit showing position, cash, P&L and whether the kill switch is armed — because you cannot fix what you cannot see. The venue-level version is the dashboard's STATS tab, where MAKER % and NET FEES are the two most diagnostic numbers on the platform. Neither helps unless you wrote down the healthy baseline while the market was calm: fills per ten seconds, net worth, maker share.",
+          "The signal-to-order pipeline is a chain of seams, and the seams are where the session is lost. on_tick reads a book snapshot, computes a number, risk vetoes or passes it, an order goes on the wire, an ack comes back, a fill follows, the portfolio marks, the leaderboard updates. Each hop is a contract between two processes that were tested separately. Where it breaks is ordering: a fill that lands before its ack, a signal that fires again before risk has seen the first order, a float price that the venue rounds to a tick. A round-trip test proves the payload; only a wired-up run proves the sequence.",
+          "Offline honesty decides where you are allowed to test. End-to-end runs over live data are flaky by construction — the feed moves, the counterparties change, the failure does not reproduce — so the seeded, network-free simulator is the first venue for every claim, and the live session is confirmation rather than discovery. That is also what a smoke test is for: one fast pass over the critical path, does it start, connect, place one order and score. A green end-to-end run is proof the system was healthy once, on that data; observability is what tells you about now.",
+          "What protects capital live is degradation, not perfection. Guard the touch so a one-sided book returns None rather than raising, because a raising on_tick is a bot that quietly stopped trading. Detect staleness explicitly, since 'the connection is up' is not 'the data is good'. Bound your queues and shed load when messages arrive faster than you process them. Lose the model and fall back to flat rather than to garbage orders — fail loudly at the seam, fail safe at the edge. And give every order a client id so a retry after a dropped socket is a no-op instead of a double fill.",
+          "Your ledger and the venue's will disagree, and the reconnect is when you find out. Positions self-heal because the exchange overwrites them on every PortfolioUpdate; realised P&L, fill counts and your kill switch's loss tally do not, which is why the lab's bot comes back with the right net worth and a realized_pnl of +0.00 that stays wrong all session. Keep a shadow ledger from on_fill, diff it every tick, and treat a mismatch as a page: it means a fill you missed or double-counted. Then confirm the story offline from the tape with scripts/tca_report.py.",
+          "Costs and risk are the two things the tearsheet must not flatter. tca_report.py gives you fills, volume, buy/sell split, maker versus taker mix, fees against rebates, and execution quality against the prevailing mid at each fill — set that beside your walk-forward estimate and explain the gap, because turnover is where an edge quietly goes. Then accept the ranking: the same +12.68% return scores +10.000 as a steady curve and +0.091 as a jagged one with a 19.2% drawdown. Defend the process, not the P&L, and remember that one seed is one sample."
         ],
-        "example": {
-          "title": "In the arena",
-          "text": "tests/test_orderbook.py — the suite your own file imitates: a fixture builds a fresh book per test, two helpers remove the copy-paste, and each test pins one behaviour of the matching engine by name.",
-          "code": "# tests/test_orderbook.py\n@pytest.fixture\ndef ob():\n    return OrderBook(\"AAPL\", fee_rate=0.001)\n\ndef place_buy(ob, team, price, qty, order_type=\"limit\"):\n    return ob.place_order(team, \"buy\", price, qty, order_type)\n\nclass TestResting:\n    def test_limit_buy_rests_in_empty_book(self, ob):\n        order, trades = place_buy(ob, \"t1\", 100.0, 10)\n        assert trades == []\n        assert order.remaining == 10\n        assert ob.best_bid() == 100.0\n        assert ob.best_ask() is None"
-        }
+        "example": [
+          {
+            "title": "In the arena",
+            "text": "tests/test_orderbook.py — the suite your own file imitates: a fixture builds a fresh book per test, two helpers remove the copy-paste, and each test pins one behaviour of the matching engine by name.",
+            "code": "# tests/test_orderbook.py\n@pytest.fixture\ndef ob():\n    return OrderBook(\"AAPL\", fee_rate=0.001)\n\ndef place_buy(ob, team, price, qty, order_type=\"limit\"):\n    return ob.place_order(team, \"buy\", price, qty, order_type)\n\nclass TestResting:\n    def test_limit_buy_rests_in_empty_book(self, ob):\n        order, trades = place_buy(ob, \"t1\", 100.0, 10)\n        assert trades == []\n        assert order.remaining == 10\n        assert ob.best_bid() == 100.0\n        assert ob.best_ask() is None"
+          },
+          {
+            "title": "In the arena",
+            "text": "exchange/scoring.py — score_equity() is the function that ranks the season, and it is the same code the live venue and the offline sim both call, so a tearsheet you compute yourself is comparable with the leaderboard.",
+            "code": "# exchange/scoring.py  (score_equity)\nr = returns(eq)\nvol = statistics.pstdev(r) if len(r) > 1 else 0.0\nmean_r = (sum(r) / len(r)) if r else 0.0\nmdd = max_drawdown(eq)\n\nif n >= MIN_SNAPSHOTS and r:\n    excess = [x - RISK_FREE_PER_SNAPSHOT for x in r]\n    mean_excess = sum(excess) / len(excess)\n    ratio = mean_excess / max(vol, VOL_FLOOR)\n    ratio = max(-RISK_ADJUSTED_CAP, min(RISK_ADJUSTED_CAP, ratio))\n    if ratio >= 0:\n        risk_adjusted = ratio * max(0.0, 1.0 - pen * mdd)\n    else:\n        risk_adjusted = ratio * (1.0 + pen * mdd)"
+          }
+        ]
       },
       "interview": [
         {
@@ -1021,66 +1098,7 @@ window.FOCUS = {
           "a": "In-process, with fakes and a seeded simulator. For risk: construct the portfolio state directly, feed synthetic fills through on_fill until realised P&L breaches the daily-loss limit, and assert the next on_tick returns None and that a flatten order is emitted once, not every tick. For reconnection: run the client against a fake server you can drop, then await a reconnected event with a timeout and assert the bot re-synced state rather than trading on its stale view. Both are deterministic and run in CI, which is the only reason they get run at all.",
           "level": "senior",
           "skill": "tools.headless-sim"
-        }
-      ]
-    },
-    {
-      "n": 9,
-      "focus": "Integration & the live system",
-      "tagline": "Every part passed its own tests; integration asks whether they honour each other's contracts while the leaderboard scores risk rather than return.",
-      "concepts": [
-        {
-          "title": "Integration correctness is a different claim",
-          "text": "Unit correctness says each object honours its own contract in isolation, and 1,286 tests establish that here. Integration correctness says the objects honour each other's contracts, wired together, live, under load. The properties that decide it — timing, ordering, back-pressure, shared state — are emergent and invisible to any single unit test. The classic seam bugs are ordering bugs: the signal fires faster than risk can veto it, a fill arrives before its ack, two messages race on the book, one side sends price as a float while the other rounds to ticks and both are individually correct. Test the conversation, not just the speakers.",
-          "deck": "Deck Week 9 · slide 5"
         },
-        {
-          "title": "The wire contract is the integration contract",
-          "text": "Three independent processes — broker, exchange, trader — speak only Pydantic models from shared/messages.py, with a type discriminator that parse_message dispatches on. Every arrow between them is a seam, so the natural unit test for a seam is a round trip: dump to JSON, parse back, assert the object is identical. If it round-trips, the two sides agree about the payload; what remains to test is the timing and the ordering. This is also a responsibility diagram rather than a data-flow diagram — the exchange owns the truth, the broker owns liquidity, your bot owns its decisions — and confusion about who owns what is the root cause of most live incidents.",
-          "code": "import json\nfrom typing import Literal\nfrom pydantic import BaseModel\n\nclass PortfolioUpdate(BaseModel):                  # the seam's contract\n    type: Literal[\"portfolio_update\"] = \"portfolio_update\"\n    team_id: str; positions: dict[str, int]; realized_pnl: float; net_worth: float\nsent = PortfolioUpdate(team_id=\"t1\", positions={\"AAPL\": 3},\n                       realized_pnl=-0.95, net_worth=163296.40)\nback = PortfolioUpdate.model_validate(json.loads(sent.model_dump_json()))\nprint(\"round-trip identical:\", back == sent, back.positions)\n# round-trip identical: True {'AAPL': 3}",
-          "deck": "Deck Week 9 · slide 6"
-        },
-        {
-          "title": "Live systems fail partially, not all at once",
-          "text": "The socket stays up while the price behind it dies. The broker's Yahoo poll stalls, the mark stops moving, and you keep quoting confidently around a number nobody stands behind. Kill the market maker and the touch goes one of two ways depending on the venue: with CANCEL_ON_DISCONNECT the venue pulls the dead seat's orders and best_bid, best_ask and spread start returning None within a tick, so any arithmetic on the touch raises; without it the dead quotes persist and your arithmetic succeeds against a corpse. Handle both — guard the touch before it reaches a Signal, and keep a last-change tick per symbol so a price that stopped moving stops your quoting.",
-          "code": "class Feed:\n    def __init__(self): self.px, self.moved_at = 100.0, 0\n    def see(self, px, tick):\n        if px != self.px: self.px, self.moved_at = px, tick\n        return tick - self.moved_at            # ticks since the price last moved\n\nf, ticks = Feed(), [100.0, 100.2, 100.2, 100.2, 100.2, 100.2]\nages = [f.see(px, t) for t, px in enumerate(ticks, start=1)]\nprint(\"ages\", ages, \"| stale from tick\", 1 + next(i for i, a in enumerate(ages) if a > 2))\n# ages [1, 0, 1, 2, 3, 4] | stale from tick 5",
-          "deck": "Deck Week 9 · slide 8"
-        },
-        {
-          "title": "Reconnect, then re-sync: the venue owns the truth",
-          "text": "On ConnectionClosed you back off and reconnect — trader/trader.py retries every three seconds and clears its stale book — but reconnecting is not recovering. Positions self-heal, because the client assigns self.positions = dict(update.positions) on every PortfolioUpdate. Anything you accumulate yourself does not: in the lab the bot rejoins at Tick 0 believing it holds $100,000, net worth snaps back to $163,315 one tick later, and realized_pnl stays at +0.00 for the rest of the session. So keep a shadow ledger from on_fill, compare it against the exchange's positions every tick, log the mismatch loudly, and reset from portfolio.positions on rejoin. A retried order also needs an id, or retry logic is a double-fill machine.",
-          "code": "shadow = {}                                    # accumulated from on_fill only\ndef on_fill(side, sym, qty):\n    shadow[sym] = shadow.get(sym, 0) + (qty if side == \"buy\" else -qty)\non_fill(\"buy\", \"AAPL\", 5); on_fill(\"sell\", \"AAPL\", 2); venue = {\"AAPL\": 3}\nprint(\"before the drop, agree:\", shadow == venue)\nshadow.clear()                                 # the reconnect wiped local state\nprint(\"RECON MISMATCH AAPL: shadow=%d venue=%d\" % (shadow.get(\"AAPL\", 0), venue[\"AAPL\"]))\nshadow.update(venue)                           # re-sync from the source of truth\nprint(\"after re-sync, agree:\", shadow == venue)\n# before the drop, agree: True\n# RECON MISMATCH AAPL: shadow=0 venue=3\n# after re-sync, agree: True",
-          "deck": "Deck Week 9 · slides 8–9"
-        },
-        {
-          "title": "The tearsheet: read the curve, then the numbers",
-          "text": "One page answers two questions: did this make money, and how much risk did it take to do it. The equity curve comes first because the shape tells the story before any number does — a smooth 20% beats a jagged 40%, which is one bad tick from a blow-up. Then the numbers: Sharpe as mean excess return over the volatility of returns, max drawdown as the largest peak-to-trough fall and therefore the worst pain an investor sat through, Calmar as return over that drawdown, turnover as how much you traded to get there, and exposure as how much capital was at risk and on which side. Turnover is a cost, not a measure of effort.",
-          "code": "from statistics import mean, pstdev\neq = [100_000, 101_200, 100_800, 102_500, 102_100, 103_900, 105_200]\nr = [b / a - 1 for a, b in zip(eq, eq[1:])]\npeak = mdd = 0.0\nfor v in eq: peak = max(peak, v); mdd = max(mdd, (peak - v) / peak)\nret = eq[-1] / eq[0] - 1\nprint(f\"return {ret:+.2%} vol {pstdev(r):.4f} sharpe {mean(r) / pstdev(r):.2f}\")\nprint(f\"maxDD {mdd:.2%} calmar {ret / mdd:.1f}\")\n# return +5.20% vol 0.0090 sharpe 0.94\n# maxDD 0.40% calmar 13.2",
-          "deck": "Deck Week 9 · slide 12"
-        },
-        {
-          "title": "Risk-adjusted scoring: the steady book wins",
-          "text": "Raw return is the most misleading number in finance — the same +30% can be an edge or a coin flip that landed right, and maximum leverage on one bet wins the year it works and ends the season it does not at zero. So exchange/scoring.py ranks on a risk-adjusted score, per role, announced in week one: mean excess return over max(vol, VOL_FLOOR), multiplied by max(0, 1 - 2·max_drawdown) and clamped. Two details do real work. Returns are measured net of the risk-free cash drift, so parking cash scores about zero instead of dominating; and the denominator is floored, so a near-flat curve cannot produce an astronomical ratio. The snippet reproduces the lab's two curves exactly.",
-          "code": "from statistics import mean, pstdev\ndef score(eq, rf=1.000002 ** 60 - 1, floor=1.2e-4, pen=2.0):\n    r = [b / a - 1 for a, b in zip(eq, eq[1:])]\n    mdd = max((max(eq[:i + 1]) - v) / max(eq[:i + 1]) for i, v in enumerate(eq))\n    ratio = min(10.0, (mean(r) - rf) / max(pstdev(r), floor))   # Sharpe-like\n    return ratio * max(0.0, 1 - pen * mdd), mdd                 # drawdown always hurts\nsteady = [100_000 * 1.01 ** k for k in range(13)]\njagged = [100_000, 118_000, 96_000, 121_000, 99_000, 125_000, 101_000,\n          128_000, 104_000, 130_000, 108_000, 126_000, steady[-1]]\nfor n, e in ((\"steady\", steady), (\"jagged\", jagged)): s, d = score(e); print(f\"{n} score {s:+.3f} maxDD {d:.2%} ret {e[-1] / e[0] - 1:+.2%}\")\n# steady score +10.000 maxDD 0.00% ret +12.68%\n# jagged score +0.091 maxDD 19.20% ret +12.68%",
-          "deck": "Deck Week 9 · slides 13, 17"
-        }
-      ],
-      "hft": {
-        "text": "Why this matters in systematic trading",
-        "paragraphs": [
-          "The signal-to-order pipeline is a chain of seams, and the seams are where the session is lost. on_tick reads a book snapshot, computes a number, risk vetoes or passes it, an order goes on the wire, an ack comes back, a fill follows, the portfolio marks, the leaderboard updates. Each hop is a contract between two processes that were tested separately. Where it breaks is ordering: a fill that lands before its ack, a signal that fires again before risk has seen the first order, a float price that the venue rounds to a tick. A round-trip test proves the payload; only a wired-up run proves the sequence.",
-          "Offline honesty decides where you are allowed to test. End-to-end runs over live data are flaky by construction — the feed moves, the counterparties change, the failure does not reproduce — so the seeded, network-free simulator is the first venue for every claim, and the live session is confirmation rather than discovery. That is also what a smoke test is for: one fast pass over the critical path, does it start, connect, place one order and score. A green end-to-end run is proof the system was healthy once, on that data; observability is what tells you about now.",
-          "What protects capital live is degradation, not perfection. Guard the touch so a one-sided book returns None rather than raising, because a raising on_tick is a bot that quietly stopped trading. Detect staleness explicitly, since 'the connection is up' is not 'the data is good'. Bound your queues and shed load when messages arrive faster than you process them. Lose the model and fall back to flat rather than to garbage orders — fail loudly at the seam, fail safe at the edge. And give every order a client id so a retry after a dropped socket is a no-op instead of a double fill.",
-          "Your ledger and the venue's will disagree, and the reconnect is when you find out. Positions self-heal because the exchange overwrites them on every PortfolioUpdate; realised P&L, fill counts and your kill switch's loss tally do not, which is why the lab's bot comes back with the right net worth and a realized_pnl of +0.00 that stays wrong all session. Keep a shadow ledger from on_fill, diff it every tick, and treat a mismatch as a page: it means a fill you missed or double-counted. Then confirm the story offline from the tape with scripts/tca_report.py.",
-          "Costs and risk are the two things the tearsheet must not flatter. tca_report.py gives you fills, volume, buy/sell split, maker versus taker mix, fees against rebates, and execution quality against the prevailing mid at each fill — set that beside your walk-forward estimate and explain the gap, because turnover is where an edge quietly goes. Then accept the ranking: the same +12.68% return scores +10.000 as a steady curve and +0.091 as a jagged one with a 19.2% drawdown. Defend the process, not the P&L, and remember that one seed is one sample."
-        ],
-        "example": {
-          "title": "In the arena",
-          "text": "exchange/scoring.py — score_equity() is the function that ranks the season, and it is the same code the live venue and the offline sim both call, so a tearsheet you compute yourself is comparable with the leaderboard.",
-          "code": "# exchange/scoring.py  (score_equity)\nr = returns(eq)\nvol = statistics.pstdev(r) if len(r) > 1 else 0.0\nmean_r = (sum(r) / len(r)) if r else 0.0\nmdd = max_drawdown(eq)\n\nif n >= MIN_SNAPSHOTS and r:\n    excess = [x - RISK_FREE_PER_SNAPSHOT for x in r]\n    mean_excess = sum(excess) / len(excess)\n    ratio = mean_excess / max(vol, VOL_FLOOR)\n    ratio = max(-RISK_ADJUSTED_CAP, min(RISK_ADJUSTED_CAP, ratio))\n    if ratio >= 0:\n        risk_adjusted = ratio * max(0.0, 1.0 - pen * mdd)\n    else:\n        risk_adjusted = ratio * (1.0 + pen * mdd)"
-        }
-      },
-      "interview": [
         {
           "q": "What is the difference between unit correctness and integration correctness?",
           "a": "Unit correctness means each component honours its own contract in isolation — the matching engine matches, the risk check vetoes, the message model validates. Integration correctness means those components honour each other's contracts when wired together under load, which depends on timing, ordering, back-pressure and shared state. Those properties are emergent, so no single unit test can see them: a system can be made entirely of green components and still be wrong at the seams.",
