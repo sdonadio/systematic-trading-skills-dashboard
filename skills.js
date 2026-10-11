@@ -178,16 +178,16 @@ window.SKILLS = {
     {
       "n": 4,
       "date": "2026-10-23",
-      "title": "Backtesting & Tick Data",
+      "title": "Backtesting and Its Data",
       "decks": [
         "w4"
       ],
       "lab": {
-        "label": "Lab 4 — The Tape as a Dataset",
+        "label": "Lab 4 — Backtesting and Its Data",
         "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-4-the-tape-as-a-dataset"
       },
       "hw": {
-        "label": "HW 4 — Your team's tape warehouse",
+        "label": "HW 4 — Your tapes in SQL and Parquet, and a backtest you can trust",
         "url": "https://canvas.uchicago.edu/courses/74211/assignments/901646",
         "due": "2026-10-31"
       },
@@ -1640,7 +1640,7 @@ window.SKILLS = {
       "where": [
         {
           "type": "hw",
-          "label": "HW 4 — Your team's tape warehouse",
+          "label": "HW 4 — Your tapes in SQL and Parquet, and a backtest you can trust",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901646"
         },
         {
@@ -1672,7 +1672,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 4 — Your team's tape warehouse",
+          "label": "HW 4 — Your tapes in SQL and Parquet, and a backtest you can trust",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901646"
         },
         {
@@ -1693,7 +1693,7 @@ window.SKILLS = {
       "where": [
         {
           "type": "hw",
-          "label": "HW 4 — Your team's tape warehouse",
+          "label": "HW 4 — Your tapes in SQL and Parquet, and a backtest you can trust",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901646"
         }
       ],
@@ -1710,7 +1710,7 @@ window.SKILLS = {
       "where": [
         {
           "type": "hw",
-          "label": "HW 4 — Your team's tape warehouse",
+          "label": "HW 4 — Your tapes in SQL and Parquet, and a backtest you can trust",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901646"
         }
       ],
@@ -1727,7 +1727,7 @@ window.SKILLS = {
       "where": [
         {
           "type": "hw",
-          "label": "HW 4 — Your team's tape warehouse",
+          "label": "HW 4 — Your tapes in SQL and Parquet, and a backtest you can trust",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901646"
         }
       ],
@@ -1758,7 +1758,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 4 — Your team's tape warehouse",
+          "label": "HW 4 — Your tapes in SQL and Parquet, and a backtest you can trust",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901646"
         },
         {
@@ -1786,7 +1786,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 4 — Your team's tape warehouse",
+          "label": "HW 4 — Your tapes in SQL and Parquet, and a backtest you can trust",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901646"
         },
         {
@@ -1811,7 +1811,7 @@ window.SKILLS = {
       "where": [
         {
           "type": "hw",
-          "label": "HW 4 — Your team's tape warehouse",
+          "label": "HW 4 — Your tapes in SQL and Parquet, and a backtest you can trust",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901646"
         },
         {
@@ -2265,7 +2265,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 4 — Your team's tape warehouse",
+          "label": "HW 4 — Your tapes in SQL and Parquet, and a backtest you can trust",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901646"
         },
         {

@@ -288,7 +288,7 @@ print(f"P&L {curve[-1] - 10_000:+.2f} while the mid rose 0.6%")                 
         },
         {
             "title": "Start with SQL: schema, index, query plan",
-            "text": "One table per message type (trades, quotes, book snapshots with their depth in a child table), both clocks and the recording order kept as columns. SQLite is a library and a file, Postgres a server with concurrent users. The query every backtest asks is one symbol in a window of time, and EXPLAIN QUERY PLAN shows the difference a composite (symbol, t) index makes: equality column first, range second, and the scan becomes a search. Measured on the whole Session 2 tape, the SQLite file is {{SQL_DB_BYTES}} bytes and the AAPL-mid query drops from {{SQL_QUERY_NOINDEX_MS}} ms to {{SQL_QUERY_INDEX_MS}} ms with the index.",
+            "text": "One table per message type (trades, quotes, book snapshots with their depth in a child table), both clocks and the recording order kept as columns. SQLite is a library and a file, Postgres a server with concurrent users. The query every backtest asks is one symbol in a window of time, and EXPLAIN QUERY PLAN shows the difference a composite (symbol, t) index makes: equality column first, range second, and the scan becomes a search. Measured on the whole Session 2 tape, the SQLite file is 50,081,792 bytes, and the index takes the AAPL event window at t400 from 10.4 ms to 0.02 ms; a query that reads every AAPL row gains nothing (3.7 ms without, 4.2 ms with).",
             "code": """import random, sqlite3
 db, rng = sqlite3.connect(":memory:"), random.Random(4)
 db.execute("CREATE TABLE quotes (seq INTEGER PRIMARY KEY, t INT, symbol TEXT, bid REAL, ask REAL)")
