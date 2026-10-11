@@ -181,7 +181,7 @@
   var LAST_N = SESS.length ? SESS[SESS.length - 1].n : 0;
   var WORD = (S.course && S.course.session_word) || "Session";   // "Week" for courses that count weeks
   var DECK_WORD = (S.course && S.course.deck_word) || "";          // "Week" → "Deck Week 2" instead of "Deck W2"
-  function deckName(d) { var m = /^w(\d+)$/i.exec(String(d)); return m && DECK_WORD ? "Deck " + DECK_WORD + " " + m[1] : "Deck " + String(d).toUpperCase(); }
+  function deckName(d) { var m = /^w(\d+[a-z]?)$/i.exec(String(d)); return m && DECK_WORD ? "Deck " + DECK_WORD + " " + m[1] : "Deck " + String(d).toUpperCase(); }
   /* neighbours by position in the sorted list, so gaps in numbering are fine */
   function neighbour(n, dir) {
     var k = sessIdx[n];
@@ -665,9 +665,14 @@
     for (k = 0; k < decks.length; k++) {
       box("Deck (on " + LMS + ")", deckName(decks[k]), null, null);
     }
-    if (s.lab) box("Lab", s.lab.label || "Lab", s.lab.url, s.lab.due);
-    if (s.hw) box("Homework", s.hw.label || "Homework", s.hw.url, s.hw.due);
-    if (s.project) box("Project", s.project.label || "Project", s.project.url, s.project.due);
+    /* lab / hw / project: one object, or a list (a merged session has two) */
+    function boxes(kind, v) {
+      var list = Array.isArray(v) ? v : (v ? [v] : []), q;
+      for (q = 0; q < list.length; q++) if (list[q]) box(kind, list[q].label || kind, list[q].url, list[q].due);
+    }
+    boxes("Lab", s.lab);
+    boxes("Homework", s.hw);
+    boxes("Project", s.project);
     if (s.companion_url) box("Companion", "Interactive page for this session", s.companion_url, null);
 
     /* ── 2 · the focus ──────────────────────────────────────────── */
@@ -702,7 +707,10 @@
     clear(host);
     function afterToggle() { refreshCounts(); }
     for (k = 0; k < list.length; k++) host.appendChild(skillRow(list[k], n, afterToggle));
-    if (!list.length) add(host, el("p", "empty", "No skills are listed for this session yet."));
+    if (!list.length) add(host, el("p", "empty", s.exam && !decks.length
+      ? "No new skills this " + WORD.toLowerCase() + ": it is the " + String(s.exam) +
+        ". Review the checklists of the earlier " + WORD.toLowerCase() + "s."
+      : "No skills are listed for this session yet."));
 
     function refreshCounts() {
       var t = tally(list), q;
@@ -739,8 +747,12 @@
     clear(hh);
     if (paras.length || (f && f.hft && f.hft.example)) {
       for (k = 0; k < paras.length; k++) add(hh, el("p", "hp", txt(paras[k])));
-      var ex = f && f.hft ? f.hft.example : null;
-      if (ex && (ex.code || ex.text)) {
+      /* one example, or a list of them (a merged session keeps both parts') */
+      var exs = f && f.hft ? f.hft.example : null, ei;
+      exs = Array.isArray(exs) ? exs : (exs ? [exs] : []);
+      for (ei = 0; ei < exs.length; ei++) {
+        var ex = exs[ei];
+        if (!ex || !(ex.code || ex.text)) continue;
         var card = add(hh, el("div", "arena"));
         add(card, el("h3", "ath", txt(ex.title) || "In the arena"));
         if (ex.text) add(card, el("p", "ctx", txt(ex.text)));

@@ -9,6 +9,13 @@ Deviations from the Columbia reference validator:
     python3; its trailing "#" comment lines are its claimed output and must
     appear in stdout
   * deck labels are "Deck Week N · slides a-b" and session N teaches deck wN
+
+Resequence 2026-10-11 (the instructor's decision): Session 5 is the midterm
+week (no deck, no snippets, no interview questions — exempt from those
+minimums); Sessions 6..8 teach source decks 5..7; the merged Session 9 cites
+"Deck Week 9a" (source deck 8) and "Deck Week 9b" (source deck 9) and keeps
+both parts' content, so its upper limits are the two parts' sum. SOURCE_WEEK is
+the same table as tools/build_skills.py.
 """
 import io
 import json
@@ -25,6 +32,11 @@ SNIPS = os.path.join(ROOT, "snips")
 REPO = "/Users/sdonadio/PycharmProjects/AlgoArena"
 
 LEVELS = {"warm-up", "core", "senior"}
+SOURCE_WEEK = {"0": 0, "1": 1, "2": 2, "3": 3, "4": 4, "6": 5, "7": 6, "8": 7,
+               "9a": 8, "9b": 9}
+MIDTERM_ONLY = {5}
+# 2026-10-11: the merged Session 9 = old 8 + old 9, both parts kept
+MERGED_MAX = {9: {"concepts": 12, "paragraphs": 10, "interview": 16}}
 NSESS = 10
 # only these third-party imports are installed / allowed in a snippet
 ALLOWED_3P = {"numpy", "pandas", "pydantic", "websockets", "pytest"}
@@ -82,7 +94,7 @@ if [s["n"] for s in sessions] != list(range(NSESS)):
     err("session numbers must be 0..%d in order, got %s"
         % (NSESS - 1, [s["n"] for s in sessions]))
 
-DECK_RE = re.compile(r"Deck Week (\d+)\s*·\s*slides?\s*(\d+)(?:\s*[–-]\s*(\d+))?")
+DECK_RE = re.compile(r"Deck Week (\d+[ab]?)\s*·\s*slides?\s*(\d+)(?:\s*[–-]\s*(\d+))?")
 snippets, used_skills, lvl_tally = [], set(), {}
 
 for s in sessions:
@@ -98,9 +110,10 @@ for s in sessions:
 
     # --- concepts: 4-6 ---
     cs = s["concepts"]
-    if not (4 <= len(cs) <= 10):  # raised 2026-10-11 at the instructor's request (was 4-6; Session 2 has 10)
-        err("%s: %d concepts (want 4-10)" % (tag, len(cs)))
-    if sum(1 for c in cs if "code" in c) < 3:
+    mx = MERGED_MAX.get(n, {})
+    if not (4 <= len(cs) <= mx.get("concepts", 10)):  # raised 2026-10-11 at the instructor's request (was 4-6; Session 2 has 10)
+        err("%s: %d concepts (want 4-%d)" % (tag, len(cs), mx.get("concepts", 10)))
+    if n not in MIDTERM_ONLY and sum(1 for c in cs if "code" in c) < 3:
         err("%s: only %d concepts carry a snippet (want >= 3)"
             % (tag, sum(1 for c in cs if "code" in c)))
     for i, c in enumerate(cs, 1):
@@ -118,11 +131,11 @@ for s in sessions:
             if not found:
                 err("%s.c%d: unparseable deck label %r" % (tag, i, c["deck"]))
             for wk, a, b in found:
-                if int(wk) != n:
+                if int(wk[0]) != n or wk not in SOURCE_WEEK:
                     err("%s.c%d: cites Deck Week %s, but this is session %d"
                         % (tag, i, wk, n))
                     continue
-                dk = "w%s" % wk
+                dk = "w%d" % SOURCE_WEEK[wk]
                 for g in (a, b):
                     if g and not (1 <= int(g) <= deck_len[dk]):
                         err("%s.c%d: slide %s out of range for %s (1..%d)"
@@ -131,22 +144,29 @@ for s in sessions:
     # --- hft block: 3-5 paragraphs ---
     h = s["hft"]
     ps = h.get("paragraphs")
-    if not isinstance(ps, list) or not (3 <= len(ps) <= 6):  # raised 2026-10-11 at the instructor's request (was 3-5; Session 2 has 6)
-        err("%s: hft.paragraphs must be a list of 3-6 strings (got %r)"
-            % (tag, len(ps) if isinstance(ps, list) else type(ps).__name__))
+    pmax = mx.get("paragraphs", 6)
+    if not isinstance(ps, list) or not (3 <= len(ps) <= pmax):  # raised 2026-10-11 at the instructor's request (was 3-5; Session 2 has 6)
+        err("%s: hft.paragraphs must be a list of 3-%d strings (got %r)"
+            % (tag, pmax, len(ps) if isinstance(ps, list) else type(ps).__name__))
     for p in (ps or []):
         if not isinstance(p, str) or len(p.split()) < 25:
             err("%s: hft paragraph too short / not a string: %r" % (tag, str(p)[:60]))
     ex = h.get("example")
-    if ex is not None:
+    for e in (ex if isinstance(ex, list) else ([ex] if ex is not None else [])):
         for k in ("title", "code", "text"):
-            if not ex.get(k):
+            if not e.get(k):
                 err("%s: hft.example missing %r" % (tag, k))
 
     # --- interview: 6-8 with the required level mix ---
     iv = s["interview"]
-    if not (6 <= len(iv) <= 10):  # raised 2026-10-11 at the instructor's request (was 6-8; Sessions 2 and 3 have 10)
-        err("%s: %d interview items (want 6-10)" % (tag, len(iv)))
+    imax = mx.get("interview", 10)
+    if n in MIDTERM_ONLY:
+        if iv:
+            err("%s: the midterm week carries no interview questions" % tag)
+        lvl_tally[n] = {}
+        continue
+    if not (6 <= len(iv) <= imax):  # raised 2026-10-11 at the instructor's request (was 6-8; Sessions 2 and 3 have 10)
+        err("%s: %d interview items (want 6-%d)" % (tag, len(iv), imax))
     counts = {}
     for j, q in enumerate(iv, 1):
         if not q.get("q"):
@@ -250,10 +270,14 @@ print("6. arena examples ...... files named must exist in the repo")
 for s in sessions:
     ex = s["hft"].get("example")
     if not ex:
-        warnings.append("S%d: no hft.example" % s["n"])
+        if s["n"] not in MIDTERM_ONLY:
+            warnings.append("S%d: no hft.example" % s["n"])
         print("   S%-2d (none)" % s["n"])
         continue
-    paths = set(PATH_RE.findall(ex["code"] + " " + ex["text"]))
+    exs = ex if isinstance(ex, list) else [ex]
+    paths = set()
+    for e in exs:
+        paths |= set(PATH_RE.findall(e["code"] + " " + e["text"]))
     miss = [p for p in paths if not os.path.exists(os.path.join(REPO, p))]
     if miss:
         err("S%d: hft.example names files that do not exist: %s" % (s["n"], miss))
@@ -284,5 +308,6 @@ if errors:
         print("  -", e)
     sys.exit(1)
 print("PASS  focus.js conforms to FOCUS_SCHEMA.md — %d sessions (0..9), 4-10 concepts, "
-      "3-6 paragraphs, 6-10 interview items, %d Python snippets executed and their "
-      "printed output verified." % (len(sessions), ok))
+      "3-6 paragraphs, 6-10 interview items (midterm week exempt, merged Session 9 "
+      "up to 12/10/16), %d Python snippets executed and their printed output "
+      "verified." % (len(sessions), ok))
