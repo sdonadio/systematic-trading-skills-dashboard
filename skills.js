@@ -178,16 +178,16 @@ window.SKILLS = {
     {
       "n": 4,
       "date": "2026-10-23",
-      "title": "Backtester Architecture",
+      "title": "Backtesting & Tick Data",
       "decks": [
         "w4"
       ],
       "lab": {
-        "label": "Lab 4 — Backtester Architecture",
-        "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-4-backtester-architecture"
+        "label": "Lab 4 — The Tape as a Dataset",
+        "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-4-the-tape-as-a-dataset"
       },
       "hw": {
-        "label": "HW 4 — Build an event-driven backtester",
+        "label": "HW 4 — Your team's tape warehouse",
         "url": "https://canvas.uchicago.edu/courses/74211/assignments/901646",
         "due": "2026-10-31"
       },
@@ -196,15 +196,16 @@ window.SKILLS = {
       "companion_url": "https://sdonadio.github.io/systematic-trading-arena/week4.html",
       "skills": [
         "quant.event-driven-backtest",
-        "quant.fill-simulation",
         "quant.performance-metrics",
+        "tools.sql-tick-store",
+        "tools.column-store",
+        "tools.as-of-join",
+        "tools.parquet",
+        "tools.headless-sim",
         "quant.look-ahead",
-        "quant.survivorship",
-        "quant.overfitting",
-        "quant.regime-change",
-        "trading.maker-taker",
-        "tools.headless-sim"
-      ]
+        "quant.fill-simulation"
+      ],
+      "combined_url": "https://sdonadio.github.io/systematic-trading-arena/week4.html"
     },
     {
       "n": 5,
@@ -1631,62 +1632,15 @@ window.SKILLS = {
     {
       "id": "quant.event-driven-backtest",
       "category": "quant",
-      "name": "The event-driven backtest loop",
-      "can": "You can write the five-step loop — market event, signal, order, fill, portfolio update — and explain why stepping through time keeps the strategy structurally blind to the future while a vectorised screen does not.",
+      "name": "The backtest pipeline and its goal",
+      "can": "You can draw the pipeline a backtest runs — data, replay loop, strategy, simulated fills and fees, accounting, metrics — and say what a backtest can falsify cheaply and what it cannot tell you.",
       "introduced": 4,
       "practised": [],
       "depth": 3,
       "where": [
         {
-          "type": "deck",
-          "session": 4,
-          "label": "Deck Week 4 · slides 6–7"
-        },
-        {
-          "type": "lab",
-          "session": 4,
-          "label": "Lab 4 · part 2 — Write the loop yourself",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-4-backtester-architecture"
-        },
-        {
           "type": "hw",
-          "label": "HW 4 — Build an event-driven backtester",
-          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901646"
-        },
-        {
-          "type": "exam",
-          "label": "Midterm · group: Backtester Design, Look-Ahead & Complexity"
-        },
-        {
-          "type": "exam",
-          "label": "Final · group: Backtesting, Look-Ahead Bias & Performance Metrics"
-        }
-      ],
-      "interview": true
-    },
-    {
-      "id": "quant.fill-simulation",
-      "category": "quant",
-      "name": "Fill simulation, slippage & transaction costs",
-      "can": "You can replace an optimistic last-price fill with one that crosses the spread and walks the book, and show how fees, slippage and turnover move Sharpe and drawdown once you subtract them.",
-      "introduced": 4,
-      "practised": [],
-      "depth": 3,
-      "where": [
-        {
-          "type": "deck",
-          "session": 4,
-          "label": "Deck Week 4 · slides 8–9"
-        },
-        {
-          "type": "lab",
-          "session": 4,
-          "label": "Lab 4 · part 5 — Add costs; watch Sharpe and drawdown move",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-4-backtester-architecture"
-        },
-        {
-          "type": "hw",
-          "label": "HW 4 — Build an event-driven backtester",
+          "label": "HW 4 — Your team's tape warehouse",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901646"
         },
         {
@@ -1713,23 +1667,12 @@ window.SKILLS = {
       "where": [
         {
           "type": "deck",
-          "session": 4,
-          "label": "Deck Week 4 · slide 10"
-        },
-        {
-          "type": "deck",
           "session": 9,
           "label": "Deck Week 9 · slide 12"
         },
         {
-          "type": "lab",
-          "session": 4,
-          "label": "Lab 4 · part 2 — Write the loop yourself",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-4-backtester-architecture"
-        },
-        {
           "type": "hw",
-          "label": "HW 4 — Build an event-driven backtester",
+          "label": "HW 4 — Your team's tape warehouse",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901646"
         },
         {
@@ -1740,10 +1683,96 @@ window.SKILLS = {
       "interview": true
     },
     {
+      "id": "tools.sql-tick-store",
+      "category": "tools",
+      "name": "Tick data in a relational database",
+      "can": "You can write a SQL schema for trades, quotes and book snapshots with a composite (symbol, time) index, read a query plan to tell a search from a scan, and name the five reasons a row store struggles with tick history.",
+      "introduced": 4,
+      "practised": [],
+      "depth": 2,
+      "where": [
+        {
+          "type": "hw",
+          "label": "HW 4 — Your team's tape warehouse",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901646"
+        }
+      ],
+      "interview": true
+    },
+    {
+      "id": "tools.column-store",
+      "category": "tools",
+      "name": "Column stores & time-series databases",
+      "can": "You can explain why a column store reads only the columns a query names, describe kdb+'s in-memory plus date-partitioned splayed layout and its q-sql, and place TimescaleDB, QuestDB, InfluxDB, ArcticDB and DuckDB on that map.",
+      "introduced": 4,
+      "practised": [],
+      "depth": 2,
+      "where": [
+        {
+          "type": "hw",
+          "label": "HW 4 — Your team's tape warehouse",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901646"
+        }
+      ],
+      "interview": true
+    },
+    {
+      "id": "tools.as-of-join",
+      "category": "tools",
+      "name": "The as-of join",
+      "can": "You can match each trade to the last quote at or before it with aj in q, ASOF JOIN in DuckDB or merge_asof in pandas, choose the key and the direction on purpose, and explain why a forward match inside a backtest is look-ahead.",
+      "introduced": 4,
+      "practised": [],
+      "depth": 3,
+      "where": [
+        {
+          "type": "hw",
+          "label": "HW 4 — Your team's tape warehouse",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901646"
+        }
+      ],
+      "interview": true
+    },
+    {
+      "id": "tools.headless-sim",
+      "category": "tools",
+      "name": "A deterministic replay on the logical clock",
+      "can": "You can replay a recorded tape or a seeded simulation in one process with no sockets, drive every decision from the logical clock instead of the machine's, and prove it with the same fill digest at any replay speed.",
+      "introduced": 4,
+      "practised": [
+        6,
+        7,
+        8
+      ],
+      "depth": 3,
+      "where": [
+        {
+          "type": "deck",
+          "session": 6,
+          "label": "Deck Week 6 · slide 18"
+        },
+        {
+          "type": "deck",
+          "session": 7,
+          "label": "Deck Week 7 · slide 19"
+        },
+        {
+          "type": "hw",
+          "label": "HW 4 — Your team's tape warehouse",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901646"
+        },
+        {
+          "type": "exam",
+          "label": "Final · group: Testing, CI/CD & Reproducibility"
+        }
+      ],
+      "interview": false
+    },
+    {
       "id": "quant.look-ahead",
       "category": "quant",
       "name": "Look-ahead bias",
-      "can": "You can find the place where a backtest used information that did not exist at decision time, fix it by lagging the signal, and quantify how much of the reported edge was the leak.",
+      "can": "You can find where a backtest used information that did not exist at decision time — an unlagged signal, a forward as-of match, a peek at the next book — fix it on the logical clock, and quantify how much of the edge was the leak.",
       "introduced": 4,
       "practised": [
         7
@@ -1752,23 +1781,12 @@ window.SKILLS = {
       "where": [
         {
           "type": "deck",
-          "session": 4,
-          "label": "Deck Week 4 · slide 12"
-        },
-        {
-          "type": "deck",
           "session": 7,
           "label": "Deck Week 7 · slide 11"
         },
         {
-          "type": "lab",
-          "session": 4,
-          "label": "Lab 4 · part 4 — Plant a look-ahead bug, then catch it",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-4-backtester-architecture"
-        },
-        {
           "type": "hw",
-          "label": "HW 4 — Build an event-driven backtester",
+          "label": "HW 4 — Your team's tape warehouse",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901646"
         },
         {
@@ -1783,23 +1801,22 @@ window.SKILLS = {
       "interview": true
     },
     {
-      "id": "quant.survivorship",
+      "id": "quant.fill-simulation",
       "category": "quant",
-      "name": "Survivorship & selection bias",
-      "can": "You can explain why backtesting on today's index members silently deletes every failure from the sample, and say what a survivorship-bias-free dataset has to contain instead.",
+      "name": "Fill simulation, costs & latency",
+      "can": "You can fill a simulated order at the next tick against the recorded depth instead of the last price, charge the taker fee, and show how fees, latency in ticks and turnover move P&L and drawdown.",
       "introduced": 4,
       "practised": [],
-      "depth": 2,
+      "depth": 3,
       "where": [
         {
-          "type": "deck",
-          "session": 4,
-          "label": "Deck Week 4 · slide 13"
+          "type": "hw",
+          "label": "HW 4 — Your team's tape warehouse",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901646"
         },
         {
-          "type": "hw",
-          "label": "HW 4 — Build an event-driven backtester",
-          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901646"
+          "type": "exam",
+          "label": "Midterm · group: Backtester Design, Look-Ahead & Complexity"
         },
         {
           "type": "exam",
@@ -1813,32 +1830,19 @@ window.SKILLS = {
       "category": "quant",
       "name": "Overfitting, data snooping & bias-variance",
       "can": "You can explain test error as bias plus variance plus irreducible noise, recognise that keeping the best of 500 variants fits noise, and defend against it with fewer parameters, counted trials and a held-out block.",
-      "introduced": 4,
-      "practised": [
-        7
-      ],
+      "introduced": 7,
+      "practised": [],
       "depth": 3,
       "where": [
-        {
-          "type": "deck",
-          "session": 4,
-          "label": "Deck Week 4 · slides 14, 16"
-        },
         {
           "type": "deck",
           "session": 7,
           "label": "Deck Week 7 · slides 9, 13"
         },
         {
-          "type": "lab",
-          "session": 4,
-          "label": "Lab 4 · part 6 — In-sample vs out-of-sample",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-4-backtester-architecture"
-        },
-        {
           "type": "hw",
-          "label": "HW 4 — Build an event-driven backtester",
-          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901646"
+          "label": "HW 7 — ML signals & model ops",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901649"
         },
         {
           "type": "exam",
@@ -1850,104 +1854,6 @@ window.SKILLS = {
         }
       ],
       "interview": true
-    },
-    {
-      "id": "quant.regime-change",
-      "category": "quant",
-      "name": "Non-stationarity, regime change & drift",
-      "can": "You can explain why an edge that lived in one volatility or rate regime can bleed in the next, break P&L out by period to see it, and size risk for the regime your backtest never saw.",
-      "introduced": 4,
-      "practised": [],
-      "depth": 2,
-      "where": [
-        {
-          "type": "deck",
-          "session": 4,
-          "label": "Deck Week 4 · slide 15"
-        },
-        {
-          "type": "hw",
-          "label": "HW 4 — Build an event-driven backtester",
-          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901646"
-        },
-        {
-          "type": "exam",
-          "label": "Final · group: Backtesting, Look-Ahead Bias & Performance Metrics"
-        }
-      ],
-      "interview": true
-    },
-    {
-      "id": "trading.maker-taker",
-      "category": "trading",
-      "name": "Maker/taker fees & rebates",
-      "can": "You can compute the fee on a trade under a maker/taker schedule, say which side of a fill pays and which is paid, and explain how a post-only order and a rebate change a strategy's break-even edge.",
-      "introduced": 4,
-      "practised": [],
-      "depth": 2,
-      "where": [
-        {
-          "type": "deck",
-          "session": 4,
-          "label": "Deck Week 4 · slide 9"
-        },
-        {
-          "type": "hw",
-          "label": "HW 4 — Build an event-driven backtester",
-          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901646"
-        },
-        {
-          "type": "exam",
-          "label": "Final · group: Order Books, Matching & Market Microstructure in Code"
-        }
-      ],
-      "interview": true
-    },
-    {
-      "id": "tools.headless-sim",
-      "category": "tools",
-      "name": "A network-free, seeded simulator",
-      "can": "You can run a whole trading session in one process with no sockets, pin a seed so a run is reproducible, and drive the same strategy code offline and live through one adapter.",
-      "introduced": 4,
-      "practised": [
-        6,
-        7,
-        8
-      ],
-      "depth": 3,
-      "where": [
-        {
-          "type": "deck",
-          "session": 4,
-          "label": "Deck Week 4 · slides 19–20"
-        },
-        {
-          "type": "deck",
-          "session": 6,
-          "label": "Deck Week 6 · slide 18"
-        },
-        {
-          "type": "deck",
-          "session": 7,
-          "label": "Deck Week 7 · slide 19"
-        },
-        {
-          "type": "lab",
-          "session": 4,
-          "label": "Lab 4 · part 3 — One on_tick, two worlds — as_signal_fn",
-          "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-4-backtester-architecture"
-        },
-        {
-          "type": "hw",
-          "label": "HW 4 — Build an event-driven backtester",
-          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901646"
-        },
-        {
-          "type": "exam",
-          "label": "Final · group: Testing, CI/CD & Reproducibility"
-        }
-      ],
-      "interview": false
     },
     {
       "id": "python.bigo",
@@ -2338,10 +2244,12 @@ window.SKILLS = {
     {
       "id": "tools.parquet",
       "category": "tools",
-      "name": "Columnar storage & a feature cache",
-      "can": "You can explain why columnar Parquet beats row-oriented CSV for analytics — typed columns, column pruning, compression — and materialise an expensive feature build once so every later run reloads it.",
-      "introduced": 6,
-      "practised": [],
+      "name": "Parquet, partitions & predicate pushdown",
+      "can": "You can convert a tape to partitioned Parquet, explain row groups, footer statistics, dictionary encoding and projection, query the files in place with DuckDB or Polars, and reuse them as a feature cache.",
+      "introduced": 4,
+      "practised": [
+        6
+      ],
       "depth": 3,
       "where": [
         {
@@ -2354,6 +2262,11 @@ window.SKILLS = {
           "session": 6,
           "label": "Lab 6 · part 6 — Columnar vs row storage",
           "url": "https://canvas.uchicago.edu/courses/74211/pages/lab-6-big-data"
+        },
+        {
+          "type": "hw",
+          "label": "HW 4 — Your team's tape warehouse",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901646"
         },
         {
           "type": "hw",

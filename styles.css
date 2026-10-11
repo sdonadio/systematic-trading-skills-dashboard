@@ -376,3 +376,11 @@ table.cat .catdot{display:inline-block;width:8px;height:8px;border-radius:2px;ma
     block-size:auto !important}
   details.qa:not([open])>*:not(summary){display:block !important}
 }
+
+/* a session whose page moved to a combined companion page (skills.js combined_url) */
+.moved{max-width:1100px;margin:18px auto 0;padding:14px 18px;border:1px solid var(--accent-2);
+  border-left:4px solid var(--accent);border-radius:10px;background:rgba(var(--accent-rgb),.16);
+  font-size:14px;line-height:1.55;color:var(--ink)}
+.moved b{color:#fff}
+.moved .btn{display:inline-block;margin-top:8px;text-decoration:none}
+@media print{.moved{display:none}}

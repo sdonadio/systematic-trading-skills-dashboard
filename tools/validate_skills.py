@@ -70,6 +70,8 @@ lab_parts = {}
 for i in range(1, 10):
     txt = open(os.path.join(LABS_DIR, "week%02d.md" % i), encoding="utf-8").read()
     lab_parts[i] = {int(m) for m in re.findall(r"^### (\d+)\.", txt, re.M)}
+    # labs rebuilt from Week 3 on number their sections "## Step N — ..."
+    lab_parts[i] |= {int(m) for m in re.findall(r"^## Step (\d+)\b", txt, re.M)}
 
 # exam bank group names
 banks = {}
@@ -144,7 +146,7 @@ chk(50 <= len(skills) <= 80, "want 50-80 skills, got %d" % len(skills))
 by_id = {k["id"]: k for k in skills}
 ORDER = ["deck", "lab", "hw", "project", "exam"]
 DECK_RE = re.compile(r"^Deck Week (\d+) · (slide|slides) ([\d,– ]+)$")
-LAB_RE = re.compile(r"^Lab (\d+) · part (\d+) — .+$")
+LAB_RE = re.compile(r"^Lab (\d+) · (?:part|step) (\d+) — .+$")
 
 for k in skills:
     sid = k["id"]

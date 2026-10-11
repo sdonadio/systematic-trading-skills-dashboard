@@ -23,6 +23,11 @@
    and from the optional FOCUS.meta: link_title, link_kicker, link_phrase,
    link_short, interview_title, interview_kicker.
 
+   A session may carry `combined_url`: its student-facing page is a combined
+   companion page. The overview row links there, and session-N.html opens with a
+   banner pointing to it (old bookmarks keep working; the checklist below still
+   works and shares the same ticks).
+
    Categories are whatever skills.js lists — any ids, any number; the colour of
    a row or dot is the category's own `color`. Sessions are whatever skills.js
    lists — any numbers (0-based is fine), any dates, any count.
@@ -524,7 +529,7 @@
         var s = SESS[k], f = focusOf(s.n), list = skillsOf(s), t = tally(list);
         var li = add(ol, el("li", "tli"));
         var a = add(li, el("a", "trow" + (isFuture(s.n) ? " future" : "")));
-        a.href = "session-" + s.n + ".html";
+        a.href = s.combined_url ? String(s.combined_url) : "session-" + s.n + ".html";
         a.setAttribute("aria-label", WORD + " " + s.n + ": " +
           (f && f.focus ? f.focus : s.title) + ". " + t.checked + " of " + t.total +
           " skills checked.");
@@ -551,7 +556,7 @@
         add(c3, el("div", "pg", t.checked + " / " + t.total + " skills · " +
           pct(t.checked, t.total) + "%"));
 
-        add(a, el("div", "tg", "Open session"));
+        add(a, el("div", "tg", s.combined_url ? "Open the " + WORD.toLowerCase() + " page" : "Open session"));
       }
     }
 
@@ -611,6 +616,19 @@
     if (next) crumbs.push({ label: WORD + " " + next.n + " →", href: "session-" + next.n + ".html" });
     buildNav(crumbs, { label: "All skills →", href: "skills.html" });
     buildFooter();
+
+    /* ── 0 · combined page banner ───────────────────────────────── */
+    if (s.combined_url) {
+      var app = $("app"), ban = el("aside", "moved");
+      ban.setAttribute("role", "note");
+      add(ban, el("b", null, WORD + " " + n + " now lives on one page. "));
+      ban.appendChild(document.createTextNode(
+        "The explanations, the interactive widgets, this checklist and the interview questions " +
+        "are all on the combined " + WORD.toLowerCase() + " page; your ticks are shared with it. "));
+      var go = add(ban, el("a", "btn", "Open the " + WORD + " " + n + " page →"));
+      go.href = String(s.combined_url);
+      if (app) app.insertBefore(ban, app.firstChild);
+    }
 
     /* ── 1 · header ─────────────────────────────────────────────── */
     $("hKicker").textContent = WORD + " " + n + " of " + SESS.length + " · " + fmtDate(s.date);

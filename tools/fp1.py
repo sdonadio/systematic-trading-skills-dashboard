@@ -368,16 +368,17 @@ class Trader(ABC):
     ],
 }
 
+# Session 2 below is the content committed in focus.js by b9e9063 (threads &
+# processes added), brought back into this source on 2026-10-10.
 s2 = {
     "n": 2,
-    "focus": "Concurrency & the asyncio event loop",
-    "tagline": "One thread, many tasks, and a half-second tick budget: your hook is a callback inside somebody else's loop, and everything it blocks is a fill you never see.",
+    "focus": "Concurrency: asyncio, threads & processes",
+    "tagline": "One loop, many tasks, a half-second tick budget, and one rule above all: pick asyncio, a thread or a process by where each component's time goes, and measure before you believe it.",
     "concepts": [
         {
             "title": "Concurrency is structure; parallelism is execution",
             "text": "Concurrency means many tasks are in progress and interleaved on one worker; parallelism means they run at the same instant on several cores. asyncio gives you the first and not the second: `gather` overlaps waiting, so three sleeps of 3, 2 and 1 seconds finish in 3 seconds rather than 6, on one thread and one core. Nothing ran faster — the waiting overlapped. That is the right trade for a trading bot, which is I/O-bound: sockets, feeds, acks. CPU-bound work is the other case, and CPython's GIL lets only one thread execute bytecode at a time, so threads give no speedup there and processes do.",
-            "code": """\
-import asyncio
+            "code": """import asyncio
 done = []
 async def worker(name, delay):
     await asyncio.sleep(delay)          # non-blocking: yields to the loop
@@ -394,8 +395,7 @@ asyncio.run(main())
         {
             "title": "Calling a coroutine does not run it",
             "text": "`async def` defines a coroutine function. Calling it builds a coroutine object and executes nothing — the body runs only when something awaits it or the loop schedules it as a task. Forget the `await` and your program carries on cheerfully having done none of the work, with a `RuntimeWarning` about a coroutine that was never awaited buried in a log you are not reading. Worth knowing for this codebase: the engine's `on_tick` hook is a plain synchronous function called from inside the loop, so marking your override `async` returns a coroutine object the engine treats as a truthy signal.",
-            "code": """\
-import asyncio, inspect
+            "code": """import asyncio, inspect
 async def best_ask(sym):
     await asyncio.sleep(0)
     return 185.50
@@ -412,8 +412,7 @@ print("async?", inspect.iscoroutinefunction(best_ask), "on_tick async?", inspect
         {
             "title": "One blocking call freezes every task",
             "text": "A single-threaded loop runs one task at a time and switches only at an `await`. So `time.sleep`, a blocking HTTP call or a long numeric loop inside a coroutine stalls every other task for its whole duration — including the socket reader. In the week-2 lab three seconds of blocking work left the heartbeat 3,010 ms late; the same work through `asyncio.to_thread` cost it 4.8 ms. `async` buys nothing if you never `await`. Run with `debug=True` or `PYTHONASYNCIODEBUG=1` and the loop logs any callback that hogs it for more than 100 ms, which is the first thing to try when a bot \"misses fills for no reason\".",
-            "code": """\
-import asyncio, time
+            "code": """import asyncio, time
 async def reader(stop, n):
     while not stop.is_set(): await asyncio.sleep(0.005); n.append(1)
 async def main(block):
@@ -430,8 +429,7 @@ print("reads during 0.2s of work - blocking:", asyncio.run(main(True)) < 8, "off
         {
             "title": "A bounded queue is backpressure; an unbounded one is a time machine",
             "text": "`asyncio.Queue` decouples a fast producer from a slower consumer, and `maxsize` is the interesting parameter: when the queue is full, `put()` waits, which is backpressure for free. Leave it unbounded and the producer races ahead — in the lab a 10,000-slot queue let the feed run about 1,960 ticks in front, so the strategy was deciding on prices two and a half seconds old, with no throughput gain whatsoever. Depth is latency you cannot see in a throughput number. When you cannot keep up, drop or coalesce stale book updates; never buffer them.",
-            "code": """\
-import asyncio
+            "code": """import asyncio
 async def feed(q, n):
     for i in range(n): await q.put(i)          # put() waits when the queue is full
     await q.put(None)
@@ -448,8 +446,7 @@ print("stale ticks behind you - maxsize=1:", asyncio.run(run(1)), "unbounded:", 
         {
             "title": "Atomic between awaits, not across them",
             "text": "One task runs at a time and yields only at an `await`, so plain state updates between awaits are atomic and the pre-emptive data races you fear from threads do not happen. What does happen is the logic race: a read, an `await`, then a write derived from the read. The other task ran in the gap, and your write lands on a stale value. The shape to hunt for in your own bot is read a position, `await` the order send, write back a computed position. The fix is `asyncio.Lock` around the section that spans the await — or better, stop sharing mutable state and pass data between tasks through a queue.",
-            "code": """\
-import asyncio
+            "code": """import asyncio
 pos = 0
 async def buy(qty):
     global pos
@@ -464,10 +461,112 @@ asyncio.run(main())
             "deck": "Deck Week 2 · slide 12",
         },
         {
+            "title": "The GIL: threads wait in parallel, they do not compute in parallel",
+            "text": "CPython's Global Interpreter Lock lets one thread execute Python bytecode at a time. A thread that blocks on a socket, a disk or `time.sleep` releases it, so threads overlap waiting, and they do nothing for computing. Classify the work first. Quiz 3 measured it on a 10-core Mac: the same dot product took 1.85 s sequentially, 2.21 s on 4 threads (slower, because you pay the hand-offs and get no parallelism) and 0.78 s on 4 processes, each with its own interpreter and its own GIL. numpy and other C kernels release the GIL inside their loops, which is why vectorised code can still use threads.",
+            "code": """import threading, time
+def crunch(n):                        # CPU-bound: pure Python bytecode, holds the GIL
+    while n: n -= 1
+def wait(s):                          # I/O-bound: blocks with the GIL released
+    time.sleep(s)
+def timed(fn, arg, threads):
+    t0 = time.perf_counter()
+    if threads:
+        ts = [threading.Thread(target=fn, args=(arg,)) for _ in range(4)]
+        [t.start() for t in ts]; [t.join() for t in ts]
+    else:
+        [fn(arg) for _ in range(4)]
+    return time.perf_counter() - t0
+cpu = timed(crunch, 3_000_000, False) / timed(crunch, 3_000_000, True)
+io = timed(wait, 0.2, False) / timed(wait, 0.2, True)
+print("CPU-bound: 4 threads at least 1.5x faster?", cpu > 1.5)
+print("I/O-bound: 4 threads at least 2.5x faster?", io > 2.5)
+# CPU-bound: 4 threads at least 1.5x faster? False
+# I/O-bound: 4 threads at least 2.5x faster? True""",
+            "deck": "Deck Week 2 · slides 7, 14",
+        },
+        {
+            "title": "The GIL is not thread safety: find the race, take the Lock",
+            "text": "The GIL protects the interpreter, not your data. A switch can land between the read and the write of `balance = balance + amount`, and the other thread's update disappears. In Quiz 2 two customers made 10 million deposits each way and the balance ended at +2,478,125 instead of 0. A different number came out every run, so a passing test proves nothing. The fix is a `threading.Lock` around the whole read-modify-write: correct, at the cost of 1.3 s becoming 2.1 s, so lock only the critical section. The toolkit is small. `Thread` and `join`, `Event` as the clean stop flag, `queue.Queue` to hand data over instead of sharing it, and `RLock` when a locked `withdraw()` calls a locked `deposit()`.",
+            "code": """import sys, threading
+sys.setswitchinterval(1e-5)               # switch threads often so the race shows quickly
+class Account:
+    def __init__(self): self.balance = 0; self.lock = threading.Lock()
+    def _write_receipt(self, b): pass
+    def deposit(self, amount):
+        new = self.balance + amount       # 1. read
+        self._write_receipt(new)          # 2. a thread switch can land here
+        self.balance = new                # 3. write: overwrites the other thread's update
+    def safe_deposit(self, amount):
+        with self.lock:                   # 1-2-3 as ONE critical section
+            new = self.balance + amount
+            self._write_receipt(new); self.balance = new
+def run(method, n=200_000):
+    acct = Account(); op = getattr(acct, method)
+    def customer(amount):
+        for _ in range(n): op(amount)
+    ts = [threading.Thread(target=customer, args=(a,)) for a in (+1, -1)]
+    [t.start() for t in ts]; [t.join() for t in ts]
+    return acct.balance
+print("no lock, balance is 0?", run("deposit") == 0)
+print("with Lock, balance:", run("safe_deposit"))
+# no lock, balance is 0? False
+# with Lock, balance: 0""",
+            "deck": "Deck Week 2 · slides 15–16",
+        },
+        {
+            "title": "Pools, start methods and pickling: a process is not free",
+            "text": "`ThreadPoolExecutor` and `ProcessPoolExecutor` share one API (`map`, `submit`, Futures), so you can swap the class and keep the code, then measure. Ten blocking 0.3 s polls take 3.04 s serially and 0.31 s on a thread pool. CPU work needs the process pool, but every argument and result crosses by pickle, and the child gets your function by name. Lambdas, nested functions, sockets, locks and event loops will not go. The start method decides how the child begins. `spawn` (the default on macOS and Windows) re-imports your file, so the `__main__` guard is mandatory. `fork` copies the parent along with any half-held locks, and `forkserver` is the Linux default from 3.14. Pool start-up costs 0.1 to 0.3 s, so a process pool loses to one core on small jobs, and passing 160 MB of lists instead of seeds handed Quiz 3's win back.",
+            "code": """import multiprocessing as mp, pickle, sys, time
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+def crunch(n):                            # module level: pickled BY NAME, child re-imports it
+    while n: n -= 1
+    return n
+def timed(pool_cls, jobs):
+    t0 = time.perf_counter()
+    with pool_cls(max_workers=4) as ex: list(ex.map(crunch, jobs))
+    return time.perf_counter() - t0
+if __name__ == "__main__":                # REQUIRED under spawn: the child re-imports this file
+    print(sys.platform, mp.get_start_method())
+    try: pickle.dumps(lambda x: x * x)
+    except Exception as e: print("pickle a lambda ->", type(e).__name__)
+    big, tiny = [5_000_000] * 4, [10] * 4
+    print("big jobs: processes beat threads?", timed(ProcessPoolExecutor, big) < timed(ThreadPoolExecutor, big))
+    t0 = time.perf_counter(); [crunch(n) for n in tiny]; one_core = time.perf_counter() - t0
+    print("tiny jobs: process pool slower than one core?", timed(ProcessPoolExecutor, tiny) > one_core)
+# darwin spawn
+# pickle a lambda -> PicklingError
+# big jobs: processes beat threads? True
+# tiny jobs: process pool slower than one core? True""",
+            "deck": "Deck Week 2 · slides 17–20",
+        },
+        {
+            "title": "Choose per component, and cross the thread-loop line safely",
+            "text": "Decide per component by where its time goes. The feed handler and the order gateway wait on sockets, so they run as asyncio tasks, and the gateway stays one task so order sequence is kept. The yfinance reference poll is blocking HTTP with no async API, so it gets a thread. A light z-score signal costs microseconds of numpy and runs inline, while a heavy fit or backtest burns CPU for seconds and goes to a process pool. Logs and disk writes use `to_thread` or a writer thread. When a thread and the loop must talk, there are three safe crossings: a plain dict write the loop reads later, `loop.call_soon_threadsafe` to push into the loop, and `await asyncio.to_thread(fn)` to run blocking work and get the result back. An `asyncio.Queue` is not thread-safe, so a thread never touches it directly.",
+            "code": """import asyncio, threading, time
+prices = {}                                         # the broker's state.yahoo_prices
+def heavy_calc():                                   # blocking work the loop asks for
+    time.sleep(0.3); return 42
+async def main():
+    loop = asyncio.get_running_loop()
+    q = asyncio.Queue()                             # NOT thread-safe: only the loop touches it
+    def poll():                                     # the "yahoo-feed" thread
+        for i in range(3):
+            time.sleep(0.1)                         # blocking HTTP stand-in
+            prices["AAPL"] = 100.0 + i              # PULL: a plain dict write
+            loop.call_soon_threadsafe(q.put_nowait, i)   # PUSH: the only safe way in
+    threading.Thread(target=poll, daemon=True, name="yahoo-feed").start()
+    t0 = time.perf_counter()
+    score = await asyncio.to_thread(heavy_calc)     # loop -> thread -> result back
+    got = [await q.get() for _ in range(3)]
+    print(score, got, prices, "overlapped:", time.perf_counter() - t0 < 0.45)
+asyncio.run(main())
+# 42 [0, 1, 2] {'AAPL': 102.0} overlapped: True""",
+            "deck": "Deck Week 2 · slides 21–22",
+        },
+        {
             "title": "Sockets drop: catch ConnectionClosed and back off",
             "text": "A live session will drop your socket — the venue restarts, the wifi blinks, a close frame arrives. `websockets.exceptions.ConnectionClosed` must be caught around the read loop, not inside the strategy, and the retry has to back off: double the delay and cap it, so thirty bots reconnecting do not arrive as a thundering herd on a venue that is still starting. Reset state on the way back in. The engine rebuilds `MarketData()` on every reconnect for a reason — a stale book is worse than no book, because it looks tradeable.",
-            "code": """\
-import asyncio
+            "code": """import asyncio
 async def consume(attempts, delay=1.0):
     log = []
     for ok in attempts:
@@ -479,7 +578,7 @@ async def consume(attempts, delay=1.0):
     return log
 print(asyncio.run(consume([False, False, False, True])))
 # ['ConnectionClosed - retry in 1s', 'ConnectionClosed - retry in 2s', 'ConnectionClosed - retry in 4s', 'connected']""",
-            "deck": "Deck Week 2 · slide 14 · Deck Week 2 · slide 20",
+            "deck": "Deck Week 2 · slide 25 · slide 31",
         },
     ],
     "hft": {
@@ -489,32 +588,13 @@ print(asyncio.run(consume([False, False, False, True])))
             "That is the live-risk failure, and it is measurable rather than theoretical. Block the loop for three seconds and three seconds of snapshots, acks and fills arrive at a socket nobody is reading; the lab's heartbeat measured 3,010 ms of starvation against 4.8 ms for the same work moved off the loop with `to_thread`. Scoring begins in week 2, so this is not a style point — a blocking bot misses fills, and it also misses the SESSION_CLOSED event that triggers flattening, which is how a position survives the end of a session.",
             "Queue depth is a transaction cost. A bounded queue makes the producer wait and keeps the prices you act on current; an unbounded one converts a slow consumer into stale decisions, and a stale decision crosses a spread that has already moved against it. The lab's two rows say it precisely: identical throughput, worst-case lag of a few milliseconds against roughly 2.4 seconds. Turnover multiplies that error, so the right response to falling behind is to drop or coalesce updates and keep the tick you act on fresh, not to buy a bigger buffer.",
             "There is exactly one legitimate thread here, and it is worth knowing why. `yfinance` is blocking HTTP with no async API — one `Ticker(...).fast_info.last_price` took 3.6 seconds in the lab, across ten symbols every 5 seconds — so the broker runs it in a daemon thread named `yahoo-feed` that writes one dict of floats, and the async quoting code reads that dict. Threads for blocking libraries, the loop for sockets, nothing shared but plain floats, and the thread's body wrapped so it never raises. That is the whole hand-off.",
+            "Processes belong to research, not to the tick. A walk-forward fit or a parameter sweep is CPU-bound and embarrassingly parallel, so it is the one place a process pool pays: Quiz 3's 1.85 s became 0.78 s on four workers. A process round trip per tick is the opposite trade, because start-up and pickling cost more than a z-score. And a thread you add to write your portfolio while the loop reads it is Quiz 2 waiting to happen. Keep one owner for each piece of state, and measure before you add a core.",
             "Offline honesty has a limit here that is worth naming. The simulator runs the same `Trader` subclass with no network, which makes an offline P&L a statement about the code you ship — but it never stalls, never drops a socket and never delivers a book two seconds late. The failures this week is about are exactly the ones a clean harness cannot show you. So instrument the real thing: time `on_tick` and log a warning past 50 ms, run once with `debug=True`, and make your bot log a reconnect line and come back without being restarted.",
         ],
         "example": {
             "title": "In the arena",
             "text": "broker/broker.py — the one thread in the codebase. `start_yahoo_feeds()` launches a daemon thread and `_yahoo_poll_loop()` writes into a plain dict the async quoting code reads; note the wrapper that guarantees it never raises.",
-            "code": """\
-# broker/broker.py
-def start_yahoo_feeds(self) -> None:
-    \"\"\"Poll Yahoo Finance in a background daemon thread.\"\"\"
-    t = threading.Thread(target=self._yahoo_poll_loop,
-                         args=(config.EQUITY_SYMBOLS,),
-                         daemon=True, name="yahoo-feed")
-    t.start()
-
-def _yahoo_poll_loop(self, symbols: list[str]) -> None:
-    \"\"\"Runs in the yahoo-feed thread. Never raises - errors are logged.\"\"\"
-    import yfinance as yf
-    while True:
-        for sym in symbols:
-            try:
-                price = float(yf.Ticker(sym).fast_info.last_price)
-                if price > 0:
-                    self.state.yahoo_prices[sym] = price   # the whole hand-off
-            except Exception as exc:
-                logger.debug("Yahoo fetch failed for %s: %s", sym, exc)
-        time.sleep(config.YAHOO_POLL_INTERVAL)""",
+            "code": "# broker/broker.py\ndef start_yahoo_feeds(self) -> None:\n    \"\"\"Poll Yahoo Finance in a background daemon thread.\"\"\"\n    t = threading.Thread(target=self._yahoo_poll_loop,\n                         args=(config.EQUITY_SYMBOLS,),\n                         daemon=True, name=\"yahoo-feed\")\n    t.start()\n\ndef _yahoo_poll_loop(self, symbols: list[str]) -> None:\n    \"\"\"Runs in the yahoo-feed thread. Never raises - errors are logged.\"\"\"\n    import yfinance as yf\n    while True:\n        for sym in symbols:\n            try:\n                price = float(yf.Ticker(sym).fast_info.last_price)\n                if price > 0:\n                    self.state.yahoo_prices[sym] = price   # the whole hand-off\n            except Exception as exc:\n                logger.debug(\"Yahoo fetch failed for %s: %s\", sym, exc)\n        time.sleep(config.YAHOO_POLL_INTERVAL)",
         },
     },
     "interview": [
@@ -531,22 +611,10 @@ def _yahoo_poll_loop(self, symbols: list[str]) -> None:
             "skill": "python.coroutines",
         },
         {
-            "q": "Why don't threads speed up CPU-bound Python, and what do you use instead?",
-            "a": "CPython's global interpreter lock lets one thread execute bytecode at a time, so four threads doing pure Python arithmetic interleave rather than scale — you pay context switches for no throughput. Threads still help for blocking I/O, because the lock is released around a socket, disk or network wait. For real CPU parallelism use processes (`multiprocessing`, `ProcessPoolExecutor`), accepting separate memory and a serialisation cost at the boundary, or push the loop into a library that releases the GIL while it works, which is what a vectorised numpy operation does.",
-            "level": "core",
-            "skill": "python.gil",
-        },
-        {
             "q": "A bot stops receiving market data for seconds at a time, then catches up. How do you diagnose it?",
             "a": "That pattern is a blocked event loop, not a network problem: while one coroutine refuses to yield, the socket reader never runs and the data queues up in the kernel. First confirm it — run the loop with `debug=True` or `PYTHONASYNCIODEBUG=1`, which logs any callback that holds the loop for more than 100 ms, and add timing around the suspect hook. Then find the offender, which is nearly always `time.sleep`, a blocking HTTP client, a synchronous database driver, or a heavy numeric loop. Move it off the loop with `asyncio.to_thread` or a process pool, and re-measure the same way.",
             "level": "core",
             "skill": "python.non-blocking",
-        },
-        {
-            "q": "Why give an asyncio.Queue a maxsize, and what do you do when the consumer cannot keep up?",
-            "a": "`maxsize` makes `put()` wait when the queue is full, which pushes backpressure onto the producer and bounds memory. Unbounded, a fast feed and a slow strategy produce a deep queue, and depth is age: you keep full throughput while acting on prices that are seconds stale. For market data the right answer is usually not to queue at all — keep the latest snapshot per symbol and overwrite it, or coalesce updates so the consumer always gets the newest book. Queue everything you must not lose, such as fills and acks; drop what only the freshest value of matters.",
-            "level": "core",
-            "skill": "python.asyncio-queue",
         },
         {
             "q": "The event loop is single-threaded. Do you still need a lock?",
@@ -555,16 +623,40 @@ def _yahoo_poll_loop(self, symbols: list[str]) -> None:
             "skill": "python.async-races",
         },
         {
-            "q": "Design the reconnect path for a WebSocket market-data client.",
-            "a": "Wrap the whole connect-and-read cycle in a loop, catch `ConnectionClosed` and `OSError` around it rather than inside the strategy, and back off exponentially with a cap and some jitter — `delay = min(delay * 2, 30)` — so a venue restart does not get a thundering herd from every bot at once, and reset the delay after a successful handshake. On reconnect, discard derived state: rebuild the local book rather than resuming from a stale one, and re-subscribe. Cancel the sibling tasks with the connection so a trading loop does not keep firing orders at a dead socket, and treat a clean close and an abnormal drop as the same event.",
+            "q": "Why did 4 threads not speed up the dot product, when 4 processes did?",
+            "a": "The dot product in Quiz 3 is pure Python arithmetic, so it is CPU-bound, and CPython's GIL lets only one thread execute bytecode at a time. Four threads take turns on one core and add switching and hand-off cost: 1.85 s sequentially became 2.21 s. Four processes each have their own interpreter, GIL and core, so they ran in parallel: 0.78 s. The fix is to classify the work before choosing the tool. Threads help when the time goes on waiting, because a blocked thread releases the GIL. For computing you want processes, or a numpy kernel that releases the GIL inside its loop.",
+            "level": "core",
+            "skill": "python.gil",
+        },
+        {
+            "q": "The GIL means only one thread runs at a time. So why can two threads still corrupt a balance?",
+            "a": "The GIL makes each bytecode atomic, not your three-step update. `new = balance + amount; balance = new` is a load, an add and a store, and the interpreter can switch threads between them, so the second writer overwrites the first and an update is lost. Quiz 2 ended at +2,478,125 when it should have been 0, with a different value every run. Put a `threading.Lock` around the whole read-modify-write and it comes back to 0, at about 60% more run time, so lock only the critical section. Two follow-ups are worth knowing: `balance += 1` is not atomic either, and taking a plain Lock in `withdraw()` and again in the `deposit()` it calls deadlocks, so use an `RLock` or lock in one place. The better design is often to share nothing and pass data through a `queue.Queue`.",
+            "level": "core",
+            "skill": "python.threading",
+        },
+        {
+            "q": "When is a process pool worse than a single core?",
+            "a": "When the overhead is bigger than the work. A pool pays start-up (0.1 to 0.3 s, since under `spawn` each worker starts a fresh interpreter and re-imports your module) and pickles every argument and result across the boundary. On small jobs, or once per tick, that costs more than the computation, so one core in a loop wins. It also loses when the payload is big: Quiz 3 took 0.78 s when each worker rebuilt its slice from a seed, and 1.59 s for the dot product alone when the parent pickled 160 MB of lists across. And it loses when the work is not CPU-bound at all, because waiting does not need another core. Create the pool once, send small inputs, return small results, and keep the decision only if the timing shows a gain.",
+            "level": "core",
+            "skill": "python.executors",
+        },
+        {
+            "q": "For each component of a trading system, would you use threads, processes or asyncio?",
+            "a": "Decide by where the time goes. The feed handler waits on a socket for thousands of messages, so it runs on asyncio: one loop and no locks. The order gateway also waits, and order sequence matters, so it is one asyncio task acting as the single writer. A blocking library with no async API, like the yfinance reference poll, gets a thread. A light signal such as a numpy z-score runs inline, because a process round trip would cost more than the math. A heavy fit or backtest is CPU-bound and goes to a process pool, with the result pickled back. Logs and database writes use `to_thread` or a dedicated writer thread. The default is asyncio, a thread only when a library blocks, and a process only after a measurement shows the CPU is the bottleneck.",
             "level": "senior",
-            "skill": "python.reconnect",
+            "skill": "python.concurrency-choice",
         },
         {
             "q": "Your signal needs a blocking C library that takes 20 ms per call, and the tick budget is 500 ms. Walk through the options.",
             "a": "First check whether it must be on the tick path at all — a cached or periodically refreshed value often removes the problem. If it must run per tick, `asyncio.to_thread` is the one-liner and is correct when the library releases the GIL while it works, which most C extensions doing real work do; if it holds the GIL, the thread starves the loop anyway and you need a process pool and the serialisation cost with it. Use `run_in_executor` with your own bounded pool when you need to limit concurrency. Whatever you pick, keep a deadline: if the result is not back in time, skip the tick rather than queue a stale decision.",
             "level": "senior",
-            "skill": "python.multiprocessing",
+            "skill": "python.to-thread",
+        },
+        {
+            "q": "Design the reconnect path for a WebSocket market-data client.",
+            "a": "Wrap the whole connect-and-read cycle in a loop, catch `ConnectionClosed` and `OSError` around it rather than inside the strategy, and back off exponentially with a cap and some jitter — `delay = min(delay * 2, 30)` — so a venue restart does not get a thundering herd from every bot at once, and reset the delay after a successful handshake. On reconnect, discard derived state: rebuild the local book rather than resuming from a stale one, and re-subscribe. Cancel the sibling tasks with the connection so a trading loop does not keep firing orders at a dead socket, and treat a clean close and an abnormal drop as the same event.",
+            "level": "senior",
+            "skill": "python.reconnect",
         },
     ],
 }

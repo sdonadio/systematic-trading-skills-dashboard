@@ -7,40 +7,161 @@ trailing `#` comment lines are the real captured stdout.
 SESSIONS = [
 
 # ─────────────────────────────────────────────────────────────── session 3 ──
+# The content committed in focus.js by b9e9063 (Session 3 rewritten in teaching
+# order), brought back into this source on 2026-10-10.
 {
     "n": 3,
-    "focus": "Sockets, WebSockets & typed message protocols",
-    "tagline": "Bytes are not messages: frame them, upgrade the connection once, then let a pydantic model reject a bad order at the edge instead of three layers deep in the matching engine.",
+    "focus": "The stack, sockets & wire protocols",
+    "tagline": "Nine things happen between joining the Wi-Fi and your first quote. Learn the layer each one lives at, pick TCP or UDP by what a loss costs, frame your bytes, read FIX and ITCH, then let a WebSocket and a typed schema carry your orders.",
     "concepts": [
         {
-            "title": "TCP hands you bytes, not messages",
-            "text": "TCP is a reliable, ordered byte stream with no message boundaries. Two sendall calls can arrive as one recv, and one call can arrive split across two. In the week-3 lab three sends came back as two receives: the first glued two JSON objects together and cut a third in half. json.loads raises on either buffer. There are exactly three fixes — a delimiter, a length prefix, or a protocol that frames for you.",
-            "code": """import json, struct
-glued = b'{"type":"place_order"}{"type":"cancel_order"}'      # two sends, one recv
-try: json.loads(glued)
-except json.JSONDecodeError as e: print("unframed ->", e.msg)
-frame = lambda p: struct.pack("!I", len(p)) + p
-wire = frame(b'{"type":"place_order"}') + frame(b'{"type":"cancel_order"}')[:9]
-msgs, i = [], 0
-while i + 4 <= len(wire) and i + 4 + struct.unpack("!I", wire[i:i + 4])[0] <= len(wire):
-    n = struct.unpack("!I", wire[i:i + 4])[0]; msgs.append(wire[i + 4:i + 4 + n]); i += 4 + n
-print("framed ->", len(msgs), "complete,", len(wire) - i, "bytes buffered")
-# unframed -> Extra data
-# framed -> 1 complete, 9 bytes buffered""",
-            "deck": "Deck Week 3 · slide 6 · slide 11",
+            "title": "Seven OSI layers, four that the Internet implements",
+            "text": "OSI is a vocabulary for saying where something lives or fails; TCP/IP is what is actually implemented. Here is each layer with its job, PDU, header, protocols and devices. L1 Physical puts bits on a medium (radio, copper, fibre, through antennas and optics). L2 Data link delivers a frame to the next hop: MAC addresses and an FCS, over 802.11 or Ethernet, with ARP resolving the gateway's MAC, through NICs, access points and switches. L3 Network moves a packet host to host: a 20-byte IPv4 header with TTL and protocol, through routers and NAT. L4 Transport is process to process: ports, plus TCP's sequence, ack, window and flags, on host kernels, firewalls and NAT. L5 Session and L6 Presentation have no protocol of their own on the Internet; TLS 1.3 and your encoding (JSON, SBE) live there. L7 Application is DNS, HTTP, the WebSocket, FIX and our JSON. TCP/IP folds L1–2 into Link and L5–7 into Application. Each layer reads only its own header and hands the rest up. Setup from this laptop to the arena took about 250 ms (DNS 53 ms, TCP 25 ms, TLS 35 ms, upgrade 26 ms), once per session.",
+            "code": """STACK = [  # OSI layer, PDU, TCP/IP layer, what tonight's quote carries there
+    (7, "Application",  "message",  "Application", "DNS, HTTP, WebSocket 2-14 B, our JSON"),
+    (6, "Presentation", "-",        "Application", "TLS encryption; JSON / SBE encoding"),
+    (5, "Session",      "-",        "Application", "TLS session, FIX session, WS close"),
+    (4, "Transport",    "segment",  "Transport",   "TCP 20-60 B: ports, seq, ack, flags"),
+    (3, "Network",      "packet",   "Internet",    "IPv4 20 B: src/dst IP, TTL, protocol"),
+    (2, "Data link",    "frame",    "Link",        "802.11 / Ethernet: MACs, FCS 4 B"),
+    (1, "Physical",     "bit",      "Link",        "5 GHz radio, copper, fibre"),
+]
+for n, name, pdu, tcpip, carries in STACK:
+    print(f"L{n} {name:<12} {pdu:<8} {tcpip:<11} {carries}")
+print("TCP MSS on a 1500-byte MTU with timestamps:", 1500 - 20 - 20 - 12)
+# L7 Application  message  Application DNS, HTTP, WebSocket 2-14 B, our JSON
+# L6 Presentation -        Application TLS encryption; JSON / SBE encoding
+# L5 Session      -        Application TLS session, FIX session, WS close
+# L4 Transport    segment  Transport   TCP 20-60 B: ports, seq, ack, flags
+# L3 Network      packet   Internet    IPv4 20 B: src/dst IP, TTL, protocol
+# L2 Data link    frame    Link        802.11 / Ethernet: MACs, FCS 4 B
+# L1 Physical     bit      Link        5 GHz radio, copper, fibre
+# TCP MSS on a 1500-byte MTU with timestamps: 1448""",
+            "deck": "Deck Week 3 · slides 3–11",
         },
         {
-            "title": "One upgrade, then full duplex and framed",
-            "text": "A WebSocket starts as an ordinary HTTP GET carrying Upgrade: websocket and a random Sec-WebSocket-Key. The server replies 101 Switching Protocols and echoes back the SHA-1 of your key concatenated with a fixed RFC 6455 GUID — that is how the client knows it reached a real WebSocket server and not a cache. From then on the same TCP connection is full-duplex and framed: one await ws.recv() returns exactly one message, never half and never two. HTTP polling gives you neither; SSE is server-to-client only, and a trader must also send orders.",
+            "title": "UDP vs TCP: what a loss costs decides",
+            "text": "TCP (`SOCK_STREAM`) costs one round trip of handshake and gives you a byte stream: ordered, retransmitted, flow- and congestion-controlled, with no message boundaries, and with head-of-line blocking where one lost packet freezes every byte behind it. UDP (`SOCK_DGRAM`) has an 8-byte header, no connection, no retransmit and no ordering. One `sendto` is one `recvfrom`, and multicast lets the network copy each datagram to every subscriber at nearly the same instant. Hence the rule. Order entry runs on TCP (FIX, OUCH, iLink 3, our WebSocket), because a lost order is a bug. Market data runs on UDP multicast (ITCH, CME MDP 3.0), because a retransmitted price arrives stale. You pay for UDP by numbering every datagram and detecting gaps yourself: in the lab all three subscribers saw `missing [4]`. UDP fails silently: a `sendto` to nobody still reports success.",
+            "code": """import socket, struct
+rx = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+rx.bind(("127.0.0.1", 0)); rx.settimeout(0.5)            # UDP: bind and go, no listen/accept
+tx = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+for seq in (1, 2, 3, 5):                                  # datagram 4 was "lost" on the way
+    tx.sendto(struct.pack("!Q", seq) + b"AAPL 225.78", rx.getsockname())
+got = [struct.unpack("!Q", rx.recvfrom(65535)[0][:8])[0] for _ in range(4)]   # one sendto = one recvfrom
+expected, missing = 1, []
+for seq in got:                                           # gap detection is YOUR job on UDP
+    missing += range(expected, seq); expected = seq + 1
+print("received", got, "missing", missing, "-> retransmit or snapshot")
+print("sendto() to a port nobody listens on returned", tx.sendto(b"hello?", ("127.0.0.1", 9)))
+# received [1, 2, 3, 5] missing [4] -> retransmit or snapshot
+# sendto() to a port nobody listens on returned 6""",
+            "deck": "Deck Week 3 · slides 12–13",
+        },
+        {
+            "title": "The socket API, call by call, and what the kernel does",
+            "text": "TCP server: `socket`, `setsockopt(SO_REUSEADDR)`, `bind`, `listen(8)`. From `listen` on, the kernel answers SYNs by itself and parks finished handshakes in the backlog, which is why the client's `connect` returned at 0.39 ms, before the server's `accept`. `accept` mints a new socket per client while the listening socket keeps listening. `recv(n)` returns whatever has arrived, up to n bytes, and `b''` means the peer sent FIN. `sendall` loops `send` for you. The side that closes first sits in TIME_WAIT, so a restarted server gets `[Errno 48] Address already in use` without `SO_REUSEADDR`. UDP is just `socket`, `bind`, `recvfrom` on the receiver and `sendto` on the sender, with no listen, no accept and no connection state. A blocking accept loop serves one client at a time (50 clients took 0.23 s); readiness I/O with `selectors` or asyncio serves them all on one thread (0.03 s).",
+            "code": """import socket
+srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)   # rebind despite TIME_WAIT
+srv.bind(("127.0.0.1", 0)); srv.listen(8)                   # LISTEN: the kernel now answers SYNs
+cli = socket.create_connection(srv.getsockname(), timeout=2)  # handshake done by the kernels...
+conn, peer = srv.accept()                                   # ...and queued in the backlog until now
+print("accept() minted a new socket:", conn.fileno() != srv.fileno())
+cli.sendall(b"buy 5 AAPL");  print("server recv:", conn.recv(4096))
+conn.sendall(b"BUY 5 AAPL"); print("client recv:", cli.recv(4096))
+cli.close()                                                 # client sends FIN
+print("server recv after FIN:", conn.recv(4096))            # b'' = orderly close, not an error
+conn.close(); srv.close()
+# accept() minted a new socket: True
+# server recv: b'buy 5 AAPL'
+# client recv: b'BUY 5 AAPL'
+# server recv after FIN: b''""",
+            "deck": "Deck Week 3 · slides 15–17",
+        },
+        {
+            "title": "An echo server, framing, and a UDP pair",
+            "text": "Every networked program is the echo server plus framing plus error handling. The server loop is `while data := conn.recv(4096): conn.sendall(data.upper())`, and the client sets a timeout so a silent peer becomes an exception instead of a hang. With the server down, the client gets `ConnectionRefusedError` because the kernel answered the SYN with RST. TCP gives you bytes, not messages: three `sendall` calls came back as two `recv`s, and one 1 MB send arrived as 25. Frame every message, with a 4-byte length prefix for anything binary (FIX, SoupBinTCP and SBE all carry a length) or a newline for text you want to grep, like the session `.jsonl` tapes. On UDP the boundaries are preserved and delivery is not, so put a sequence number in every datagram and expect a datagram over 65,507 bytes to fail with `Message too long`.",
+            "code": """import json, socket, struct
+a, b = socket.socketpair()                                  # a connected byte stream
+a.sendall(b'{"type":"place_order"}'); a.sendall(b'{"type":"cancel_order"}')
+try: json.loads(b.recv(4096))                               # two sends, one recv
+except json.JSONDecodeError as e: print("unframed:", e.msg)
+def send_msg(s, obj):                                       # 4-byte big-endian length, then payload
+    body = json.dumps(obj).encode(); s.sendall(struct.pack("!I", len(body)) + body)
+def recv_exactly(s, n):                                     # recv may return fewer than n bytes
+    buf = bytearray()
+    while len(buf) < n:
+        chunk = s.recv(n - len(buf))
+        if not chunk: raise ConnectionError("peer closed mid-message")
+        buf += chunk
+    return bytes(buf)
+def recv_msg(s): return json.loads(recv_exactly(s, struct.unpack("!I", recv_exactly(s, 4))[0]))
+for t in ("place_order", "cancel_order", "handshake"): send_msg(a, {"type": t})
+print("framed:", [recv_msg(b)["type"] for _ in range(3)])
+# unframed: Extra data
+# framed: ['place_order', 'cancel_order', 'handshake']""",
+            "deck": "Deck Week 3 · slides 18–20",
+        },
+        {
+            "title": "FIX, ITCH and OUCH: the venue protocols under ours",
+            "text": "FIX is tag=value text separated by SOH. 8 is BeginString, 9 is BodyLength, 35 is MsgType (D is NewOrderSingle, 8 is ExecutionReport), 34 is MsgSeqNum, 11 is the client's ClOrdID, and 10 is CheckSum, the byte sum mod 256. Session messages keep the pipe honest and know nothing about orders: Logon (A), Heartbeat (0), TestRequest (1), ResendRequest (2), SequenceReset (4), Logout (5). Application messages carry the business: D, F, G and 8. Sequence numbers survive a reconnect, so a session resumes instead of restarting. When microseconds matter, fixed-layout binary replaces text. ITCH is Nasdaq's market data out over UDP multicast (MoldUDP64), and an Add Order is 36 bytes you decode with one `struct.unpack`. OUCH is Nasdaq's order entry in: tiny binary Enter, Cancel and Replace messages over TCP (SoupBinTCP). Decoding one order took 84 ns with struct against 1,197 ns with `json.loads`, and fixed sizes make latency predictable.",
+            "code": "import struct\nSOH = \"\\x01\"\ndef fix(fields):                                            # BodyLength (9) and CheckSum (10) computed\n    body = \"\".join(f\"{k}={v}{SOH}\" for k, v in fields)\n    head = f\"8=FIX.4.4{SOH}9={len(body)}{SOH}\"\n    return head + body + f\"10={sum((head + body).encode()) % 256:03d}{SOH}\"\nmsg = fix([(35, \"D\"), (49, \"TEAM_SEB\"), (56, \"ARENA\"), (34, 42), (52, \"20261016-20:45:00.123\"),\n           (11, \"c-0001\"), (55, \"AAPL\"), (54, 1), (38, 5), (40, 2), (44, \"225.30\"), (59, 0)])\nprint(msg.replace(SOH, \"|\"))\ntags = dict(f.split(\"=\", 1) for f in msg.split(SOH) if f)\nprint(\"MsgType\", tags[\"35\"], \"(NewOrderSingle) seq\", tags[\"34\"], \"ClOrdID\", tags[\"11\"])\nITCH_ADD = \"!cHH6sQcI8sI\"                                   # 'A' Add Order, 36 bytes, fixed offsets\nwire = struct.pack(ITCH_ADD, b\"A\", 7, 0, (74_700_123_457_000).to_bytes(6, \"big\"),\n                   1001, b\"B\", 5, b\"AAPL    \", 2_253_000)\nkind, _, _, ts, ref, side, shares, sym, px = struct.unpack(ITCH_ADD, wire)\nprint(len(wire), \"bytes:\", kind.decode(), f\"ref={ref}\", side.decode(), shares, sym.decode().strip(),\n      f\"@ {px / 10_000:.4f}\", f\"t={int.from_bytes(ts, 'big') / 1e9:.6f}s after midnight\")\n# 8=FIX.4.4|9=105|35=D|49=TEAM_SEB|56=ARENA|34=42|52=20261016-20:45:00.123|11=c-0001|55=AAPL|54=1|38=5|40=2|44=225.30|59=0|10=242|\n# MsgType D (NewOrderSingle) seq 42 ClOrdID c-0001\n# 36 bytes: A ref=1001 B 5 AAPL @ 225.3000 t=74700.123457s after midnight",
+            "deck": "Deck Week 3 · slides 21–23",
+        },
+        {
+            "title": "WebSocket: one upgrade, then frames, pings and a reconnect loop",
+            "text": "A WebSocket starts as an HTTP/1.1 GET with `Upgrade: websocket` and a random `Sec-WebSocket-Key`. The server answers `101 Switching Protocols` with base64(SHA-1(key + a fixed GUID)), proving it understood the upgrade. After that the same TCP connection carries frames in both directions: a 2–14 byte header with FIN, opcode (1 text, 2 binary, 8 close, 9 ping, A pong), a mask bit (client frames are always masked) and a length. One frame is one message, the boundary TCP never gave you. Ping and pong go every 20 s and are invisible to `recv()`. Close code 1000 is a normal close, and 1006 means no close frame arrived because the peer vanished. Reconnect with backoff, jitter and a resync from the first snapshot. AlgoArena maps onto real venues: Handshake is FIX Logon, ping/pong is Heartbeat/TestRequest, PlaceOrder is NewOrderSingle, and OrderAck plus TradeExecution play the role of ExecutionReport. It has no ClOrdID and no sequence numbers; full snapshots every 0.5 s replace gap fill, and one TCP send per client replaces multicast.",
             "code": """import base64, hashlib
-GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"       # RFC 6455, same on every server
-key = "dGhlIHNhbXBsZQ=="                           # the client's Sec-WebSocket-Key
-accept = base64.b64encode(hashlib.sha1((key + GUID).encode()).digest()).decode()
+GUID = b"258EAFA5-E914-47DA-95CA-C5AB0DC85B11"             # RFC 6455, the same on every server
+key = b"OEdYZE9xvbhe7elrv3f99Q=="                          # the client's Sec-WebSocket-Key
 print("HTTP/1.1 101 Switching Protocols")
-print("Sec-WebSocket-Accept:", accept)
+print("Sec-WebSocket-Accept:", base64.b64encode(hashlib.sha1(key + GUID).digest()).decode())
+OPCODES = {1: "text", 2: "binary", 8: "close", 9: "ping", 10: "pong"}
+def header(frame):                                          # first bytes of a frame, read by hand
+    fin, op, masked, n = frame[0] >> 7, frame[0] & 0x0F, frame[1] >> 7, frame[1] & 0x7F
+    if n == 126: n = int.from_bytes(frame[2:4], "big")      # 126 -> the next 2 bytes hold the length
+    return f"FIN={fin} {OPCODES[op]} masked={masked} len={n}"
+print(header(bytes.fromhex("817e05a3")), "<- server book_snapshot")
+print(header(bytes.fromhex("880203e8")), "code", int.from_bytes(bytes.fromhex("03e8"), "big"))
 # HTTP/1.1 101 Switching Protocols
-# Sec-WebSocket-Accept: OEPSNnbvaxYns+EYSv7+c2kBj+o=""",
-            "deck": "Deck Week 3 · slides 9–10",
+# Sec-WebSocket-Accept: JI+wC80lovHV+cvvlPFl5diw9JQ=
+# FIN=1 text masked=0 len=1443 <- server book_snapshot
+# FIN=1 close masked=0 len=2 code 1000""",
+            "deck": "Deck Week 3 · slides 24–30",
+        },
+        {
+            "title": "Typed schemas and one dispatcher: continue, never raise",
+            "text": "Framing and encoding are solved for you. What remains is the schema and its meaning. A pydantic model makes the shape code that runs on every message: a `Literal` makes `side='long'` unrepresentable, `Field(gt=0)` kills a zero-lot order at the edge, and a `type` discriminator picks exactly one model in one step instead of trial parsing. Every input then becomes a typed object or one of three loud errors: unparseable bytes, an unknown type, or an invalid payload. The venue's inbound loop answers each with `ErrorMsg(PARSE_ERROR)` and then `continue`, not `raise`. Your `listen()` owes it the same courtesy, because one bad frame must never end a session that has resting orders behind it.",
+            "code": """import json
+from typing import Annotated, Literal, Union
+from pydantic import BaseModel, Field, TypeAdapter, ValidationError
+class PlaceOrder(BaseModel):
+    type: Literal["place_order"] = "place_order"
+    symbol: str
+    side: Literal["buy", "sell"]                 # 'long' is unrepresentable, not just wrong
+    quantity: int = Field(gt=0)
+class CancelOrder(BaseModel):
+    type: Literal["cancel_order"] = "cancel_order"
+    order_id: str
+parse = TypeAdapter(Annotated[Union[PlaceOrder, CancelOrder], Field(discriminator="type")]).validate_python
+for raw in ('{"type":"place_order","symbol":"AAPL","side":"buy","quantity":5}',
+            '{"type":"cancel_order","order_id":"a1"}',
+            '{"type":"place_order","symbol":"AAPL","side":"long","quantity":5}',
+            '{"type":"place_ordr"}', 'nope'):
+    try:
+        print("ok      ", type(parse(json.loads(raw))).__name__)
+    except json.JSONDecodeError:
+        print("rejected unparseable bytes")
+    except ValidationError as e:
+        err = e.errors()[0]; print("rejected", err["type"], err["loc"])
+    # continue, never raise: one bad frame must not end the session
+# ok       PlaceOrder
+# ok       CancelOrder
+# rejected literal_error ('place_order', 'side')
+# rejected union_tag_invalid ()
+# rejected unparseable bytes""",
+            "deck": "Deck Week 3 · slides 32–33",
         },
         {
             "title": "A protocol is a versioned contract",
@@ -57,64 +178,14 @@ ack = OrderAck.model_validate_json(old)
 print("parsed, queue_ahead =", ack.queue_ahead,
       "| round-trip equal:", OrderAck.model_validate_json(ack.model_dump_json()) == ack)
 # parsed, queue_ahead = 0 | round-trip equal: True""",
-            "deck": "Deck Week 3 · slide 14",
-        },
-        {
-            "title": "Typed models beat raw dicts",
-            "text": "A dict is a bag of maybe-there keys: msg['quatity'] is a KeyError at runtime, mid-session, and optional-versus-required is folklore you recover by reading every producer. A pydantic model makes the shape code the machine enforces on every parse. A Literal makes side='long' unrepresentable rather than merely detected later, and Field(gt=0) kills a zero-quantity order at the boundary. The class definition is also the authoritative spec — the model is the documentation.",
-            "code": """from typing import Literal
-from pydantic import BaseModel, Field, ValidationError
-class PlaceOrder(BaseModel):
-    symbol: str
-    side: Literal["buy", "sell"]        # 'long' is unrepresentable, not just wrong
-    quantity: int = Field(gt=0)
-for bad in ({"symbol": "AAPL", "side": "long", "quantity": 1},
-            {"symbol": "AAPL", "side": "buy", "quantity": 0}):
-    try: PlaceOrder(**bad)
-    except ValidationError as e: print(e.errors()[0]["loc"], "-", e.errors()[0]["msg"])
-# ('side',) - Input should be 'buy' or 'sell'
-# ('quantity',) - Input should be greater than 0""",
-            "deck": "Deck Week 3 · slides 15–16",
-        },
-        {
-            "title": "Discriminated unions dispatch on `type`",
-            "text": "One connection carries many kinds of message, so every message carries a discriminator: its type field. A union keyed on that field lets the parser pick the right model in one step instead of guessing the shape. AlgoArena splits its 21 types into two such unions by direction — AnyClientMessage is what you send, AnyExchangeMessage is what you receive — and parse_message dispatches either one on its tag. With TypeAdapter, pydantic does the selection and the validation together.",
-            "code": """from typing import Annotated, Literal, Union
-from pydantic import BaseModel, Field, TypeAdapter
-class OrderAck(BaseModel):
-    type: Literal["order_ack"] = "order_ack"; order_id: str
-class TradeExecution(BaseModel):
-    type: Literal["trade_execution"] = "trade_execution"; price: float; fee: float
-parse = TypeAdapter(Annotated[Union[OrderAck, TradeExecution], Field(discriminator="type")]).validate_python
-for raw in ({"type": "order_ack", "order_id": "a1"},
-            {"type": "trade_execution", "price": 309.81, "fee": 0.4647}):
-    print(type(parse(raw)).__name__)
-# OrderAck
-# TradeExecution""",
-            "deck": "Deck Week 3 · slide 17 · slide 21",
-        },
-        {
-            "title": "Three ways input is wrong, and none may kill the session",
-            "text": "Decide up front what happens when a message is bad. Malformed — a missing field, a bad enum — gets rejected with a clear error before it reaches business logic. An unknown type, from a newer peer or a typo, gets logged and skipped. Unparseable input is not even JSON; catch the decode error, and consider closing only if it repeats. The venue's inbound guard is four lines and ends in continue, not raise: in the lab two junk frames both came back as ErrorMsg with the socket still open.",
-            "code": """import json
-from pydantic import BaseModel, ValidationError
-class PlaceOrder(BaseModel):
-    symbol: str; quantity: int
-TYPES, log = {"place_order": PlaceOrder}, []
-for raw in ('{"type":"place_order","symbol":"AAPL"}', '{"type":"place_ordr"}', 'nope'):
-    try: TYPES[json.loads(raw)["type"]].model_validate(json.loads(raw))
-    except json.JSONDecodeError: log.append("unparseable")
-    except KeyError: log.append("unknown-type")
-    except ValidationError: log.append("malformed")
-print(log, "-> connection stays open")
-# ['malformed', 'unknown-type', 'unparseable'] -> connection stays open""",
-            "deck": "Deck Week 3 · slide 18",
+            "deck": "Deck Week 3 · slides 31, 34",
         },
     ],
     "hft": {
         "text": "Why this matters in systematic trading",
         "paragraphs": [
-            "The wire is the last mile of the signal-to-order pipeline. Your strategy produces a number; that number only becomes a position by leaving the process as a PlaceOrder and coming back as an OrderAck and a TradeExecution. Every field on that round trip is a decision you can act on: order_type chooses whether you cross or rest, and queue_ahead on the ack tells you how many lots sit in front of you at your price. A bot that serialises by hand loses those fields quietly, and with them the ability to know whether it is ahead in the queue or behind.",
+            "Your bot writes only the last of the nine steps between the Wi-Fi and the first quote, and any of the other eight can still break it mid-session. So read a failure by its layer. `socket.gaierror` is DNS at L7. `[Errno 61] Connection refused` is L4: nothing is listening, often a stale EXCHANGE_HOST in `.env`. `SSLCertVerificationError` is L5–6. A 1006 after a Wi-Fi blip is L1–2, and a laptop that slept through its DHCP lease comes back with a new IP and every connection dead. The setup costs about 250 ms once, after which every order and quote rides the same TCP + TLS + WebSocket connection. That is why losing it is expensive.",
+            "Real venues split the wire the way the UDP/TCP comparison predicts. Market data goes out by UDP multicast, published twice on A and B feeds, with a sequence number per packet and a snapshot channel to recover a gap. Orders come in by TCP, each one named by a ClOrdID so a duplicate is detectable after a drop. AlgoArena deliberately leaves both out. TCP plus full snapshots means there is nothing to gap-fill, and there is no ClOrdID, so an order in flight at a disconnect is unknowable until you reconcile from `portfolio_update`. Knowing what your protocol omits tells you what your bot has to do itself.",
             "The protocol is also where live risk is contained. A public endpoint sees malformed frames, so one bad message must never take down a session — yours or the venue's. The venue answers with ErrorMsg and continues; your reader must do the same, because a crash mid-session leaves resting orders behind. That is why CANCEL_ON_DISCONNECT pulls a team's live orders when its socket closes. On the way back you reconnect with exponential backoff, re-handshake, and request a fresh snapshot rather than assuming the book you remember is still real.",
             "Costs travel on the wire too, which is what makes TCA possible at all. TradeExecution carries fee, maker_id and taker_id, so every fill is self-attributing: cross the ask and you are the taker paying the fee, rest and you are the maker earning the rebate out of it. In the lab a single share bought at 309.81 printed fee=0.4647 with maker=house_broker — 15 bps of notional for one lot of impatience. Read those fields per fill and your cost model stops being an assumption and becomes a measurement.",
             "Typed messages are what let one strategy be believable offline. Session recordings under sessions/ are the same JSON frames the exchange broadcast live, and scripts/backtest.py replays them through the same models, so the replay sees the identical field set with no adapter quietly inventing a mid price. Get the contract right in week 3 and the backtester in week 4 inherits it: if the offline path and the live path disagree, the disagreement is in your strategy, not in two different notions of what a book snapshot contains.",
@@ -122,52 +193,63 @@ print(log, "-> connection stays open")
         "example": {
             "title": "In the arena",
             "text": "shared/messages.py — parse_message is the whole dispatcher, and the two failure modes it raises are exactly the two your reader must catch. _TYPE_MAP holds all 21 message types.",
-            "code": """# shared/messages.py
-def parse_message(raw: dict[str, Any]) -> BaseModel:
-    \"\"\"Dispatch a raw dict to the correct Pydantic model.
-
-    Raises KeyError if the 'type' field is missing or unrecognised.
-    Raises ValidationError if the payload is structurally invalid.
-    \"\"\"
-    msg_type = raw.get("type")
-    if msg_type is None:
-        raise KeyError("Message is missing required 'type' field")
-    model_cls = _TYPE_MAP.get(msg_type)
-    if model_cls is None:
-        raise KeyError(f"Unknown message type: {msg_type!r}")
-    return model_cls.model_validate(raw)""",
+            "code": "# shared/messages.py\ndef parse_message(raw: dict[str, Any]) -> BaseModel:\n    \"\"\"Dispatch a raw dict to the correct Pydantic model.\n\n    Raises KeyError if the 'type' field is missing or unrecognised.\n    Raises ValidationError if the payload is structurally invalid.\n    \"\"\"\n    msg_type = raw.get(\"type\")\n    if msg_type is None:\n        raise KeyError(\"Message is missing required 'type' field\")\n    model_cls = _TYPE_MAP.get(msg_type)\n    if model_cls is None:\n        raise KeyError(f\"Unknown message type: {msg_type!r}\")\n    return model_cls.model_validate(raw)",
         },
     },
     "interview": [
         {
-            "q": "Would you carry orders over TCP or UDP, and does market data get the same answer?",
-            "a": "Orders go over TCP. You need every order and fill exactly once and in order, and a lost cancel is worse than a slow one. Market data is the case for UDP: it is connectionless multicast with no retransmit, which suits a feed where a stale packet is worse than a missing one and one publisher fans out to many subscribers. The trade-off is that UDP gives you gaps you must detect by sequence number and recover from a separate snapshot channel.",
+            "q": "Name the seven OSI layers, map them onto TCP/IP, and say where TLS, the WebSocket and your JSON sit.",
+            "a": "Bottom up: 1 Physical (bits, through radio, copper and fibre), 2 Data link (frames, MACs, switches and access points, ARP), 3 Network (packets, IP addresses, routers, NAT), 4 Transport (segments or datagrams, ports, TCP and UDP), 5 Session, 6 Presentation, 7 Application (messages: DNS, HTTP, FIX). TCP/IP implements four: Link (OSI 1–2), Internet (3), Transport (4) and Application (5–7). TLS sits at 5–6, opening the encrypted session and representing the data. The WebSocket is an application protocol at 7 that upgrades from HTTP, and your JSON is the payload it carries, with its encoding at 6. Each layer reads only its own header, which is why a quote on Wi-Fi is an 802.11 header, IP 20 B, TCP 32 B, a TLS record, a WS header of 2–14 B, then your JSON and the FCS.",
             "level": "warm-up",
-            "skill": "python.sockets",
+            "skill": "tools.osi-stack",
         },
         {
-            "q": "Why does a live book use a WebSocket rather than HTTP polling?",
-            "a": "Polling asks 'anything new?' on a loop: each request pays a full set of headers and a round trip, and you still miss every change that happens between polls. A WebSocket upgrades one TCP connection once and then pushes frames in both directions with a tiny header, so the exchange streams the book while you stream orders on the same pipe. SSE and long-polling fix the header tax but are effectively server-to-client, and a trader has to send orders too.",
+            "q": "Your bot never gets its first quote. How do you find which layer failed?",
+            "a": "Read the error by its layer and check with the matching tool. `socket.gaierror` means name resolution at L7, so check `dig`. A connect timeout or `timed out during opening handshake` usually means the wrong host, often a stale EXCHANGE_HOST; `[Errno 61] Connection refused` is a TCP RST at L4 because nothing is listening on that port; check both with `nc -vz host port`. `SSLCertVerificationError` is L5–6, a wrong name or wss on a plain port, so check `openssl s_client`. A stall followed by 1006 after a Wi-Fi blip is L1–2, and a new IP after sleep means the DHCP lease (L3) killed every connection. AUTH_FAILED, PARSE_ERROR or TIMEOUT come from your own protocol on top, and they will be in your bot's log.",
+            "level": "core",
+            "skill": "tools.osi-stack",
+        },
+        {
+            "q": "Would you carry orders over TCP or UDP, and does market data get the same answer?",
+            "a": "Orders go over TCP: every order and fill must arrive exactly once and in order, and a lost cancel is worse than a slow one. Market data is the case for UDP multicast. One send reaches every subscriber at nearly the same instant, there is no head-of-line blocking, and a retransmitted quote would be stale anyway. The price is that UDP will not tell you about a loss, so every datagram carries a sequence number, and the receiver detects gaps and recovers them from a retransmission server, an A/B feed or the snapshot channel, without trading that book while it does. That is ITCH and MDP 3.0 for data, and FIX, OUCH and iLink 3 over TCP for orders.",
             "level": "warm-up",
-            "skill": "python.websockets",
+            "skill": "tools.udp-tcp",
+        },
+        {
+            "q": "Walk through the TCP server and client calls. Why does connect() return before the server calls accept()?",
+            "a": "The server calls `socket`, `bind` and `listen(backlog)`. From `listen` on, the kernel itself answers SYNs, completes the three-way handshake and queues the established connection in the backlog. The client's `connect` returns as soon as the handshake completes, whether or not the application has called `accept`. `accept` then pulls a connection off the backlog and returns a new socket for that peer while the listening socket stays open. Then `sendall` and `recv` move bytes, `recv` returning `b''` means the peer sent FIN, and `close` sends your own FIN. The side that closes first waits in TIME_WAIT, which is why a restarted server needs `SO_REUSEADDR` to avoid `Address already in use`. UDP has none of this: `bind` and `recvfrom` on one side, `sendto` on the other, and no connection state.",
+            "level": "core",
+            "skill": "python.sockets",
         },
         {
             "q": "A colleague's feed reader calls json.loads on whatever recv returns and it fails under load. What is wrong?",
             "a": "recv returns bytes, not messages. TCP is a stream, so under load the kernel coalesces sends and one recv can contain two JSON objects plus half of a third — json.loads then raises 'Extra data' or 'Unterminated string'. The reader needs a framing layer: accumulate into a buffer and split on a delimiter, or length-prefix each payload and read exactly that many bytes. WebSocket is the third option and the reason we use it: the protocol frames for you, so one recv is one whole message.",
             "level": "core",
-            "skill": "python.sockets",
+            "skill": "python.socket-examples",
         },
         {
-            "q": "What does a pydantic Literal buy you over validating a str yourself?",
-            "a": "It moves the check from your code to the boundary and from runtime to the type system. side: Literal['buy', 'sell'] means side='long' raises ValidationError at parse time with loc=('side',) and a clear message, so the illegal state is unrepresentable rather than detected three layers deep in the matcher. The type checker also narrows on it, so a match or if/else over the two cases is verifiable as exhaustive. Pair it with Field(gt=0) for quantity and a zero-lot order never reaches your risk code.",
+            "q": "Read this FIX message: 8=FIX.4.4|9=105|35=D|34=42|11=c-0001|55=AAPL|54=1|38=5|40=2|44=225.30|...|10=242. What is it, and which messages are session-level?",
+            "a": "It is a NewOrderSingle (35=D): buy (54=1) 5 shares (38) of AAPL (55) as a limit order (40=2) at 225.30 (44). The client named the order c-0001 (ClOrdID, tag 11), and the message is number 42 in this direction (MsgSeqNum, tag 34). 8 is the version, 9 is the body length in bytes, and 10 is the checksum, the sum of every preceding byte mod 256, written as three digits. Session messages keep the connection honest and know nothing about orders: Logon (A), Heartbeat (0), TestRequest (1), ResendRequest (2), SequenceReset (4) and Logout (5). Application messages carry the business: NewOrderSingle (D), cancel (F), cancel/replace (G) and ExecutionReport (8). If you receive 45 after 42, you send ResendRequest for 43–44.",
             "level": "core",
-            "skill": "python.pydantic",
+            "skill": "trading.fix-itch",
         },
         {
-            "q": "You have twenty message types on one socket. Why a discriminated union instead of trying each model until one validates?",
-            "a": "Trial parsing is O(number of types) and ambiguous: two models with overlapping optional fields can both accept the same payload, so you silently build the wrong one. A union keyed on a type field is a single dict lookup to the right class, then one validation — and the error you get back names the actual type rather than twenty rejections. In pydantic that is Annotated[Union[...], Field(discriminator='type')] behind a TypeAdapter. Splitting the union by direction adds a second guarantee: a client cannot send something only the venue is allowed to say.",
+            "q": "Why do venues use binary protocols like ITCH and OUCH instead of FIX text, and what is each one for?",
+            "a": "Latency and determinism. A fixed-layout binary message is decoded by reading at known offsets, with no parsing, no allocation and no branching on content, so the 99.9th percentile looks like the median. In the lab one `struct.unpack` of an order took about 84 ns against 1.2 to 1.5 µs for JSON or FIX parsing. ITCH is Nasdaq's outbound market data, one message per book event (Add Order, Execute, Cancel), with full depth by order, over UDP multicast with MoldUDP64 sequence numbers. OUCH is Nasdaq's inbound order entry, small binary Enter, Cancel and Replace messages over TCP with SoupBinTCP for login and sequencing. CME's equivalents are MDP 3.0 and iLink 3, both SBE-encoded.",
             "level": "core",
-            "skill": "python.discriminated-union",
+            "skill": "trading.fix-itch",
+        },
+        {
+            "q": "Why does a live book use a WebSocket rather than HTTP polling, and what happens on the wire after the upgrade?",
+            "a": "Polling pays a full request, headers and a round trip each time, and still misses every change between polls. A WebSocket upgrades one connection once: an HTTP GET with `Upgrade: websocket` and a `Sec-WebSocket-Key`, answered by `101 Switching Protocols` with base64(SHA-1(key + GUID)). From then on both sides send frames on the same TCP connection, each with a 2–14 byte header: FIN, opcode, mask bit (always set by the client) and length. One frame is one message, so the framing problem goes away. Ping/pong control frames every 20 s detect a dead peer and keep NAT entries alive. Close 1000 is clean, and 1006 means the peer vanished without a close frame, which is your cue to reconnect. SSE is server-to-client only, and a trader has to send orders too.",
+            "level": "warm-up",
+            "skill": "python.websockets",
+        },
+        {
+            "q": "Map AlgoArena's JSON-over-WebSocket onto FIX. Your connection drops just after you send an order: do you resend it?",
+            "a": "The mapping is Handshake for Logon, ping/pong for Heartbeat/TestRequest, PlaceOrder for NewOrderSingle, and OrderAck plus TradeExecution plus PortfolioUpdate for ExecutionReport. What is missing matters: there are no MsgSeqNum and no ClOrdID, since TCP order and full snapshots replace sequence numbers and gap fill. So you cannot ask the venue what happened to your order, and a blind resend can open a second position. Reconnect with exponential backoff and jitter, re-handshake, take the first snapshot as the truth, and reconcile positions and open orders from `portfolio_update` before acting. A protocol that wants safe retries needs a client-generated id the venue de-duplicates on, which is exactly what FIX's ClOrdID provides.",
+            "level": "senior",
+            "skill": "python.reconnect",
         },
         {
             "q": "You must add a field to a protocol that is live, with clients you cannot redeploy. How?",
@@ -175,93 +257,97 @@ def parse_message(raw: dict[str, Any]) -> BaseModel:
             "level": "core",
             "skill": "tools.protocol-contract",
         },
-        {
-            "q": "A client starts sending garbage frames at a high rate. What should your server do?",
-            "a": "Reject each frame at the parse boundary, answer with a typed error, and keep the connection open — one bad frame must not drop a session that has resting orders behind it. But an endpoint also needs an error budget: count parse failures per connection and per unit time, and close or rate-limit a peer that exceeds it, since sustained garbage is either a bug that will not fix itself or an attack. Log the discriminator and the validation loc, not the raw payload, and never let the handler's exception escape into the accept loop.",
-            "level": "senior",
-            "skill": "python.error-boundary",
-        },
-        {
-            "q": "Your connection drops just after you send an order. You reconnect — do you resend it?",
-            "a": "Only if resending is safe, which means the protocol has to make it safe. Attach a client-generated id to every order so the venue can recognise a repeat and return the original ack instead of executing twice; without that, a retry is a second position. On reconnect do not assume continuity: re-handshake, request a fresh snapshot, and reconcile your positions and open orders against the venue's view before acting, because fills may have happened while you were away. Back off exponentially so a venue restart does not get a reconnect storm.",
-            "level": "senior",
-            "skill": "python.reconnect",
-        },
     ],
 },
 
 # ─────────────────────────────────────────────────────────────── session 4 ──
+# Week 4 was rebuilt on 2026-10-10 around one storyline (backtesting -> SQL ->
+# why SQL is not enough -> kdb+/time-series DBs -> Parquet -> logical vs real
+# time -> the Parquet-backed backtester). The student-facing page is the
+# combined companion page (systematic-trading-arena/week4.html); session-4.html
+# shows a banner pointing there. No deck slide numbers are cited while the deck
+# is being rebuilt. Numbers are from the Session 2 tape (Fri Oct 9).
 {
     "n": 4,
-    "focus": "Event-driven backtester architecture",
-    "tagline": "A backtest is a hypothesis test you can rig without noticing: one missing shift(1) turns Sharpe 2.38 into -0.19, and 15 bps of taker fee turns the survivor into a loser.",
+    "focus": "Backtesting & tick data storage",
+    "tagline": "A backtest is a replay you can be wrong about cheaply: store the tape so a question costs milliseconds (SQL, then kdb+ and Parquet), run every decision on the tape's logical clock, and the P&L is identical at any replay speed until one time.time() call breaks it.",
     "concepts": [
         {
-            "title": "Prototype vectorised, validate event-driven",
-            "text": "A vectorised backtest computes signals over a whole price series at once with numpy or pandas. It is fast to write and the right first screen, but it makes peeking at the future a one-character mistake and it cannot model queues, partial fills or an order book. An event-driven loop steps through time one event at a time, so the strategy is only ever handed the past — and the same code path runs live. AlgoArena's simulator is event-driven for exactly that reason. If the two architectures disagree on a strategy, trust neither until you know why.",
-            "deck": "Deck Week 4 · slides 5–6",
+            "title": "What a backtest is, and what it is for",
+            "text": "Six stages, always the same: data, a replay loop in recorded order, the strategy, simulated fills and fees, accounting, metrics. Its goal is to falsify cheaply: an idea that loses on the tape after honest costs will not win live. A positive result is an estimate under a fill model, a cost model and one path of history, never a proof, and it cannot see your own market impact, your queue position, a regime absent from the data or the bugs that only live in the live path. Four ticks are enough to show why the fill model matters: the mid rises 0.6 % and the strategy still loses.",
+            "code": """tape = [(1, 100.0, 100.2), (2, 100.4, 100.6), (3, 101.0, 101.2), (4, 100.6, 100.8)]  # (t, bid, ask)
+fee, cash, pos, pending, curve = 0.003, 10_000.0, 0, [], []
+for t, bid, ask in tape:                                       # replay on the logical clock
+    for side, q in pending:                                    # orders sent at t-1 fill now
+        px, sgn = (ask, 1) if side == "buy" else (bid, -1)     # a buy lifts the ask
+        cash -= sgn * q * px + q * px * fee; pos += sgn * q    # fees, then accounting
+    pending = [("buy", 10)] if t == 1 else [("sell", 10)] if t == 3 else []   # strategy
+    curve.append(cash + pos * (bid + ask) / 2)                 # mark to the mid
+print(f"P&L {curve[-1] - 10_000:+.2f} while the mid rose 0.6%")                 # metrics
+# P&L -6.04 while the mid rose 0.6%""",
         },
         {
-            "title": "The five-step loop and its invariant",
-            "text": "Every backtester is a variation on five steps: take the next market event, ask the strategy for a signal, turn the signal into an order, simulate the fill, update cash and positions — then record the mark. The live engine runs the same five. The loop invariant is the whole value of the architecture: the strategy receives prices[:i+1] and there is no expressible way for it to see prices[i+1]. Structure, not discipline, is what keeps look-ahead out.",
-            "code": """prices = [100 + (i % 20) * 0.5 for i in range(200)]
-sma = lambda xs, k: sum(xs[-k:]) / min(len(xs), k)
-cash, pos, trades, equity = 100_000.0, 0, 0, []
-for i, px in enumerate(prices):
-    past = prices[: i + 1]                                # 1. event: the past only
-    target = 100 if sma(past, 5) > sma(past, 20) else 0    # 2. signal
-    delta = target - pos                                   # 3. order
-    if delta:
-        cash -= delta * px; pos += delta; trades += 1       # 4. fill  5. portfolio
-    equity.append(cash + pos * px)                         # record the mark
-print(f"ticks={len(equity)} trades={trades} equity={equity[-1]:.2f}")
-# ticks=200 trades=19 equity=96200.00""",
-            "deck": "Deck Week 4 · slide 7",
+            "title": "Start with SQL: schema, index, query plan",
+            "text": "One table per message type (trades, quotes, book snapshots with their depth in a child table), both clocks and the recording order kept as columns. SQLite is a library and a file, Postgres a server with concurrent users. The query every backtest asks is one symbol in a window of time, and EXPLAIN QUERY PLAN shows the difference a composite (symbol, t) index makes: equality column first, range second, and the scan becomes a search. Measured on the whole Session 2 tape, the SQLite file is {{SQL_DB_BYTES}} bytes and the AAPL-mid query drops from {{SQL_QUERY_NOINDEX_MS}} ms to {{SQL_QUERY_INDEX_MS}} ms with the index.",
+            "code": """import random, sqlite3
+db, rng = sqlite3.connect(":memory:"), random.Random(4)
+db.execute("CREATE TABLE quotes (seq INTEGER PRIMARY KEY, t INT, symbol TEXT, bid REAL, ask REAL)")
+db.executemany("INSERT INTO quotes VALUES (?,?,?,?,?)",
+               [(i, i // 50, rng.choice(["AAPL", "MSFT", "NVDA"]), 100.0, 100.1) for i in range(200_000)])
+q = "SELECT count(*) FROM quotes WHERE symbol = 'AAPL' AND t BETWEEN 390 AND 460"
+print(db.execute("EXPLAIN QUERY PLAN " + q).fetchone()[-1])      # no index: read every row
+db.execute("CREATE INDEX quotes_sym_t ON quotes (symbol, t)")    # equality first, range second
+print(db.execute("EXPLAIN QUERY PLAN " + q).fetchone()[-1])
+# SCAN quotes
+# SEARCH quotes USING COVERING INDEX quotes_sym_t (symbol=? AND t>? AND t<?)""",
         },
         {
-            "title": "Honest fills cross the spread",
-            "text": "Slippage is execution price minus decision price, and it comes from the spread, your queue position, and the market moving while you act. Assume you trade at the last price and the backtest lies in your favour on every trade. A buy lifts the ask and a sell hits the bid; an order larger than the touch walks the book to worse levels and gets a blended average, not its own limit. Twelve lots against a four-lot touch here pay 6 bps against the mid before a single fee.",
-            "code": """asks = [(309.81, 4), (309.84, 6), (309.90, 20)]   # the resting sell side
-want, cost, filled = 12, 0.0, 0
-for px, qty in asks:
-    take = min(want, qty)
-    cost += take * px; filled += take; want -= take   # fill at the RESTING price
-    if not want: break
-mid, avg = 309.655, cost / filled
-print(f"naive says {mid}  honest avg {avg:.4f}  slippage {(avg - mid) / mid * 1e4:.1f} bps")
-# naive says 309.655 honest avg 309.8400 slippage 6.0 bps""",
-            "deck": "Deck Week 4 · slide 8",
+            "title": "Why a row store struggles, and what kdb+ does instead",
+            "text": "Tick research reads a few columns of many rows in time order, arriving as a firehose of appends. A row store reads every column of every matching row, pays an index update on every insert, scans ranges row by row, has no as-of join operator and does not compress columns. kdb+ answers with a column store: today's data in memory, history on disk in one directory per date with each table splayed into one file per column, data sorted by time within symbol, and aj, the as-of join, as a built-in. TimescaleDB, QuestDB, InfluxDB and ArcticDB each take part of that design; DuckDB's ASOF JOIN and pandas' merge_asof are the open-source analogues. On real AAPL trades from the earnings ramp the as-of match finds the ask each buyer paid, and the forward match shows the next quote instead, which is look-ahead inside a backtest.",
+            "code": """import pandas as pd                                    # AAPL on the Session 2 tape, t399-t400
+quotes = pd.DataFrame({"seq": [20889, 20913, 20932, 20992], "bid": [193.94, 193.94, 193.94, 198.17],
+                       "ask": [194.13, 195.14, 196.06, None]})
+trades = pd.DataFrame({"seq": [20912, 20931, 20942, 21026], "price": [194.13, 195.14, 196.06, 196.92]})
+back = pd.merge_asof(trades, quotes, on="seq", direction="backward")   # q: aj[`sym`time; t; q]
+fwd = pd.merge_asof(trades, quotes, on="seq", direction="forward")     # the NEXT quote
+print("as-of ask:", back["ask"].tolist())
+print("next  ask:", fwd["ask"].tolist())
+# as-of ask: [194.13, 195.14, 196.06, nan]
+# next  ask: [195.14, 196.06, nan, nan]""",
         },
         {
-            "title": "The turnover trap",
-            "text": "Costs are explicit and implicit. Explicit is the fee schedule: in AlgoArena the taker pays 0.0015 and the maker earns a 0.0010 rebate. Implicit is the half-spread you cross on each leg, plus your own impact, which grows with size and is often modelled as the square root of it. Both scale with the number of round trips, so halving your holding period roughly doubles the drag. A 40 bps gross edge survives one round trip and dies at two. Always report P&L net of costs.",
-            "code": """gross_bps, taker_bps, half_spread_bps = 40.0, 15.0, 1.5   # arena taker fee = 0.0015
-for round_trips in (1, 2, 4):
-    cost = round_trips * 2 * (taker_bps + half_spread_bps)   # two sides per round trip
-    print(f"{round_trips} round trip(s): gross {gross_bps:.0f} bps "
-          f"cost {cost:.0f} bps  net {gross_bps - cost:+.0f} bps")
-# 1 round trip(s): gross 40 bps cost 33 bps net +7 bps
-# 2 round trip(s): gross 40 bps cost 66 bps net -26 bps
-# 4 round trip(s): gross 40 bps cost 132 bps net -92 bps""",
-            "deck": "Deck Week 4 · slide 9",
+            "title": "Parquet: the column store as a file",
+            "text": "Parquet stores a table by column in row groups, encodes and compresses each column chunk, and writes min/max statistics for every chunk in the footer. Folders named week=2/symbol=AAPL make the directory tree the partitioned database. A reader skips folders (partition pruning), skips row groups whose statistics cannot match (predicate pushdown, which only works on sorted data) and decompresses only the named columns (projection). The Session 2 tape goes from 264,960,858 bytes of JSONL to 6,740,873 bytes of Parquet (39.3x) in 3.3 s, AAPL's mid at every tick from 2.1-2.7 s to 0.5-1.5 ms, and a filter on t reads 2 of the book file's 14 row groups. DuckDB and Polars query the files in place; Spark does the same across a cluster.",
+            "code": """import os, tempfile, pyarrow as pa, pyarrow.parquet as pq
+n = 100_000
+tbl = pa.table({"t": [i // 35 for i in range(n)], "symbol": [("AAPL", "MSFT", "NVDA")[i % 3] for i in range(n)],
+                "mid": [100 + (i % 997) / 100 for i in range(n)]})
+path = os.path.join(tempfile.mkdtemp(), "quotes.parquet")
+pq.write_table(tbl, path, row_group_size=10_000)                  # 10 row groups, sorted by t
+md = pq.ParquetFile(path).metadata
+st = [md.row_group(g).column(0).statistics for g in range(md.num_row_groups)]
+print("t in [1000, 1300] can only be in row groups", [g for g, s in enumerate(st) if s.max >= 1000 and s.min <= 1300])
+print("symbol column encoding:", md.row_group(0).column(1).encodings[-1])
+# t in [1000, 1300] can only be in row groups [3, 4]
+# symbol column encoding: RLE_DICTIONARY""",
         },
         {
-            "title": "Read return, risk and shape together",
-            "text": "One number never tells the story. CAGR normalises return to a year; Sharpe is mean excess return over its standard deviation, the return per unit of volatility; max drawdown is the largest peak-to-trough fall, the pain you have to survive to collect the return. Calmar divides CAGR by that drawdown and profit factor divides gross profit by gross loss. The path below compounds at 6.7% a year for a Sharpe of 0.47 and a 28% drawdown — a Calmar of 0.24 is not a tradeable strategy however positive the return.",
-            "code": """import numpy as np
-rng = np.random.default_rng(4)
-r = rng.normal(0.0004, 0.01, 1000)                 # one equity path, 1000 bars
-eq = 100_000 * np.cumprod(1 + r)
-cagr = (eq[-1] / eq[0]) ** (252 / len(r)) - 1
-sharpe = r.mean() / r.std(ddof=1) * np.sqrt(252)
-mdd = float((eq / np.maximum.accumulate(eq) - 1).min())
-print(f"CAGR {cagr:+.2%}  Sharpe {sharpe:+.2f}  maxDD {mdd:.2%}  Calmar {cagr / -mdd:.2f}")
-# CAGR +6.68% Sharpe +0.47 maxDD -28.01% Calmar 0.24""",
-            "deck": "Deck Week 4 · slide 10",
+            "title": "Logical time vs real time",
+            "text": "Every line of the tape carries event time (tick, the engine's step counter, and seq, the recording order) and processing time (ts, the wall clock when the line was written). They drift: on Oct 9 a tick lasted 1.062 s on average and anywhere from 0.54 s to 7 s, so the AAPL print at t400 arrived 12 s later than a one-tick-per-second clock predicts and t900 33 s later. Until 2026-10-09 the arena's own simulator resumed halted symbols with a wall-clock sleep, so a fast laptop stayed halted 235 ticks and a slow one 85; counted in ticks, 5 and 5. Decisions read the logical clock they are handed; the wall clock belongs at the edges (pacing, timeouts, backoff, logs).",
+            "code": """ts = [0.0, 1.0, 2.16, 3.35, 4.48, 5.48, 6.48, 7.58, 8.72, 9.87, 10.52, 11.68,     # ts of t400..t419,
+      12.8, 13.86, 14.58, 15.78, 16.87, 17.97, 18.56, 19.58]                     # seconds after t400
+def exit_tick(speed, clock):
+    hits = (i for i, s in enumerate(ts) if (i >= 15 if clock == "ticks" else s / speed + 0.0003 * i >= 15.9))
+    return next((f"t{400 + i}" for i in hits), "not before t420")
+for speed in (float("inf"), 5, 1):
+    print(f"speed {speed}: on ticks {exit_tick(speed, 'ticks')}, on time.time() {exit_tick(speed, 'wall')}")
+# speed inf: on ticks t415, on time.time() not before t420
+# speed 5: on ticks t415, on time.time() not before t420
+# speed 1: on ticks t415, on time.time() t416""",
         },
         {
-            "title": "Look-ahead, and the biases the curve hides",
-            "text": "The cardinal sin is using information you would not have had at decision time, and it is usually one index deep: sig[t] needs close[t] to exist, while ret[t] is the move into bar t, so the unlagged product earns a return it could never have captured. One .shift(1) takes the Sharpe below from 2.38 to -0.19, and the lab's planted version collapses the same way, 2.50 to 0.05. Survivorship bias and data snooping are quieter: test on today's index members and the bankruptcies are already deleted, and keeping the best of 500 variants selects the luckiest draw. The defence is a chronological split you touch exactly once, never a shuffled one.",
+            "title": "Back to the backtester: one clock, honest numbers",
+            "text": "The lab's backtester reads the Parquet tape and runs once per tick: apply the tick's books in seq order, fill orders due now against the first book of their symbol (latency is an integer number of ticks), deliver events, collect decisions, mark to the mid. Costs are a 0.30 % taker fee and walking the recorded depth; results are read against do-nothing and buy-and-hold, with a chronological in-sample/out-of-sample split (tuning momentum on the first half picked the setting that lost 10,313 on the second). Look-ahead is a clock violation: sig[t] * ret[t] decides with data stamped after the decision. And determinism is testable: the AAPL slice gives +505.36 with the same fill digest at speeds inf, 5 and 1, and one time.time() exit timer turns it into +902.06, +861.70 and +456.60.",
             "code": """import numpy as np, pandas as pd
 rng = np.random.default_rng(7)
 px = pd.Series(100 * np.cumprod(1 + rng.normal(0.0002, 0.01, 1500)))
@@ -270,87 +356,81 @@ sig = (px > ma).astype(float)                       # long above the 40-bar SMA
 sharpe = lambda s: s.dropna().mean() / s.dropna().std() * 252 ** 0.5
 print(f"BUG  sig[t]   * ret[t]  Sharpe {sharpe(sig * ret):+.2f}")
 print(f"FIX  sig[t-1] * ret[t]  Sharpe {sharpe(sig.shift(1) * ret):+.2f}")
-# BUG sig[t] * ret[t] Sharpe +2.38
-# FIX sig[t-1] * ret[t] Sharpe -0.19""",
-            "deck": "Deck Week 4 · slide 12 · slides 14–16",
+# BUG  sig[t]   * ret[t]  Sharpe +2.38
+# FIX  sig[t-1] * ret[t]  Sharpe -0.19""",
         },
     ],
     "hft": {
         "text": "Why this matters in systematic trading",
         "paragraphs": [
-            "Backtest honesty is an architectural property before it is a discipline. The reason we build the loop by hand is that handing the strategy prices[:i+1] makes the cardinal sin unexpressible, whereas a vectorised column makes it a one-character typo. The lab plants that typo on purpose: the unlagged signal reports +6.56% at Sharpe 2.50 and the shifted one +0.12% at Sharpe 0.05, on the same prices and the same rule. Nothing else about the strategy changed. Every believable offline number you quote this term rests on being able to point at where the future cannot leak in.",
-            "One strategy, two worlds, is the point of the signal-to-order pipeline here. arena.as_signal_fn adapts a Trader's on_tick to the simulator's signal_fn(symbol, prices, history, book, portfolio), so the bot you compete with is the bot you backtest and there is no second codebase to drift. The fills are not simulated separately either: sim and live both match through shared/orderbook.py, the same price-time-priority CLOB. There is no 'assume I traded at the mid' available to you, which is why a sim P&L is worth reading at all.",
-            "Costs are the largest position most student strategies hold. Fifteen basis points is the arena's real TAKER_FEE_RATE, and in the lab it took the momentum bot from -0.04% to -4.05% across 86 trades, dropping Sharpe by 2.7 and leaving max drawdown exactly equal to total return — a curve that only ever goes down. The in-sample parameter sweep then delivers the other lesson: the winning configuration was almost always the one that traded least, so the edge being selected was a cost reduction. Report net, count your trials, and treat turnover as a risk limit.",
-            "The score you are ranked on is risk-adjusted, so backtest for it rather than for the headline. exchange/scoring.py takes mean excess return over a floored volatility, clamps the ratio, and then penalises drawdown by sign — a good return earned through a deep drawdown shrinks toward zero, and a loss with a deep drawdown gets worse. Week 4 is also when shorts unlock and the first IPO prices, which is when unbacktested position sizing starts costing real net worth. Size for the regime you have not lived through, because no backtest covers one it never saw.",
+            "On a desk the research loop is only as fast as the question you can ask of the history. If every question means parsing a quarter of a gigabyte of JSON, you ask three a day and stop exploring; if it costs ten milliseconds, you ask a thousand and actually test the idea. That is why tick data lives in column stores, kdb+ on most bank and HFT desks and Parquet with DuckDB, Polars or Spark nearly everywhere else, while orders, positions and accounts stay in a relational database where transactions matter. Choosing the store by the shape of the work is a decision you will be asked to defend.",
+            "The as-of join is the most used and most abused operation in market-data research. Every fill analysis, every markout and every transaction-cost report matches events to the quote in force, and the key and direction decide whether the answer is honest. On the Session 2 tape, joining on the tick alone hands every AAPL trade in tick 400 a one-sided book recorded after it traded; joining forward is exactly right for a post-trade markout and exactly wrong inside a backtest. Write the definition down (the lab's book_eot) and make every engine use it.",
+            "Determinism is what turns a backtest into evidence. If the same tape and the same code can produce two P&Ls, a parameter search is measuring your machine, and the fastest replay, the one you run a thousand times, is the one that lies most: on the AAPL slice the wall-clock exit made +902 at full speed against +505 for the honest run. Desks enforce this by injecting the clock into the strategy, replaying recorded production days through the live code path, and comparing fill digests in CI, so that any difference between replay and live is a real difference and not an accident of timing.",
+            "Costs and latency are positions you hold whether you model them or not. At the arena's 0.30 % taker fee, momentum lost 16,501 over the block through 1,187 fills, and the in-sample tuning chose the lookback that lost most out of sample. A latency of one tick decided whether event_ride caught the 36 shares offered at 197.18 during the AAPL ramp or found an empty ask side. Report P&L net of fees against baselines, count the trials you ran, and treat latency as a number of ticks you measure, because your backtest will otherwise invent exactly the trades that pay.",
         ],
         "example": {
             "title": "In the arena",
-            "text": "sim/session.py — the whole arena in-process, no network, seedable. This is the reference event loop the lab asks you to narrate: four numbered steps, and no way for a trader to see a price that has not been produced yet.",
-            "code": """# sim/session.py  — Main simulation loop
-for tick_n in range(n_ticks):
-    # 1. Advance GBM prices.
-    exchange.advance_tick()
-
-    # 2. Record prices.
-    for sym in exchange.symbols:
-        price_history[sym].append(exchange.ref_prices[sym])
-
-    # 3. Broker requotes all symbols.
-    broker.tick()
-
-    # 4. Each trader generates and places a signal.
-    for trader in traders:
-        trader.tick()""",
+            "text": "course/systematic-trading/week4_demos/backtest_parquet.py — the lab's backtester. One loop per tick of the tape, the logical clock; the strategy is told the time (now=t) and never asks the machine. The wall clock appears once, to pace a replay, and never changes what is decided.",
+            "code": """for i, t in enumerate(tape.ticks):
+    if math.isfinite(speed) and t in tape.ts_at:                 # pacing only
+        wait = (tape.ts_at[t] - t0_ts) / speed - (time.time() - t0_wall)
+        if wait > 0:
+            time.sleep(wait)
+    ...
+    for ev in tape.events_at.get(t, []):                         # 3. events
+        strategy.on_event(ev, now=t)
+    for sig in strategy.on_tick(now=t, market=view, pf=pf) or []:  # 4. decisions
+        pending[t + latency].append(sig)                         #    fill at t + latency""",
         },
     },
     "interview": [
         {
-            "q": "Define look-ahead bias and give a concrete example.",
-            "a": "It is using information that would not have been available at decision time. The textbook case is a signal computed from today's close multiplied by today's return: the return is the move into the bar, so the signal needs a price that did not exist when you supposedly traded. Lagging the signal by one bar fixes it. Subtler versions hide in reference data — using today's index membership, a restated earnings figure, or a split adjustment applied to the whole history rather than only after the split.",
-            "level": "warm-up",
-            "skill": "quant.look-ahead",
-        },
-        {
-            "q": "Vectorised or event-driven — which backtester would you build, and when?",
-            "a": "Both, in that order. Vectorised with numpy or pandas is the fast first screen: a few lines, whole-series arithmetic, good enough to reject an idea. Event-driven is what you validate and trade with, because stepping one event at a time lets you model queue position, partial fills, costs and latency, and because the same code path runs live. The practical rule is that if the two disagree on the same strategy you trust neither until you have found the reason, which is usually a lag or a fill assumption.",
+            "q": "What is a backtest for, and what can it not tell you?",
+            "a": "It is a cheap way to falsify a strategy: replay recorded events in order, let the strategy see only the past, simulate fills and costs, and see whether it still makes money against a baseline. A loss after honest costs is strong evidence; a profit is only an estimate under the fill model, the cost model and one path of history. It cannot show your own market impact, because the recorded book never reacts to you, nor your queue position, a regime missing from the data, unmodelled latency, or the failures that only happen live, such as reconnects and rejects.",
             "level": "warm-up",
             "skill": "quant.event-driven-backtest",
         },
         {
-            "q": "A strategy reports Sharpe 1.8. What else do you want to see before believing it?",
-            "a": "Max drawdown and time under water, because a Sharpe of 1.8 with a 60% drawdown is untradeable; Calmar to combine the two. Then turnover and the P&L net of fees and slippage, since the cost drag scales with round trips and often accounts for the whole edge. Then hit rate against average win and loss size, to see whether the return is many small wins or one lucky outlier. Finally the P&L broken out by period, to check the Sharpe is not the average of one great regime and several bad ones.",
-            "level": "core",
-            "skill": "quant.performance-metrics",
+            "q": "Row store or column store for five years of quotes, and why?",
+            "a": "A column store. The workload is append-only and reads a few columns of many rows in time order, such as the bid and ask of one symbol over a window. A column store reads only those columns, compresses each one well because the values are similar, and keeps data sorted by time within symbol so a window is a contiguous slice. A row store reads every column of every matching row and pays an index update on every insert. Orders, positions and accounts are the opposite workload, small and transactional, and belong in a relational row store such as Postgres.",
+            "level": "warm-up",
+            "skill": "tools.column-store",
         },
         {
-            "q": "How would you model fills honestly for a strategy that trades 5,000 shares at a time?",
-            "a": "Not at the last price. A buy pays the ask and a sell receives the bid, and once the order is larger than the displayed size at the touch it walks the book, so the fill price is the volume-weighted average over the levels consumed. Cap each fill at the size actually displayed and let the remainder rest or be cancelled according to the order type, which turns some of your trades into partials. Add a latency between signal and fill, and an impact term that grows with size — commonly modelled as the square root of participation.",
+            "q": "Design a SQL schema for trades, quotes and book snapshots. Which indexes, and what hurts first as it grows?",
+            "a": "One table per message type with typed columns: trades (seq, t, symbol, price, qty, aggressor), quotes (seq, t, symbol, bid, bid_qty, ask, ask_qty), and book snapshots with the depth in a child table keyed by (snapshot, side, level). Keep the event clock, the recording order and, separately, the wall-clock timestamp. Index (symbol, t), equality column first and range second, and check with the query plan that it searches rather than scans. What hurts first is the write path, since every insert updates every index, then the size of the exploded depth table and the cost of as-of joins written as correlated subqueries.",
+            "level": "core",
+            "skill": "tools.sql-tick-store",
+        },
+        {
+            "q": "What is an as-of join? Write it two ways and name a way it silently goes wrong.",
+            "a": "For each row on the left, take the last row on the right whose key is at or before it, usually by symbol: each trade gets the quote in force when it happened. In pandas it is merge_asof(trades, quotes, on='time', by='symbol', direction='backward'); in DuckDB, trades ASOF JOIN quotes ON trades.symbol = quotes.symbol AND trades.time >= quotes.time; in q, aj[`sym`time; trade; quote]. It goes wrong silently when the key is too coarse, so several quotes share a timestamp and an arbitrary one wins, when inputs are unsorted or the key dtypes differ, or when someone uses a forward match inside a backtest, which is look-ahead.",
+            "level": "core",
+            "skill": "tools.as-of-join",
+        },
+        {
+            "q": "Your Parquet query filters on time and is still slow. What do you check?",
+            "a": "First whether the files are sorted by the filter column: predicate pushdown skips a row group only if its min/max statistics exclude the range, and a file sorted by symbol has every row group spanning the whole day. Then whether the partition layout matches the filter, so the reader can skip whole folders, and whether the query names only the columns it needs. Then row-group size, since huge groups prune coarsely and tiny ones bloat the footer, and the number of small files. Finally check the plan in DuckDB or Polars to see whether the filter and the projection were actually pushed into the scan.",
+            "level": "core",
+            "skill": "tools.parquet",
+        },
+        {
+            "q": "How do you model fills and latency for a strategy that trades on scheduled news?",
+            "a": "Fill at the next tick, not the decision tick, against the book recorded at that moment, walking the depth up to the limit price and dropping or resting the remainder by order type; charge the taker fee on the notional. Treat latency as an integer number of ticks and test several values, because on a thin book around an announcement the result is lumpy: on the AAPL earnings ramp an order arriving one tick after the decision filled 36 shares, while zero or two ticks found no ask under the cap. Expect one-sided books and empty levels exactly when the news hits, and never assume the mid.",
             "level": "core",
             "skill": "quant.fill-simulation",
         },
         {
-            "q": "In-sample Sharpe is 2.5 and out-of-sample is 0.05. What happened and what do you do next?",
-            "a": "A large in-sample to out-of-sample gap is the definition of overfitting: the parameters fit noise. Before retuning anything, check for a look-ahead bug, since those produce exactly this signature and are cheaper to find. Then count the configurations you tried, because the more variants you screened the higher the bar for significance, and the best of 500 is a luckiest-draw story. The fix is fewer parameters with an economic rationale, robustness to small changes rather than a fragile optimum, and a test set that is touched once.",
-            "level": "core",
-            "skill": "quant.overfitting",
-        },
-        {
-            "q": "Why does survivorship bias flatter a buy-the-dip strategy in particular?",
-            "a": "Because the strategy's thesis is that prices come back, and a universe of today's index members is a sample in which they always did. Every name that went bankrupt, delisted or was acquired has been deleted, so the dips that never recovered are simply absent from the data. The fix is a dataset that includes dead tickers with each name present only on the dates it actually traded. Selection bias is the cousin to watch for at the same time: choosing the symbols, dates or markets where the rule happens to work.",
-            "level": "core",
-            "skill": "quant.survivorship",
-        },
-        {
-            "q": "A portfolio manager wants to halve the holding period to 'capture more moves'. What do you tell them?",
-            "a": "That the gross edge per trade has to survive twice the cost, and it usually does not. Each round trip pays the taker fee on both legs plus the half-spread on both, so the drag scales linearly with turnover: a 40 bps gross edge that nets +7 bps at one round trip nets -26 at two. The alternative is to earn the other side of the schedule by resting rather than crossing, which turns the taker fee into a maker rebate — but it costs fill certainty and exposes you to adverse selection, so model that before promising it.",
+            "q": "The same backtest on the same data gives a different P&L on every run. How do you find the cause?",
+            "a": "Make the run reproducible enough to compare: record a digest of the fill list, rerun at two replay speeds and on two machines, and find the first fill that differs. The usual cause is a decision that reads the machine rather than the data: time.time(), datetime.now() or a sleep-based cooldown, so its length in market time depends on CPU speed. Others are unseeded randomness, iteration over an unordered container, threads racing on shared state, or parallel workers merging results in completion order. Fix it by handing the strategy the logical time and an injected clock, and keep the wall clock at the edges only.",
             "level": "senior",
-            "skill": "trading.maker-taker",
+            "skill": "tools.headless-sim",
         },
         {
-            "q": "How do you make a backtest reveal regime dependence rather than average it away?",
-            "a": "Stop reporting one blended number. Break the P&L out by calendar period and by a regime label defined independently of the strategy — realised volatility buckets, rate cycles, liquidity conditions — and look at the dispersion, not the mean. A robust strategy is merely acceptable everywhere; a fragile one is spectacular in one window and bleeding elsewhere, and the blended Sharpe hides that. Walk-forward, which we build in week 7, rolls the train and test split through time so each out-of-sample window is judged in its own regime.",
+            "q": "A researcher shows you Sharpe 3 on tick data. How do you try to break it?",
+            "a": "Look for leaks first, because they are cheap to find: lag the signal by one tick and see whether the edge degrades a little or collapses, check every as-of join for its key and direction, and check that nothing reads restated or future reference data. Then the fill model: next-tick fills against recorded depth, the real fee schedule, latency in ticks, one-sided books. Then compare with baselines and count the trials behind the chosen parameters, and look at the out-of-sample block they never touched. Finally replay at two speeds and confirm the same fill digest, to rule out a wall-clock dependency.",
             "level": "senior",
-            "skill": "quant.regime-change",
+            "skill": "quant.look-ahead",
         },
     ],
 },
