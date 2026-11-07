@@ -523,6 +523,102 @@ print("mean hides the tail:", statistics.mean(lat) < pct(.99) / 10)
 # mean hides the tail: True""",
             "deck": "Deck Week 6 · slide 16",
         },
+        {
+            "title": "Overlapping sub-problems: memoise, or fill the table bottom-up",
+            "text": "Recursion that recomputes the same sub-problem is exponential: fib(n) calls fib(n-1) and fib(n-2), the call tree has about 1.6 to the n nodes, and fib(n-2) is rebuilt over and over. Two fixes keep the algorithm and drop the repetition. Memoise: one lru_cache line stores each result by its argument, so every value is computed once, O(n) time and O(n) memory, and a repeat call is a dict lookup. Or go bottom-up: walk from the smallest sub-problem and keep only the last two values, O(n) time and O(1) memory, the shape of a streaming statistic. The costs are real. maxsize=None never evicts, the function must be pure with hashable arguments (caching a read of the order book returns stale answers), and a cold memoised call deeper than about 1,000 frames raises RecursionError. On one laptop fib(30) took about 79 ms recursively, 0.008 ms memoised and 0.003 ms iteratively.",
+            "code": """import sys
+from functools import lru_cache
+calls = 0
+def fib_slow(n):                               # the definition, as code: O(1.6^n)
+    global calls; calls += 1
+    return n if n < 2 else fib_slow(n - 1) + fib_slow(n - 2)
+@lru_cache(maxsize=None)                       # same code + one decorator: O(n)
+def fib_memo(n):
+    return n if n < 2 else fib_memo(n - 1) + fib_memo(n - 2)
+def fib_table(n):                              # bottom-up: O(n) time, O(1) memory
+    a, b = 0, 1
+    for _ in range(n): a, b = b, a + b
+    return a
+print("fib(25) =", fib_slow(25), "took", calls, "calls")
+ok = fib_table(25) == fib_memo(25)
+print("memo computed", fib_memo.cache_info().misses, "values; table agrees:", ok)
+fib_memo.cache_clear()
+try: fib_memo(5_000)                           # cold call: recursion 5000 deep
+except RecursionError: print("cold fib_memo(5000): RecursionError, limit", sys.getrecursionlimit())
+print("fib_table(5000) has", len(str(fib_table(5_000))), "digits")
+# fib(25) = 75025 took 242785 calls
+# memo computed 26 values; table agrees: True
+# cold fib_memo(5000): RecursionError, limit 1000
+# fib_table(5000) has 1045 digits""",
+        },
+        {
+            "title": "0/1 knapsack: allocating capital across trade ideas",
+            "text": "You have a capital budget and a list of trade ideas, each with a capital need and an expected profit, each taken whole or not at all. Trying every subset is O(2 to the n): 25 ideas took about 190 ms recursively on one laptop. The DP table best[c], the best profit using capital c with the ideas seen so far, solves it in O(n*W) time and O(W) memory, where W is the budget in integer units; walk c downward so an idea is used at most once. It is pseudo-polynomial: the cost grows with the size of W, not just the number of ideas. Measure the same $250,000 in $10 units instead of $1,000 and W is 100 times larger, and so is the time (about 0.8 ms to about 104 ms for 100 ideas on one laptop). Pick the coarsest unit the sizing really needs, and remember the table needs integer weights.",
+            "code": """import random
+def trade_ideas(n, seed=3):                    # capital need in $1,000, profit in $
+    rng = random.Random(seed)
+    w = [rng.randint(5, 60) for _ in range(n)]
+    return w, [int(x * rng.uniform(8, 30)) for x in w]
+def knapsack(weights, values, cap):            # O(n * W) time, O(W) memory
+    best = [0] * (cap + 1)
+    for w, v in zip(weights, values):
+        for c in range(cap, w - 1, -1):        # downward: each idea used once
+            best[c] = max(best[c], best[c - w] + v)
+    return best[cap]
+w, v = trade_ideas(100)
+print("100 ideas, $250k budget: best profit $%d" % knapsack(w, v, 250))
+for scale in (1, 10, 100):                     # same money, measured in finer units
+    print("W = %6d  table cells = %9d" % (250 * scale, 100 * 250 * scale))
+print("same answer, W x100:", knapsack([x * 100 for x in w], v, 25_000) == knapsack(w, v, 250))
+# 100 ideas, $250k budget: best profit $7309
+# W = 25000 table cells = 2500000
+# same answer, W x100: True""",
+        },
+        {
+            "title": "Dijkstra: the cheapest route, as long as no cost is negative",
+            "text": "A market is a graph: nodes are venues, currencies or gateways, and an edge is a hop with a cost in basis points. Dijkstra answers 'cheapest way from A to B?' with a heap: pop the cheapest unsettled node, settle it for good, relax its edges. It is O((V + E) log V), and the stale-entry skip is the lazy deletion from the order book again. 'Settled for good' is the assumption, and it needs every cost to be non-negative. Add a 12 bp rebate edge and venue_A is settled at 5 bp before the cheaper path through the rebate is looked at, so Dijkstra still answers 9.0 bp while the true best is 7.0. You meet it in smart order routing, in the cheapest path between data centres, and in converting a position through the cheapest chain of instruments.",
+            "code": """import heapq, math
+def dijkstra(g, src):                          # needs every cost >= 0
+    dist, heap, done = {src: 0.0}, [(0.0, src)], set()
+    while heap:
+        d, u = heapq.heappop(heap)
+        if u in done: continue                 # stale entry: lazy deletion again
+        done.add(u)
+        for v, w in g.get(u, {}).items():
+            if v not in done and d + w < dist.get(v, math.inf):
+                dist[v] = d + w; heapq.heappush(heap, (d + w, v))
+    return dist
+net = {"gw": {"house": 15.0, "venue_A": 6.0, "dark": 2.0}, "dark": {"venue_A": 3.0},
+       "venue_A": {"fill": 4.0}, "house": {"fill": 0.5}}
+print("Dijkstra:", dijkstra(net, "gw")["fill"], "bp")
+net["house"]["venue_A"] = -12.0                # a rebate: true best is 15-12+4 = 7
+print("with a -12 bp edge Dijkstra still says", dijkstra(net, "gw")["fill"], "bp")
+# Dijkstra: 9.0 bp
+# with a -12 bp edge Dijkstra still says 9.0 bp""",
+        },
+        {
+            "title": "Bellman-Ford: negative edges, and arbitrage as a negative cycle",
+            "text": "Bellman-Ford relaxes every edge V-1 times, O(V*E), and allows negative costs. If a V-th pass still improves a distance there is a negative cycle. Arbitrage is exactly that: trading a to b at rate r multiplies your money by r, so weight each edge with -log(r), and a loop multiplies money by more than 1 exactly when its weights sum below 0. One stale GBP/EUR quote 60 bp too high, against a 2 bp spread, makes EUR to GBP to EUR worth +56 bp before fees. Measured on random graphs with about ten edges per node, doubling V roughly doubled Dijkstra and quadrupled Bellman-Ford. A detected loop is not yet a profit: fees, size at those prices and latency decide, and it may be gone before you trade.",
+            "code": """import math
+def has_arbitrage(rates):                  # Bellman-Ford on -log(rate): O(V * E)
+    edges = [(a, b, -math.log(r)) for a in rates for b, r in rates[a].items()]
+    dist = {n: 0.0 for n in rates}
+    for _ in range(len(rates)):                # pass V still improving => negative cycle
+        moved = False
+        for a, b, w in edges:
+            if dist[a] + w < dist[b] - 1e-12: dist[b] = dist[a] + w; moved = True
+    return moved
+usd = {"USD": 1.0, "EUR": 1.0860, "GBP": 1.2658}
+fx = {a: {b: usd[a] / usd[b] * 0.9998 for b in usd if b != a} for a in usd}   # 2 bp spread
+print("consistent quotes, arbitrage:", has_arbitrage(fx))
+fx["GBP"]["EUR"] *= 1.006                      # one stale quote, 60 bp too high
+print("stale GBP/EUR quote, arbitrage:", has_arbitrage(fx))
+loop = fx["EUR"]["GBP"] * fx["GBP"]["EUR"]
+print("EUR -> GBP -> EUR: x%.5f (%+.1f bp)" % (loop, (loop - 1) * 1e4))
+# consistent quotes, arbitrage: False
+# stale GBP/EUR quote, arbitrage: True
+# EUR -> GBP -> EUR: x1.00560 (+56.0 bp)""",
+        },
     ],
     "hft": {
         "text": "Why this matters in systematic trading",
@@ -531,6 +627,7 @@ print("mean hides the tail:", statistics.mean(lat) < pct(.99) / 10)
             "The order book is where the theory is load-bearing. shared/orderbook.py holds two min-heaps of (price, seq, order_id) plus a canonical dict, so best_bid measured 0.075 microseconds and stayed dead flat from 1,000 to 100,000 resting orders — a lazy heap clean followed by an O(1) peek, on the operation the venue repeats most. get_snapshot is the counterexample: it aggregates price levels by iterating _orders, so it went from 96 microseconds to 8,461 across the same range, exactly linear, and the exchange calls it on every broadcast. Knowing which of your reads is which separates a venue that holds up under load from one that does not.",
             "Tail latency is a live-risk control, not a vanity metric. The p99 arrives during a shock burst, when ticks come fastest and the book is moving most, which is precisely when a stale quote gets taken. For a market maker that is adverse selection, and it shows up in TCA as fills that sit systematically on the wrong side of the next mid: a rebate does not cover a spread you quoted against a price that no longer exists. Cancel latency has the same shape — a requote you cannot land in time is a free option you have written to the fastest taker in the session.",
             "Complexity also decides what you can honestly test. An O(n squared) per-session statistic makes a 20,000-tick backtest take twelve seconds, which is enough to stop you running the parameter sweeps and walk-forward windows that would have caught the overfit. Welford and the full recompute agree on the variance to floating-point precision; the only difference is the curve. Fast, correct hot paths are what buy you the number of honest runs, and they are the same paths week 7 goes on to distribute.",
+            "The same cost discipline reaches past the book. Memoisation and a bottom-up table are how a repeated sub-problem stops being repeated, and a knapsack table allocates a fixed capital budget across all-or-nothing trade ideas in O(n*W). Graph algorithms price routes and loops: Dijkstra picks the cheapest of several venues when every cost is non-negative, and Bellman-Ford over -log(rate) edges flags a loop of quotes that multiplies money, which on the AlgoArena team venues is the same stock quoted at two prices. A detected loop is only worth trading if fees, size and latency leave something over.",
             "This session also carries the midterm: 30 multiple-choice questions in 90 minutes, one attempt, closed book, drawn from weeks 1 to 5. It rewards exactly the vocabulary above — naming the complexity class of an operation, choosing the container that matches the question you repeat most, and reading a percentile table rather than a mean. The homework that follows has you build an order book from scratch and defend it with a written complexity table and a benchmark, so treat tonight's measurements as the reference you will be held to.",
         ],
         "example": {
@@ -601,6 +698,18 @@ def best_ask(self) -> float | None:
             "a": "Maintain a price-level index alongside the canonical dict: a dict keyed by (side, price) holding aggregated quantity and a FIFO of order ids, plus a heap of live prices per side. A snapshot of depth k then reads the k best prices off the heap and takes their aggregates, independent of N. The cost is that every mutation must maintain it — place increments the level and appends to the queue, cancel decrements and removes, and a level that hits zero is dropped or marked dead for lazy cleanup. Test that the index and the dict never disagree, because two sources of truth is the bug this design invites.",
             "level": "senior",
             "skill": "python.hot-loop",
+        },
+        {
+            "q": "You have a graph of venues and fees and one venue pays a rebate, a negative edge. Which shortest-path algorithm do you use, and how do you search for an arbitrage?",
+            "a": "Not Dijkstra. It settles the cheapest node and never revisits it, so a negative edge reached later can leave an already-settled answer wrong: with a 12 bp rebate it still reports the 9 bp route when the true best is 7. Use Bellman-Ford, which relaxes every edge V-1 times in O(V*E) and tolerates negative costs. For arbitrage, weight each edge with -log(rate): a loop multiplies money by the product of its rates, so it is profitable exactly when its weights sum to a negative number, a negative cycle, which Bellman-Ford reports when the V-th pass still improves a distance. A found cycle is a candidate, not a profit: fees, available size at those prices and latency decide whether it survives.",
+            "level": "core",
+            "skill": "python.shortest-paths",
+        },
+        {
+            "q": "A knapsack DP over your capital budget runs in O(n*W). A colleague says that is polynomial, so scale it up. What do you answer?",
+            "a": "It is pseudo-polynomial: the time is polynomial in the number of ideas and in the numeric value of the budget W, but W is written in about log W bits, so in the size of the input the cost is exponential. In practice, measuring $250,000 in $10 units instead of $1,000 makes W 100 times larger and the table 100 times slower for the same problem, about 0.8 ms to about 104 ms for 100 ideas on one laptop. So I choose the coarsest unit the sizing really needs, round weights onto that grid, and budget the n*W cells of memory if I also want to recover which ideas were chosen. With real-valued sizes or a very fine grid the DP stops being the right tool.",
+            "level": "senior",
+            "skill": "quant.knapsack",
         },
     ],
 },

@@ -250,7 +250,11 @@ window.SKILLS = {
         "quant.rolling-stats",
         "trading.price-time-priority",
         "tools.profiling",
-        "tools.latency-tail"
+        "tools.latency-tail",
+        "python.memoization",
+        "python.dp-table",
+        "quant.knapsack",
+        "python.shortest-paths"
       ]
     },
     {
@@ -2080,6 +2084,70 @@ window.SKILLS = {
           "label": "HW 5 — Complexity & the order book data structure",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901647"
         },
+        {
+          "type": "exam",
+          "label": "Final · group: Complexity & Data Structures"
+        }
+      ],
+      "interview": true
+    },
+    {
+      "id": "python.memoization",
+      "category": "python",
+      "name": "Overlapping sub-problems & memoising with lru_cache",
+      "can": "You can spot overlapping sub-problems in a recursion, cache them with functools.lru_cache to turn exponential into linear, and name the costs: memory that grows with every distinct argument, the recursion limit on a cold deep call, and the need for a pure function with hashable arguments.",
+      "introduced": 6,
+      "practised": [],
+      "depth": 3,
+      "where": [
+        {
+          "type": "exam",
+          "label": "Final · group: Complexity & Data Structures"
+        }
+      ],
+      "interview": false
+    },
+    {
+      "id": "python.dp-table",
+      "category": "python",
+      "name": "From recursion to a bottom-up DP table",
+      "can": "You can rewrite a memoised recursion as a bottom-up table that fills from the smallest sub-problem up, keep only the row you still need, and say why it avoids the recursion limit.",
+      "introduced": 6,
+      "practised": [],
+      "depth": 2,
+      "where": [
+        {
+          "type": "exam",
+          "label": "Final · group: Complexity & Data Structures"
+        }
+      ],
+      "interview": false
+    },
+    {
+      "id": "quant.knapsack",
+      "category": "quant",
+      "name": "0/1 knapsack: capital allocation over trade ideas",
+      "can": "You can pick the best all-or-nothing subset of trade ideas under a capital budget with an O(n*W) DP table, and explain why that is pseudo-polynomial: the cost grows with the size of the budget in your chosen units, not just the number of ideas.",
+      "introduced": 6,
+      "practised": [],
+      "depth": 2,
+      "where": [
+        {
+          "type": "exam",
+          "label": "Final · group: Complexity & Data Structures"
+        }
+      ],
+      "interview": true
+    },
+    {
+      "id": "python.shortest-paths",
+      "category": "python",
+      "name": "Dijkstra vs Bellman-Ford: routing and arbitrage",
+      "can": "You can choose Dijkstra for cheapest routes when every cost is non-negative and Bellman-Ford when edges can be negative, and turn an arbitrage search into negative-cycle detection by weighting each rate with -log(rate).",
+      "introduced": 6,
+      "practised": [],
+      "depth": 2,
+      "where": [
         {
           "type": "exam",
           "label": "Final · group: Complexity & Data Structures"

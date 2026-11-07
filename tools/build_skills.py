@@ -785,6 +785,26 @@ SKILLS = [
        final(FN_CPX)], True),
 
 
+    S("python.memoization", "python", "Overlapping sub-problems & memoising with lru_cache",
+      "You can spot overlapping sub-problems in a recursion, cache them with functools.lru_cache to turn exponential into linear, and name the costs: memory that grows with every distinct argument, the recursion limit on a cold deep call, and the need for a pure function with hashable arguments.",
+      6, [], 3,
+      [final(FN_CPX)], False),
+
+    S("python.dp-table", "python", "From recursion to a bottom-up DP table",
+      "You can rewrite a memoised recursion as a bottom-up table that fills from the smallest sub-problem up, keep only the row you still need, and say why it avoids the recursion limit.",
+      6, [], 2,
+      [final(FN_CPX)], False),
+
+    S("quant.knapsack", "quant", "0/1 knapsack: capital allocation over trade ideas",
+      "You can pick the best all-or-nothing subset of trade ideas under a capital budget with an O(n*W) DP table, and explain why that is pseudo-polynomial: the cost grows with the size of the budget in your chosen units, not just the number of ideas.",
+      6, [], 2,
+      [final(FN_CPX)], True),
+
+    S("python.shortest-paths", "python", "Dijkstra vs Bellman-Ford: routing and arbitrage",
+      "You can choose Dijkstra for cheapest routes when every cost is non-negative and Bellman-Ford when edges can be negative, and turn an arbitrage search into negative-cycle detection by weighting each rate with -log(rate).",
+      6, [], 2,
+      [final(FN_CPX)], True),
+
     # ================= session 7 (source week 6) =================
     S("python.pandas-memory", "python", "The DataFrame memory bill & dtypes",
       "You can measure what a frame really costs with memory_usage(deep=True), "
@@ -1080,7 +1100,8 @@ SESSION_SKILLS = {
     4: ["quant.event-driven-backtest", "quant.performance-metrics", "tools.sql-tick-store", "tools.column-store", "tools.as-of-join", "tools.parquet", "tools.headless-sim", "quant.look-ahead", "quant.fill-simulation"],
     # 2026-10-11: the midterm week teaches nothing new (review = weeks 1-4)
     5: [],
-    6: ["trading.clob", "python.bigo", "python.containers", "python.hot-loop", "quant.rolling-stats", "trading.price-time-priority", "tools.profiling", "tools.latency-tail"],
+    6: ["trading.clob", "python.bigo", "python.containers", "python.hot-loop", "quant.rolling-stats", "trading.price-time-priority", "tools.profiling", "tools.latency-tail",
+        "python.memoization", "python.dp-table", "quant.knapsack", "python.shortest-paths"],
     7: ["python.gil", "tools.headless-sim", "python.pandas-memory", "python.numpy-vectorize", "python.chunking", "python.multiprocessing", "tools.parquet", "tools.determinism", "trading.multi-venue"],
     8: ["quant.look-ahead", "quant.overfitting", "tools.headless-sim", "tools.latency-tail", "quant.supervised-setup", "quant.feature-engineering", "quant.walk-forward", "quant.signal-scoring", "quant.model-ops"],
     # 2026-10-11: the old Session 8 (CI/CD) and Session 9 (finale) checklists,

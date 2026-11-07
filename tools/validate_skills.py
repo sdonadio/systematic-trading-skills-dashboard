@@ -170,7 +170,8 @@ skills = data["skills"]
 ids = [k["id"] for k in skills]
 chk(len(ids) == len(set(ids)), "duplicate skill ids: %r" %
     [i for i, n in collections.Counter(ids).items() if n > 1])
-chk(50 <= len(skills) <= 80, "want 50-80 skills, got %d" % len(skills))
+chk(50 <= len(skills) <= 90,  # raised 2026-11-06 (was 80) for the 4 DP/shortest-path skills added to Session 6 (83 total)
+    "want 50-90 skills, got %d" % len(skills))
 by_id = {k["id"]: k for k in skills}
 ORDER = ["deck", "lab", "hw", "project", "exam"]
 DECK_RE = re.compile(r"^Deck Week (\d+[ab]?) · (slide|slides) ([\d,– ]+)$")
