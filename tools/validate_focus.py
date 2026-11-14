@@ -32,11 +32,15 @@ SNIPS = os.path.join(ROOT, "snips")
 REPO = "/Users/sdonadio/PycharmProjects/AlgoArena"
 
 LEVELS = {"warm-up", "core", "senior"}
-SOURCE_WEEK = {"0": 0, "1": 1, "2": 2, "3": 3, "4": 4, "6": 5, "7": 6, "8": 7,
-               "9a": 8, "9b": 9}
+# 2026-11-14: course files renumbered to session numbers (see build_skills.py)
+SOURCE_WEEK = {"0": 0, "1": 1, "2": 2, "3": 3, "4": 4, "6": 6, "7": 7, "8": 8,
+               "9a": 9, "9b": 9}
 MIDTERM_ONLY = {5}
 # 2026-10-11: the merged Session 9 = old 8 + old 9, both parts kept
 MERGED_MAX = {9: {"concepts": 12, "paragraphs": 10, "interview": 16}}
+# 2026-11-14: the rebuilt Week 8 class has nine parts P0-P8 with P3 in two
+# cards and fine-tuning as its own card -> 11 concept cards
+MERGED_MAX[8] = {"concepts": 11}
 NSESS = 10
 # only these third-party imports are installed / allowed in a snippet
 ALLOWED_3P = {"numpy", "pandas", "pydantic", "websockets", "pytest"}

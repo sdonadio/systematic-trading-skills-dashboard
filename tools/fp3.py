@@ -1,7 +1,10 @@
 """Focus content for FINM 33500 sessions 7 and 8 (window.FOCUS slice).
 
 Session 7 — Big data & distributed compute   (source deck week 6, 22 slides)
-Session 8 — Machine-learning signals & model ops (source deck week 7, 22 slides)
+Session 8 — Machine learning that makes the strategy better (rebuilt 2026-11-14
+            to the new Week 8 class: one concept card per part P0-P8 of
+            .claude/handover/week8_ml_redo/OUTLINE.md in the course repo, P3 in
+            two cards; no deck chips until the rebuilt week8.pptx lands)
 
 Resequenced 2026-10-11: these were Sessions 6 and 7; the variable names s6/s7
 keep the source week. Deck labels cite the new week numbers (Deck Week 7/8).
@@ -186,204 +189,383 @@ if __name__ == "__main__":                 # required for multiprocessing
 
 s7 = {
     "n": 8,
-    "focus": "Machine-learning signals & model ops",
-    "tagline": "A model is just another signal function: learn it offline, split in time so it cannot see the future, and load it once so predicting fits inside the per-tick budget.",
+    "focus": "Machine learning that makes the strategy better",
+    "tagline": "A model earns its place in the bot only when it beats the rule you already have — out-of-sample, in time order, after costs — so the class runs the pipeline from features to a frozen model in on_tick, and every model it climbs through is judged that way.",
     "concepts": [
         {
-            "title": "The supervised setup — X at t, y about t+h",
-            "text": "You learn a mapping from features to a label, and in trading the two live at different times. Every column of X must be knowable at t; y is about t+h. Classification predicts direction and is easy to size by confidence; regression predicts magnitude and is more informative but noisier. The horizon h has to match how long you actually hold — label a 5-tick move and then hold for an hour and you have validated a different strategy. The last h rows of any tape have no label yet, which is exactly the shape of the live problem: you always stand at the right-hand edge.",
-            "code": """import numpy as np
-rng = np.random.default_rng(7)
-mid = 100 + np.cumsum(rng.normal(0, 0.05, 600))       # the tape
-h, t = 5, np.arange(20, 600 - 5)                      # horizon, usable rows
-ret = np.r_[0.0, mid[1:] / mid[:-1] - 1]
-X = np.c_[ret[t], mid[t] / mid[t - 10] - 1]           # known AT t
-y = (mid[t + h] > mid[t]).astype(float)               # about t+h: the label only
-print("X", X.shape, "y", y.shape, "up-rate", round(float(y.mean()), 3))
-print("last labelled t", int(t[-1]), "of", len(mid) - 1, "- the tail has no label yet")
-# X (575, 2) y (575,) up-rate 0.386
-# last labelled t 594 of 599 - the tail has no label yet""",
-            "deck": "Deck Week 8 · slide 5",
+            "title": "Why machine learning in trading — a better strategy, not a new system",
+            "text": "Machine learning is there for one reason: to make the strategy better — a better signal, better execution, better risk. In the pipeline you have built all quarter (gateway in, book, signal, execution, order management, gateway out) a model replaces or sharpens the signal or the execution-cost estimate; it never replaces the system around it. Typical uses: predict the direction or the return over the next h ticks, spot patterns in order flow, detect the regime, predict the cost of an order, score news sentiment, flag a bot that has gone wrong. Three things make it dangerous here. Signal-to-noise is tiny, so a 52% hit rate is either an edge or pure luck depending on how many trades stand behind it. Markets are non-stationary, so models rot. And your own trades feed back into the prices you learn from. The rule for the whole class: spend as much time catching yourself cheating as fitting. What this changes in your bot: nothing until a model beats your current rule out-of-sample, after costs.",
+            "code": """import math
+def z_of(hit_rate, n):                  # how many standard errors above a coin flip
+    return (hit_rate - 0.5) / math.sqrt(0.25 / n)
+for n in (200, 2_000, 10_000):
+    print(f"52% on {n:>6} trades: z = {z_of(0.52, n):.2f}")
+fee_bp, edge_bp = 15.0, 4.0              # taker fee each way vs the move you predict
+print("edge after a round trip (bp):", edge_bp - 2 * fee_bp)
+# 52% on 200 trades: z = 0.57
+# 52% on 10000 trades: z = 4.00
+# edge after a round trip (bp): -26.0""",
         },
         {
-            "title": "Features from prices and the book",
-            "text": "The model is only as good as X, and the useful families are the rolling statistics you already built: momentum over a lookback, volatility as recent dispersion of returns, the spread in basis points, and order-book imbalance as signed bid-versus-ask pressure. Standardise them, because a model that cares about magnitude will be dominated by whichever column has the largest scale. Fewer, better features win — each one costs a degree of freedom. Print X.std(0) before every fit: in the week-7 lab, obi came out with standard deviation 0.0, because a single broker quoting a symmetric ladder never moves the imbalance. A zero-variance feature cannot help, and a feature you cannot compute inside on_tick is not a feature.",
+            "title": "Supervised vs unsupervised — two kinds of question",
+            "text": "Supervised learning has an answer to learn: features X known at time t and a label y about t+h. Ask for a class (up or down, filled or not filled) and it is classification; ask for a number (the next return, the cost of an order) and it is regression. Unsupervised learning has no label: it finds structure — clustering volatility, volume and spread into market regimes, PCA for the common factors of a basket, anomaly detection on your own fills and messages to catch a bot that misbehaves. Reinforcement learning (learning an execution policy by trial and error) is a third family, out of scope here. In the arena: a classifier predicts the sign of the next 10-tick mark move; k-means on volatility and spread tells a calm book from a stressed one, which can switch your quote width or your position limit. What this changes in your bot: a supervised model becomes the signal; an unsupervised one usually becomes a switch on the rules you already have.",
             "code": """import numpy as np
-px = np.array([100.0, 100.2, 100.1, 100.4, 100.9, 101.0, 100.7, 101.3, 101.1, 101.6])
-rets = px[1:] / px[:-1] - 1
-bid, ask, bidq, askq = 101.55, 101.65, 400, 100
-X = np.array([rets[-1], px[-1] / px[0] - 1, rets.std(),
-              (ask - bid) / ((ask + bid) / 2) * 1e4, (bidq - askq) / (bidq + askq)])
-names = ["ret1", "mom9", "vol9", "spread_bps", "obi"]
-print(dict(zip(names, np.round(X, 4).tolist())))
-rows = np.array([X, X * 1.1, X * 0.9]); rows[:, 4] = 0.60   # one broker: obi never moves
-print("dead features:", [n for n, s in zip(names, rows.std(0)) if s < 1e-12])
-# {'ret1': 0.0049, 'mom9': 0.016, 'vol9': 0.0031, 'spread_bps': 9.8425, 'obi': 0.6}
-# dead features: ['obi']""",
-            "deck": "Deck Week 8 · slide 6",
+from sklearn.cluster import KMeans
+from sklearn.linear_model import LogisticRegression
+rng = np.random.default_rng(1)
+calm  = np.c_[rng.normal(10, 2, 300), rng.normal(2, 0.5, 300)]    # vol bp, spread bp
+storm = np.c_[rng.normal(45, 8, 100), rng.normal(9, 2.0, 100)]
+F = np.r_[calm, storm]
+regime = KMeans(n_clusters=2, n_init=10, random_state=0).fit_predict(F)   # no labels
+print("unsupervised regimes:", sorted(np.bincount(regime).tolist()))
+x = rng.normal(0, 1, (400, 1)); y = (x[:, 0] + rng.normal(0, 1, 400) > 0).astype(int)
+clf = LogisticRegression().fit(x[:300], y[:300])                 # labels: up / down
+print("supervised: coef > 0:", bool(clf.coef_[0, 0] > 0),
+      "| p(up | x=+2) > 0.8:", bool(clf.predict_proba([[2.0]])[0, 1] > 0.8))
+# unsupervised regimes: [99, 301]
+# supervised: coef > 0: True | p(up | x=+2) > 0.8: True""",
         },
         {
-            "title": "Split in time, with an embargo",
-            "text": "Random shuffling leaks the future into training, so time-series data is split chronologically: an early train slice, a middle validation slice you tune on, and a latest test slice you look at once. Then embargo the wall — drop the last h training rows — because with horizon h the labels of adjacent rows overlap, so a shuffled split drops each test row's near-twin into training and a memoriser simply looks it up. The snippet runs a 1-nearest-neighbour model on a pure random walk, where the honest answer is 50%: the shuffled split invents almost eight accuracy points of edge on data that contains none. The lab measured the same effect at +0.095.",
-            "code": """import numpy as np
-rng = np.random.default_rng(0)
-mid = 100 + np.cumsum(rng.normal(0, 0.05, 1500))   # a random walk: there is NO edge
-h, t = 20, np.arange(50, 1480)
-X = np.c_[mid[t] / mid[t - 20] - 1, mid[t] / mid[t - 50] - 1]
-y = (mid[t + h] > mid[t]).astype(int)              # labels of adjacent rows overlap
-nn1 = lambda A, a, B, b: float((a[((B[:, None] - A[None]) ** 2).sum(2).argmin(1)] == b).mean())
-cut, p = int(0.7 * len(X)), rng.permutation(len(X))
-shuf = nn1(X[p[:cut]], y[p[:cut]], X[p[cut:]], y[p[cut:]])
-hon = nn1(X[:cut - h], y[:cut - h], X[cut:], y[cut:])
-print(f"1-NN shuffled {shuf:.3f}  time+embargo {hon:.3f}  fake edge {shuf - hon:+.3f}")
-# 1-NN shuffled 0.602 time+embargo 0.526 fake edge +0.077""",
-            "deck": "Deck Week 8 · slide 11",
-        },
-        {
-            "title": "Walk-forward validation is the only score to trust",
-            "text": "Train on the past, test on the next unseen block, roll forward, repeat, and average the out-of-sample metric over the test blocks. An expanding window keeps all history; a rolling window forgets the distant past and copes better with drift. Report the dispersion as well as the mean — one lucky fold is not a result. Keep the embargo on every fold. The fit itself needs no framework: scikit-learn and joblib are not in requirements.txt and the graded week-7 lab is numpy-only, so a least-squares fit through numpy.linalg.lstsq is a perfectly respectable linear baseline, and the model ladder says beat that baseline before you climb to regularised linear or tree ensembles.",
-            "code": """import numpy as np
+            "title": "Technical indicators — the feature factory, and why so many parameters",
+            "text": "Technical indicators are the classical hand-made features: SMA and EMA gaps, momentum or rate of change, RSI, MACD, Bollinger z-scores, ATR or realised volatility, the distance to VWAP, order-book imbalance, the spread in basis points, trade-flow imbalance. Every one of them has windows and thresholds, and every window is a parameter: 10 indicators in 20 settings over 9 symbols is 1,800 columns before you add the model's own parameters (coefficients, depth, C, gamma, layers) and its hyperparameters. That is more columns than your data has independent information, which is exactly the curse of dimensionality and the overfitting the next cards deal with. Two rules. Shift every feature so that row t only uses what was known at t. And compute it in O(1) per tick inside on_tick with the rolling statistics from Week 6, never by recomputing a window. What this changes in your bot: pick a handful of indicators you can defend, not every setting you can generate.",
+            "code": """import numpy as np, pandas as pd
 rng = np.random.default_rng(3)
-sig = np.sin(2 * np.pi * np.arange(2100) / 300); t = np.arange(10, 2090)
-X = np.c_[sig[t] - sig[t - 5] + rng.normal(0, .3, len(t)), np.ones(len(t))]
-y = np.sign(sig[t + 5] - sig[t])                             # label about t+5
-accs = []
-for i in range(1, 5):                                        # 4 expanding folds
-    a, b = i * 400, (i + 1) * 400
-    w, *_ = np.linalg.lstsq(X[:a - 5], y[:a - 5], rcond=None)  # embargo the last 5 rows
-    accs.append(round(float((np.sign(X[a:b] @ w) == y[a:b]).mean()), 3))
-print("folds", accs, "| mean", round(sum(accs) / 4, 3))
-# folds [0.527, 0.54, 0.593, 0.557] | mean 0.554""",
-            "deck": "Deck Week 8 · slide 12",
+px = pd.Series(100 + np.cumsum(rng.normal(0, 0.2, 500)))
+def rsi(p, n):
+    d = p.diff(); up = d.clip(lower=0).rolling(n).mean(); dn = (-d.clip(upper=0)).rolling(n).mean()
+    return 100 - 100 / (1 + up / dn)
+feat = pd.DataFrame({
+    "sma_gap_20": px / px.rolling(20).mean() - 1,
+    "ema_gap_10": px / px.ewm(span=10).mean() - 1,
+    "roc_5": px.pct_change(5),
+    "rsi_14": rsi(px, 14),
+    "boll_z_20": (px - px.rolling(20).mean()) / px.rolling(20).std(),
+    "rvol_20": px.pct_change().rolling(20).std(),
+}).shift(1).dropna()                         # shift: only what was known at t
+print("rows", len(feat), "| features", feat.shape[1], "| RSI in [0,100]:",
+      bool(feat.rsi_14.between(0, 100).all()))
+indicators, settings, symbols = 10, 20, 9   # each window/threshold is a parameter
+print("columns you could build:", indicators * settings * symbols)
+# rows 479 | features 6 | RSI in [0,100]: True
+# columns you could build: 1800""",
         },
         {
-            "title": "Metrics that matter — accuracy is a trap",
-            "text": "A signal is good only if it makes risk-adjusted money out-of-sample after costs. Accuracy is necessary and not sufficient: 51% on balanced up-and-down labels can be very profitable, and 99% on rare events can lose money. What decides it is hit rate together with payoff, the average win over the average loss. Then subtract the trading: fees, spread and slippage, which is where most backtested machine-learning alpha dies. The snippet gives a genuine 4 bp average edge that a 15 bp taker fee each way destroys. Turnover and capacity are part of the score — a signal that flips every tick pays the spread endlessly, and slower, surer signals often win the season.",
+            "title": "The pipeline, part 1 — clean, standardise, as-of merge",
+            "text": "Start with a hypothesis you write down before touching the data (\"imbalance at the touch predicts the next move\"), then choose the data and its granularity: arena tapes, the history zips, news and events. Cleaning comes first: drop duplicate timestamps, turn impossible values (a negative mid, a crossed book) into missing ones, fill gaps from the past only, fix types and align the clocks of the different streams. Standardise features (z-score, or a robust median/IQR scale) with statistics fitted on the training slice only, then apply those numbers to validation and test. Merge on time with an as-of join that only looks backward: each tick gets the latest news score, event or book state that already existed, never the next one. A single forward-looking merge is enough to produce a beautiful and worthless backtest. What this changes in your bot: the feature function you write here is the one the bot calls live, so the cleaning and the scaling must be the same code.",
+            "code": """import numpy as np, pandas as pd
+from sklearn.preprocessing import StandardScaler
+ticks = pd.DataFrame({"ts": pd.to_datetime([1, 2, 2, 3, 4, 5, 6, 7], unit="s"),
+                      "mid": [100.0, 100.1, 100.1, -1.0, 100.3, np.nan, 100.2, 100.4]})
+ticks = ticks.drop_duplicates("ts").reset_index(drop=True)     # 1. duplicates
+ticks.loc[ticks.mid <= 0, "mid"] = np.nan                       # 2. impossible values
+ticks["mid"] = ticks.mid.ffill()                                # 3. gaps: last known, never next
+news = pd.DataFrame({"ts": pd.to_datetime([2.5, 5.5], unit="s"), "sent": [0.8, -0.6]})
+m = pd.merge_asof(ticks, news, on="ts", direction="backward")   # 4. as-of: no future rows
+print("sentiment as of each tick:", m.sent.fillna(0).tolist())
+X = m[["mid"]].to_numpy(); cut = 4
+sc = StandardScaler().fit(X[:cut])                              # 5. fit on TRAIN only
+print("train mean", round(float(sc.mean_[0]), 3), "| test z", sc.transform(X[cut:]).round(1).ravel().tolist())
+# sentiment as of each tick: [0.0, 0.0, 0.8, 0.8, 0.8, -0.6, -0.6]""",
+        },
+        {
+            "title": "The pipeline, part 2 — cross-validate in time, then measure",
+            "text": "Random K-fold lies on time series: neighbouring rows have near-identical features and labels that overlap over the horizon, so shuffling puts each test row's twin in the training set. Use time splits instead — walk-forward folds, with the rows that straddle each boundary purged and an embargo of h rows after it (sklearn's TimeSeriesSplit(gap=h)). Train, choose hyperparameters on validation folds, and touch the test block once. Then measure with metrics chosen for the question. Classification: accuracy, precision and recall, F1, ROC-AUC, log-loss, the confusion matrix. Regression: MSE or RMSE, MAE, R squared out-of-sample. Trading: hit rate, P&L after fees and spread, Sharpe, turnover, maximum drawdown, capacity. Always against baselines first — always-up and the momentum rule. The snippet runs on a random walk, where the honest answer is no edge; note that even one honest test block can print an AUC of 0.6 by luck, which is why you report several folds and their dispersion. What this changes in your bot: you only ship what wins walk-forward against the baseline.",
             "code": """import numpy as np
-rng = np.random.default_rng(11)
-edge = rng.normal(0.0004, 0.004, 4000)      # 4000 round trips, a real 4 bp edge
-hit = float((edge > 0).mean())
-payoff = float(edge[edge > 0].mean() / -edge[edge < 0].mean())
-cost = 2 * 0.0015                           # taker in, taker out
-print(f"hit {hit:.3f}  payoff {payoff:.2f}  gross {edge.mean() * 1e4:+.1f}bp"
-      f"  net {(edge.mean() - cost) * 1e4:+.1f}bp")
-print("survives costs:", bool(edge.mean() > cost))
-# hit 0.550 payoff 1.09 gross +4.5bp net -25.5bp
-# survives costs: False""",
-            "deck": "Deck Week 8 · slide 14",
+from sklearn.model_selection import KFold, TimeSeriesSplit, cross_val_score
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import precision_score, recall_score, roc_auc_score
+rng = np.random.default_rng(0)
+mid = 100 + np.cumsum(rng.normal(0, 0.05, 4000))      # random walk: there is NO edge
+h, t = 50, np.arange(200, 3950)
+X = np.c_[mid[t] / mid[t - 100] - 1, mid[t] / mid[t - 200] - 1]
+y = (mid[t + h] > mid[t]).astype(int)                 # neighbours share most of a label
+knn = KNeighborsClassifier(n_neighbors=1)
+shuf = cross_val_score(knn, X, y, cv=KFold(5, shuffle=True, random_state=0)).mean()
+purged = cross_val_score(knn, X, y, cv=TimeSeriesSplit(5, gap=h)).mean()   # gap = embargo
+print("shuffled K-fold", round(shuf, 2), "| time split + gap", round(purged, 2))
+print("shuffled CV lies:", shuf - purged > 0.1)
+cut = 3000; p = knn.fit(X[:cut - h], y[:cut - h]).predict(X[cut:])         # test once
+print("precision", round(precision_score(y[cut:], p), 2), "| recall",
+      round(recall_score(y[cut:], p), 2), "| AUC", round(roc_auc_score(y[cut:], p), 2))
+# shuffled K-fold 0.68 | time split + gap 0.53
+# shuffled CV lies: True""",
         },
         {
-            "title": "Model ops — persist, serve, monitor, retrain",
-            "text": "A model is a live artifact with a lifecycle, and training is the small part. Serialise the fitted weights together with the feature list, the horizon, the scaler statistics and a version, so the bot can check that what it computes per tick is what the model was fitted on. Load it once in __init__, never in the hot path, and measure predict() against the per-tick budget — a model you cannot run live scores nothing. A missing or stale artifact must be a quiet no-trade, not a crash mid-session. Then monitor: live hit rate against the training number, feature distributions, P&L against the backtest. Decide the retraining cadence up front and keep every version so you can roll one back.",
-            "code": """import json, os, tempfile, numpy as np
-art = {"version": 1, "kind": "logistic", "horizon": 5, "b": 0.02,
-       "features": ["ret1", "mom10", "vol20"], "w": [-0.84, 0.61, -0.18],
-       "mu": [0.0, 0.0, 0.004], "sd": [0.002, 0.01, 0.001]}
-with tempfile.TemporaryDirectory() as d:
-    p = os.path.join(d, "signal_v1.json"); json.dump(art, open(p, "w"))
-    a = json.load(open(p))                       # load ONCE, in __init__
-w, mu, sd = (np.array(a[k]) for k in ("w", "mu", "sd"))
-z = ((np.array([0.001, 0.012, 0.005]) - mu) / sd) @ w + a["b"]
-print("v%d %s h=%d" % (a["version"], a["features"], a["horizon"]),
-      "p_up %.4f" % (1 / (1 + np.exp(-z))), "| contract ok:", len(a["features"]) == len(w))
-# v1 ['ret1', 'mom10', 'vol20'] h=5 p_up 0.5379 | contract ok: True""",
-            "deck": "Deck Week 8 · slide 15 · Deck Week 8 · slide 18",
+            "title": "The curse of dimensionality — and its remedies",
+            "text": "Add columns and the space empties out: the volume of the hypercube grows exponentially, distances between points concentrate (the nearest and the farthest neighbour look alike), and the number of rows you need to cover the space explodes. In finance n is small and noisy, so this bites early. Three remedies. Shrinkage: ridge (L2) pulls every weight towards zero, lasso (L1) sets most of them to exactly zero and so selects features, elastic net mixes both. PCA rotates the basis to the directions of largest variance (an SVD): on the arena basket the first component is the market factor and the next ones are eigen-portfolios; the scree plot tells you how many to keep. LDA is the supervised cousin: the projection that best separates the classes rather than the one that keeps the most variance. Feature selection keeps original columns; feature extraction builds new ones. What this changes in your bot: fewer, better inputs, and a penalty chosen by time-aware cross-validation.",
+            "code": """import numpy as np
+from sklearn.linear_model import Ridge, Lasso
+from sklearn.decomposition import PCA
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
+rng = np.random.default_rng(4)
+for d in (2, 100, 1000):                      # distances concentrate as d grows
+    D = np.linalg.norm(rng.random((200, d)) - rng.random(d), axis=1)
+    print(f"d={d:>4}  (max-min)/min distance = {(D.max() - D.min()) / D.min():.2f}")
+n, p = 120, 60                                # few rows, many indicator columns
+X = rng.normal(size=(n, p)); y = 0.5 * X[:, 0] - 0.3 * X[:, 1] + rng.normal(0, 1, n)
+print("lasso keeps", int((Lasso(alpha=0.1).fit(X, y).coef_ != 0).sum()), "of", p,
+      "| ridge keeps", int((Ridge(alpha=10).fit(X, y).coef_ != 0).sum()))
+mkt = rng.normal(0, 1, (500, 1))              # one common factor drives 9 symbols
+R = mkt + 0.5 * rng.normal(0, 1, (500, 9))
+print("PC1 explains > 70% of the basket:", bool(PCA().fit(R).explained_variance_ratio_[0] > 0.7))
+lab = (R[:, 0] - R[:, 1] > 0).astype(int)     # LDA: the projection that separates labels
+print("LDA separates the classes:", bool(LDA().fit(R, lab).score(R, lab) > 0.9))
+# lasso keeps 19 of 60 | ridge keeps 60
+# PC1 explains > 70% of the basket: True
+# LDA separates the classes: True""",
+        },
+        {
+            "title": "Linear models, and the overfitting picture",
+            "text": "Ordinary least squares has a closed form, t-statistics and an R squared — and the in-sample R squared always flatters you, so report it out-of-sample. Logistic regression puts the same linear score through a sigmoid and is fitted on log-loss; its output is a probability you can threshold and size with, provided it is calibrated. The overfitting picture is the one to remember: fit polynomials of degree 1 to 15 on noisy data and the training error falls every time while the test error turns up; the same U appears when the ridge penalty goes to zero. Test error is bias plus variance plus irreducible noise, and in markets the noise term is most of it. Limits of a line: interactions (up only when two features agree), regime changes, outliers, noise that changes with volatility. What this changes in your bot: a logistic regression on a few standardised features is the first model to beat, and often the one you keep.",
+            "code": """import numpy as np
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import PolynomialFeatures, StandardScaler
+from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.metrics import mean_squared_error as mse
+rng = np.random.default_rng(5)
+x = rng.uniform(-1, 1, (60, 1)); y = 0.8 * x[:, 0] + rng.normal(0, 0.3, 60)
+xt = rng.uniform(-1, 1, (500, 1)); yt = 0.8 * xt[:, 0] + rng.normal(0, 0.3, 500)
+tr, te = [], []
+for deg in (1, 3, 15):                       # more parameters: train error always falls
+    m = make_pipeline(PolynomialFeatures(deg), StandardScaler(), LinearRegression()).fit(x, y)
+    tr.append(mse(y, m.predict(x))); te.append(mse(yt, m.predict(xt)))
+    print(f"degree {deg:>2}: train {tr[-1]:.3f}  test {te[-1]:.3f}")
+print("train falls:", tr[0] > tr[1] > tr[2], "| test U-turns:", te[2] > te[0])
+up = (y > 0).astype(int)
+p = LogisticRegression().fit(x, up).predict_proba([[0.5]])[0, 1]   # a probability you can size with
+print("P(up | x=0.5) between 0.5 and 1:", 0.5 < p < 1)
+# degree 15: train 0.047 test 0.116
+# train falls: True | test U-turns: True
+# P(up | x=0.5) between 0.5 and 1: True""",
+        },
+        {
+            "title": "Non-linear models — trees, forests, boosting, SVMs, neural nets",
+            "text": "A decision tree splits on the feature and threshold that reduce impurity most; depth and minimum leaf size are its overfitting knobs, and its rules can be read. A random forest averages many deep trees, each on a bootstrap sample with a random subset of features: lower variance, an out-of-bag error for free, feature importance, and it trains in parallel. Gradient boosting fits trees one after the other on the residuals of the ensemble so far, with a learning rate and early stopping (sklearn's HistGradientBoosting); because each tree needs the previous one, it parallelises badly across trees. A support vector machine maximises the margin, C trades margin for errors, and a kernel (polynomial, RBF with gamma) separates data that no line can, without building the features. A multilayer perceptron stacks layers and activations trained by backpropagation over epochs; learning curves, early stopping and dropout keep it honest, and it needs far more data than 500 noisy bars — it shines on images and text. Climb this ladder one rung at a time, on the same features and the same walk-forward, and watch the cost per prediction. What this changes in your bot: a non-linear model earns its place only when it beats the logistic and the momentum baseline out-of-sample.",
+            "code": """import numpy as np, time
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier
+from sklearn.svm import SVC
+from sklearn.neural_network import MLPClassifier
+rng = np.random.default_rng(6)
+X = rng.uniform(-1, 1, (1200, 2))            # an interaction: up only when the two agree
+y = ((X[:, 0] * X[:, 1] > 0) ^ (rng.random(1200) < 0.1)).astype(int)   # 10% label noise
+Xtr, ytr, Xte, yte = X[:800], y[:800], X[800:], y[800:]
+models = {"logistic": LogisticRegression(),
+          "tree d=4": DecisionTreeClassifier(max_depth=4, random_state=0),
+          "forest": RandomForestClassifier(200, min_samples_leaf=5, n_jobs=-1, random_state=0),
+          "boosting": HistGradientBoostingClassifier(learning_rate=0.1, random_state=0),
+          "svm rbf": SVC(kernel="rbf", C=1.0, gamma=2.0),
+          "mlp": MLPClassifier((16, 16), max_iter=2000, random_state=0)}
+acc = {}
+for name, m in models.items():
+    m.fit(Xtr, ytr); t0 = time.perf_counter(); acc[name] = m.score(Xte, yte)
+    us = (time.perf_counter() - t0) / len(Xte) * 1e6
+    print(f"{name:<9} test acc {acc[name]:.2f}   {us:6.1f} us per row, batched")
+print("no line separates XOR:", acc["logistic"] < 0.65,
+      "| every non-linear model > 0.8:", min(v for k, v in acc.items() if k != "logistic") > 0.8)
+# no line separates XOR: True | every non-linear model > 0.8: True""",
+        },
+        {
+            "title": "From model to bot — freeze, load, predict, fall back, monitor",
+            "text": "Apply the whole pipeline to an arena question — the next k-tick mark move, or patterns in the house desk's flow from book and trade-flow features on the week-9 history — walk it forward in the simulator, then freeze the winner: joblib (or JSON weights) together with its feature list, horizon and version. Load it once in __init__, check the feature list on load, and predict inside on_tick within the per-tick budget. If the artifact is missing or does not match, fall back to the baseline rule and log it: never crash, never guess. Then monitor drift: score each prediction h ticks later and keep a rolling live hit rate; when it sits well below the training number, stop trusting the model and retrain on a fixed cadence or on that trigger. Judge it the only way that counts — P&L after fees against the momentum baseline. What this changes in your bot: this card is the bot; the Week 9 block rewards a model built this way.",
+            "code": """import os, tempfile, joblib, numpy as np
+from collections import deque
+from sklearn.linear_model import LogisticRegression
+FEATURES = ["ret1", "mom5", "vol20"]                       # one feature function, offline AND live
+rng = np.random.default_rng(9); X = rng.normal(size=(500, 3)); y = (X[:, 1] > 0).astype(int)
+path = os.path.join(tempfile.mkdtemp(), "signal_v3.joblib")
+joblib.dump({"model": LogisticRegression().fit(X, y), "features": FEATURES, "version": 3}, path)  # freeze
+
+def load(p):                                               # once, in __init__ — never per tick
+    try:
+        art = joblib.load(p)
+        return art if art["features"] == FEATURES else None   # schema check on load
+    except (OSError, KeyError, ValueError):
+        return None
+art, missing = load(path), load(path + ".gone")
+def decide(art, x):                                        # in on_tick
+    if art is None:
+        return "fallback: momentum rule"                   # never crash, never guess
+    return "buy" if art["model"].predict_proba([x])[0, 1] > 0.6 else "hold"
+print(decide(art, [0.0, 1.5, 0.2]), "|", decide(missing, [0.0, 1.5, 0.2]))
+hits = deque(maxlen=50); hits.extend([1] * 22 + [0] * 28)  # score each call h ticks later
+print("live hit rate", sum(hits) / len(hits), "| drift alarm:", sum(hits) / len(hits) < 0.5)
+# buy | fallback: momentum rule
+# live hit rate 0.44 | drift alarm: True""",
+        },
+        {
+            "title": "Unstructured data — from news to a sentiment feature",
+            "text": "Text becomes a signal through the same pipeline. Start from the raw item — a headline, a filing, a post, or the arena's own news and event messages — and extract metadata: the time you received it (not the time printed on it), the source, the tickers and entities, the topic, the language, and a dedup key, because the same story arrives several times. Score it: a finance word list in the Loughran-McDonald style is transparent and fast; a transformer classifier reads context. As-of merge the scores with prices, run an event study (the return in the window after the item) to see whether the score means anything, and only then build a feature — a sentiment per symbol that decays with a half-life. Licensing matters: vendor news usually forbids training on it, while EDGAR, RSS feeds and public headlines are free. What this changes in your bot: one more feature known at t, judged by the same walk-forward as the others.",
+            "code": """import math, re
+POS = {"beat", "beats", "raises", "upgrade", "record", "surge"}      # Loughran-McDonald style lists
+NEG = {"miss", "misses", "warning", "downgrade", "probe", "cuts", "recall"}
+news = [(100, "Reuters", "NVDA beats estimates, raises guidance"),
+        (160, "PR wire", "TSLA recall widens; analysts downgrade"),
+        (170, "Reuters", "NVDA beats estimates, raises guidance")]  # a duplicate story
+seen, feed = set(), []
+for ts, src, text in news:                                         # 1. metadata + dedup
+    if text in seen:
+        continue
+    seen.add(text)
+    words = re.findall(r"[a-z]+", text.lower())
+    score = (sum(w in POS for w in words) - sum(w in NEG for w in words)) / len(words)
+    feed.append({"ts": ts, "src": src, "ticker": text.split()[0], "score": round(score, 3)})
+print([(f["ticker"], f["score"]) for f in feed])
+def decayed(ticker, now, half_life=60.0):                          # 2. the feature at tick `now`
+    return sum(f["score"] * 0.5 ** ((now - f["ts"]) / half_life)
+               for f in feed if f["ticker"] == ticker and f["ts"] <= now)   # as-of: no future news
+print("NVDA at t=160:", round(decayed("NVDA", 160), 3), "| TSLA at t=150:", decayed("TSLA", 150))
+# [('NVDA', 0.4), ('TSLA', -0.4)]
+# NVDA at t=160: 0.2 | TSLA at t=150: 0""",
+        },
+        {
+            "title": "Fine-tuning a transformer on financial headlines",
+            "text": "An off-the-shelf sentiment model is trained on movie reviews and gets finance wrong: \"profit warning\" and \"beat estimates\" are not in its world. Fine-tuning fixes that cheaply: take a pretrained DistilBERT (about 66 million parameters), put a new classification head on it for negative, neutral and positive, freeze the pretrained body and train only the head (about 0.6 million parameters) on a few hundred labelled financial headlines — optionally unfreezing the last layers. Compare held-out accuracy before and after, and look for the sentences that flip. On a laptop CPU it takes minutes. In production you would start from a finance-specific model such as FinBERT. What this changes in your bot: a sentiment score that understands the vocabulary of the market — still one feature among others, still validated in time. The snippet runs offline: it uses only cached weights, and skips the transformer part if the library or the weights are not there.",
+            "code": """import os; os.environ.setdefault("HF_HUB_OFFLINE", "1")   # cached weights only, no download
+H, LABELS = 768, 3                                          # DistilBERT width; neg / neutral / pos
+head = (H * H + H) + (H * LABELS + LABELS)                  # pre_classifier + classifier
+try:
+    from transformers import AutoModelForSequenceClassification, AutoTokenizer, pipeline
+    sst2 = pipeline("sentiment-analysis",                   # off the shelf: movie reviews, not markets
+                    model="distilbert/distilbert-base-uncased-finetuned-sst-2-english")
+    print("sst-2 says:", [r["label"] for r in sst2(["profit warning", "beat estimates"])])
+    name = "distilbert-base-uncased"
+    tok = AutoTokenizer.from_pretrained(name)
+    model = AutoModelForSequenceClassification.from_pretrained(name, num_labels=LABELS)
+    for p in model.distilbert.parameters():                 # freeze the pretrained body ...
+        p.requires_grad = False
+    trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    assert trainable == head                                # ... train only the new head
+    batch = tok(["profit warning", "beat estimates"], padding=True, return_tensors="pt")
+    print("logits shape", tuple(model(**batch).logits.shape))   # (2 headlines, 3 classes)
+except ImportError:
+    print("transformers not installed (optional, for Part 8)")
+except Exception as e:                                      # e.g. weights not in the local cache
+    print("transformer skipped offline:", type(e).__name__)
+print("trainable head params", head, "of ~66M")
+# trainable head params 592899 of ~66M""",
         },
     ],
     "hft": {
         "text": "Why this matters in systematic trading",
         "paragraphs": [
-            "Machine learning replaces the signal, not the system. The model emits one number; your sizing, stop-loss, position limit and routing are unchanged, and the seam is the same one you have used all quarter — a signal_fn with the registry signature, or on_tick in the SDK. That is the whole integration: compute features from market and portfolio, call the model, and turn a probability into a Signal above a threshold or into None below it. Everything expensive stays offline, because the pipeline that produced last week's cached features is what trains it.",
-            "Honesty is the entire deliverable here. Financial returns are mostly noise, so a 52% out-of-sample model can be excellent while a 90% in-sample one is worthless. Split in time, embargo the horizon, walk forward, report mean and dispersion, and look at the final test block once. Run the two controls the lab gives you: a shuffled-label run, which should collapse to a coin flip, and a random-walk symbol, where the honest answer is no edge. If the score survives both, you have something; if you tuned on the test block, you have a number with no meaning.",
-            "Costs decide whether the edge is real. A model that is right 55% of the time and flips its view every tick pays the taker fee and half the spread on both legs, which on the arena's schedule is 15 bp each way against an edge measured in single basis points. So make the label fee-aware — only call the move up if it clears the round-trip cost — and score turnover alongside Sharpe. Many machine-learning signals are pure alpha in a backtest and pure transaction cost in a live session.",
-            "Live risk is mostly serving discipline. Load the artifact once in __init__ and do arithmetic per tick; if the file is missing or its feature list does not match what you compute, trade nothing and log it rather than crashing mid-session. Measure predict() against the per-tick budget and against the order quota — eight messages per tick from season week 7 on — because a model that blocks the loop misses the market it just predicted. Then monitor drift: score your own predictions h ticks later and log a rolling live hit rate. Two standard errors below the training number for a whole session means the artifact is stale.",
-            "Features have to be identical offline and live or you have leaked. The lab drops obi for exactly that reason: it has zero variance in the simulated tape and MarketData cannot hand it to you live anyway. Write the feature function once, call it from both the training script and on_tick, and validate the recorded feature list on load. The bot you walk-forward validate in sim/session.py is the bot that competes in the season, unchanged.",
+            "Machine learning changes the signal, not the system. Your sizing, stops, position limits and routing stay as they are, and the seam is the one you have used all quarter: on_tick in the SDK returns a Signal or None. A model plugs in there — features computed from the market and the portfolio, one predict call, a threshold that turns a probability into an order. Everything expensive (cleaning, fitting, cross-validation) happens offline; on the tick you only do arithmetic.",
+            "Honesty is the deliverable. Returns are mostly noise, so a 52% out-of-sample hit rate over thousands of trades can be excellent while a 90% in-sample one is worthless. Split in time, purge and embargo the horizon, walk forward, report the mean and the dispersion across folds, and look at the test block once. Two controls catch most mistakes: shuffle the labels (the score must collapse to a coin flip) and run on a random walk (the honest answer is no edge).",
+            "Costs decide whether an edge exists. A model that is right 55% of the time and flips its view every tick pays the taker fee and the spread on both legs, which on the arena's default schedule is tens of basis points per round trip against an edge measured in single digits. Make the label cost-aware, score turnover next to Sharpe, and always compare with the momentum baseline after fees: many models are alpha in a backtest and transaction cost live.",
+            "Serving is risk management. Load the frozen model once, validate its feature list, and keep a fallback rule for the moment the file is missing or wrong; time predict against the per-tick budget and the order quota, because a model that blocks the loop misses the market it predicted. Then watch it: a rolling live hit rate scored h ticks after each call is the cheapest drift alarm there is, and a retrain cadence decided in advance beats a retrain decided in a panic.",
+            "The Week 9 block (Fri Dec 4) is built for exactly this pipeline: the house desk's flow contains patterns a model can learn, and the 200 simulated sessions in the week-9 history are the training data. Nobody is told the rule. Build features from the book and the trade flow, walk them forward, freeze the model, and let the block judge it on P&L after fees.",
         ],
         "example": {
             "title": "In the arena",
-            "text": "arena/trader.py defines the Trader base whose on_tick(market, portfolio) returns a Signal or None; market exposes prices(), mid_price(), best_bid/ask() and spread(), and portfolio exposes can_buy()/can_sell(). An ML bot loads its artifact in __init__ and only does arithmetic inside the hook.",
-            "code": """# team/trader.py — numpy-only model, artifact frozen offline
-import json, math
-import numpy as np
+            "text": "arena/trader.py defines the Trader base: on_tick(market, portfolio) returns a Signal or None, market exposes symbols(), prices(), mid_price(), best_bid()/best_ask() and spread(), portfolio exposes can_buy()/can_sell(). The bot below lives in team/trader.py: it loads a frozen sklearn Pipeline (scaler fitted on train plus a classifier) once in __init__, falls back to the momentum rule when the artifact is missing or its feature list does not match, scores each of its own calls H ticks later, and stops firing when the live hit rate drifts below a coin flip.",
+            "code": """# team/trader.py — a frozen sklearn model, loaded once, with a fallback
+from collections import deque
+import joblib, numpy as np
 from arena import Trader, Signal
 
+FEATURES = ["ret1", "mom5", "mom10", "vol20", "spread_bp"]   # the SAME function offline
+H = 10                                                       # the label's horizon, in ticks
+
+def features(px, spread, mid):
+    p = np.asarray(px[-21:], float); r = p[1:] / p[:-1] - 1
+    return [r[-1], p[-1] / p[-6] - 1, p[-1] / p[-11] - 1, r.std(), spread / mid * 1e4]
+
 class MLTrader(Trader):
-    def __init__(self, path="models/signal_v1.json"):
-        try:
-            self.art = json.load(open(path))       # load ONCE, never in on_tick
-        except (OSError, ValueError):
-            self.art = None                        # fail safe, not silent
-        if self.art:
-            self.w, self.mu, self.sd = (np.array(self.art[k]) for k in ("w", "mu", "sd"))
+    def __init__(self, path="models/signal_v3.joblib"):
+        try:                                        # load ONCE, never in on_tick
+            art = joblib.load(path)
+            self.model = art["model"] if art["features"] == FEATURES else None
+        except (OSError, KeyError, ValueError):
+            self.model = None                       # missing or mismatched -> fallback
+        self.pending, self.hits = deque(), deque(maxlen=100)
 
     def on_tick(self, market, portfolio):
-        if self.art is None:
-            return None                            # no artifact -> trade nothing
+        for _ in range(len(self.pending)):          # drift: score each call H ticks later
+            sym, mid0, age = self.pending.popleft()
+            if age < H:
+                self.pending.append((sym, mid0, age + 1))
+            elif market.mid_price(sym):
+                self.hits.append(market.mid_price(sym) > mid0)
+        live_ok = len(self.hits) < 50 or sum(self.hits) / len(self.hits) >= 0.5
         for sym in market.symbols():
             px, spread, mid = market.prices(sym), market.spread(sym), market.mid_price(sym)
-            if len(px) < 21 or spread is None or not mid:
-                continue
-            p_ = np.array(px[-21:], float); rets = p_[1:] / p_[:-1] - 1
-            x = np.array([rets[-1], p_[-1] / p_[-6] - 1, p_[-1] / p_[-11] - 1,
-                          rets.std(), spread / mid * 1e4])
-            z = float(((x - self.mu) / self.sd) @ self.w + self.art["b"])
-            p = 1 / (1 + math.exp(-max(-60, min(60, z))))
             ask = market.best_ask(sym)
-            if p > 0.55 and ask and portfolio.can_buy(sym, 2, ask):
-                return Signal(symbol=sym, side="buy", quantity=2, price=ask, confidence=p)
+            if len(px) < 21 or not spread or not mid or not ask:
+                continue
+            if self.model is None:                  # fallback: the momentum baseline
+                p_up = 0.7 if px[-1] > px[-11] else 0.3
+            else:                                   # a Pipeline: scaler fitted on train only
+                p_up = float(self.model.predict_proba([features(px, spread, mid)])[0, 1])
+            if p_up > 0.6 and live_ok and portfolio.can_buy(sym, 2, ask):
+                self.pending.append((sym, mid, 0))
+                return Signal(symbol=sym, side="buy", quantity=2, price=ask, confidence=p_up)
         return None""",
         },
     },
     "interview": [
         {
-            "q": "You want a model that predicts direction over the next five ticks. What are X and y, and what is the one rule you cannot break?",
-            "a": "X is one row per point in time holding only quantities knowable at t — recent returns, momentum over a lookback, rolling volatility, the spread, book imbalance. y is about t+h: for direction, 1 if mid[t+h] > mid[t] else 0. The rule is that nothing in X may touch data after t, and that includes the scaler — fit mu and sd on the training slice only. The horizon also has to match the holding period, because a 5-tick label validates a 5-tick trade and nothing else.",
+            "q": "Name one supervised and one unsupervised use of machine learning in a trading bot, and say where each plugs in.",
+            "a": "Supervised: predict the sign of the mid move over the next h ticks from features known at t — a classifier whose probability becomes the signal in on_tick. Unsupervised: cluster volatility, volume and spread into regimes with k-means and use the regime as a switch on rules you already have (a wider quote, a smaller position limit). Supervised needs labels about the future; unsupervised needs none and usually changes parameters rather than placing orders.",
             "level": "warm-up",
             "skill": "quant.supervised-setup",
         },
         {
-            "q": "Why can a 52% accurate model be excellent while a 99% accurate one is useless?",
-            "a": "Because accuracy ignores both the payoff and the base rate. Financial returns are mostly noise, so on balanced up-and-down labels a couple of points above a coin flip, repeated with disciplined sizing, is a real edge. A 99% model on a rare event is usually predicting the majority class and earns nothing when it is right and loses heavily on the 1%. What matters is hit rate together with the average win over the average loss, out-of-sample, after fees and spread.",
+            "q": "The kernel trick in one sentence — and what C and gamma do in an RBF SVM.",
+            "a": "The kernel trick computes inner products in a high-dimensional feature space directly from the original inputs, so a linear max-margin classifier there draws a non-linear boundary here without ever building those features. C is the price of a margin violation: large C fits the training set tightly (low bias, high variance), small C accepts errors for a wider margin. Gamma is the RBF's reach: large gamma makes each point's influence local and the boundary wiggly, small gamma makes it smooth. Both are chosen by time-aware cross-validation.",
             "level": "warm-up",
-            "skill": "quant.signal-scoring",
+            "skill": "quant.svm-kernels",
         },
         {
-            "q": "Your model scores 0.57 on a random 70/30 split and 0.48 walk-forward. What happened?",
-            "a": "The random split leaked. With a horizon of h the labels of neighbouring rows overlap, and their features are nearly identical, so shuffling puts each test row's near-twin in the training set and the model recognises it instead of generalising. Split chronologically and drop the last h training rows as an embargo so no training label reaches across the wall. The 0.48 is the honest number; on a random-walk symbol that is exactly what you should see, and the gap is the measure of the leak.",
-            "level": "core",
-            "skill": "quant.look-ahead",
-        },
-        {
-            "q": "Expanding window or rolling window for walk-forward folds?",
-            "a": "Expanding keeps all history, so each fold trains on more data and the estimates are more stable — good when the relationship is roughly stationary. Rolling forgets the distant past, which is what you want under drift, because a regime from two years ago dilutes the current one. In practice I run both and compare: if rolling wins, the process is non-stationary and that is a finding about the market, not a hyperparameter. Either way every test block stays out-of-sample, the embargo applies per fold, and I report the mean with the fold-to-fold dispersion.",
+            "q": "Your classifier scores 0.68 with shuffled 5-fold cross-validation and 0.53 with a time split. Which do you believe, and why does shuffled CV lie here?",
+            "a": "The time split. With a horizon of h ticks, neighbouring rows have nearly identical features and labels that overlap over most of the window, so a shuffled fold puts each test row's near-twin in the training set and the model recognises it instead of predicting. Split chronologically, purge the rows whose labels straddle the boundary and embargo h rows after it (TimeSeriesSplit(gap=h) is the minimum). The gap between the two numbers is the size of the leak; on a random walk 0.53 is roughly the honest answer.",
             "level": "core",
             "skill": "quant.walk-forward",
         },
         {
-            "q": "Name three concrete ways a feature can leak the future, and the check that rules each one out.",
-            "a": "First, a centred or unshifted rolling statistic: a rolling mean that includes t+1, or a signal used on the same bar it was computed from — the check is a mandatory shift() and a re-run to confirm the P&L drops. Second, scaling or imputing on the full sample: fit mu and sd on the train slice and apply them to test. Third, a label-derived column, such as a forward return sneaking into X — the check is a shuffled-label control, which must collapse to chance; if the model still scores, a feature encodes the answer.",
+            "q": "Explain the bias-variance trade-off with the model you would fit in a trading bot.",
+            "a": "Expected test error is bias squared plus variance plus irreducible noise. A logistic regression on three features has high bias (it cannot bend) and low variance (it barely changes when the data does); a deep tree or a degree-15 polynomial has low bias and huge variance, so training error falls while test error turns up. In markets the noise term dominates, so variance is the enemy: regularise, keep few features, prefer the simpler model unless the complex one wins walk-forward, and read the train-test gap as the overfitting meter.",
             "level": "core",
             "skill": "quant.overfitting",
         },
         {
-            "q": "You tried 200 feature-and-hyperparameter configurations and the best one has a Sharpe of 2.1. What do you report?",
-            "a": "Not 2.1. Picking the maximum of 200 noisy estimates inflates it by construction, so I report the deflated Sharpe — adjusted down for the number of trials — along with the trial count itself and the dispersion across walk-forward folds. If the test block was used to choose among the 200, it is no longer a test and the honest answer is that there is no out-of-sample number yet. The fixes are budgeting trials up front, logging every run, and keeping one untouched block to look at exactly once.",
+            "q": "When does a decision tree beat a logistic regression, and when does it lose?",
+            "a": "A tree wins when the signal is an interaction or a threshold — buy only when imbalance is high and the spread is tight, an XOR-shaped rule no single line can draw — or when features have very different scales and outliers, which a tree does not care about. It loses when the relationship is smooth and roughly linear in noisy data: the tree spends splits fitting noise, its predictions are step functions, and its variance is high. That is why the forest (averaging) and boosting (small steps) exist, and why the logistic stays the baseline.",
             "level": "core",
-            "skill": "quant.overfitting",
+            "skill": "quant.decision-tree",
         },
         {
-            "q": "How do you serve a trained model inside a per-tick loop without hurting yourself?",
-            "a": "Freeze it offline and ship an artifact that carries its weights, the feature list, the horizon, the scaler statistics and a version. Load it once in the constructor, never per tick, and on load validate that the feature list matches what the bot computes; on a missing or mismatched artifact, return None and log rather than crash. Then measure: time predict() over thousands of calls and compare the tail against the per-tick budget and the message quota. Use the same feature function offline and live, because two implementations is a leak waiting to happen.",
+            "q": "Why does a random forest parallelise well and gradient boosting badly?",
+            "a": "A forest's trees are independent — each sees its own bootstrap sample and feature subset — so they can be grown on every core at once and averaged at the end. Boosting is sequential by construction: tree k is fitted to the residuals of trees 1 to k-1, so it cannot start until the previous one is done. Implementations parallelise inside a tree (histogram building over features and rows, which is what HistGradientBoosting does), but not across trees. The trade-off: boosting usually wins on accuracy per tree, the forest on wall-clock training and robustness.",
+            "level": "core",
+            "skill": "quant.boosting",
+        },
+        {
+            "q": "PCA versus LDA on the same feature set: what does each keep?",
+            "a": "PCA is unsupervised: it rotates to the orthogonal directions of largest variance and keeps the first few, regardless of the labels — on a basket of returns the first component is the market factor. LDA is supervised: it finds the projection that maximises the distance between class means relative to the spread within classes, at most one fewer dimension than there are classes. A high-variance direction can be useless for prediction and a low-variance one can carry the signal, so PCA compresses and LDA discriminates; fit both on the training slice only.",
+            "level": "core",
+            "skill": "quant.pca-lda",
+        },
+        {
+            "q": "For a buy signal, do you care more about precision or recall, and how do you set the threshold?",
+            "a": "Usually precision: every positive is a trade that pays fees and the spread, so a false positive costs real money while a missed opportunity costs nothing but the edge you did not take. Recall matters when missing the move is expensive (a hedge, a stop). Rather than 0.5, set the threshold on the validation folds by maximising P&L after costs or a precision floor, read the precision-recall curve rather than accuracy, and check the threshold is stable across folds; then confirm on the untouched test block.",
+            "level": "core",
+            "skill": "quant.signal-scoring",
+        },
+        {
+            "q": "Your fine-tuned headline model is live in a bot. What exactly changed when you fine-tuned, and what can still go wrong?",
+            "a": "Fine-tuning added a new classification head for negative, neutral and positive on top of a pretrained DistilBERT and updated its weights (and optionally the last transformer layers) on our labelled financial headlines; the tokenizer, the vocabulary and most of the 66 million body weights are unchanged, so the model now maps finance phrases like 'profit warning' to the right class. What can go wrong: a few hundred labels overfit, so measure on held-out headlines; the score is only a feature, so it still needs an as-of merge on the time received and an event study; inference is milliseconds, so score asynchronously off the tick path; and the training text must be licensed for training.",
             "level": "senior",
-            "skill": "quant.model-ops",
+            "skill": "quant.fine-tuning",
         },
         {
-            "q": "The model is live. How do you know when it has stopped working, and what do you do?",
-            "a": "Instrument the prediction, not just the P&L. Store (tick, symbol, prediction) when you fire, score it against the realised move h ticks later, and log a rolling live hit rate; track feature distributions and live P&L against the backtest curve as well. If the live hit rate sits about two standard errors below the training number for a whole session, the data-generating process moved. The response is decided in advance: retrain on a rolling window at a fixed cadence or on a drift trigger, version every artifact, and keep the previous one loadable so a rollback is one config change.",
+            "q": "Walk me through serving a model inside on_tick, from the file on disk to the drift alarm.",
+            "a": "Offline, freeze the fitted pipeline (scaler plus model) with its feature list, horizon and version. In __init__, load it once, check the feature list against the feature function the bot uses — the same code that built the training set — and on any failure fall back to the baseline rule and log it. In on_tick, compute the features in O(1), call predict_proba once, threshold, and keep the call inside the per-tick budget and the message quota. Store each prediction, score it h ticks later, and keep a rolling live hit rate; if it sits two standard errors below the validation number for a session, stop trading the model, retrain on a rolling window and keep the previous artifact for a one-line rollback.",
             "level": "senior",
             "skill": "quant.model-ops",
         },
     ],
 }
+
 
 SESSIONS = [s6, s7]

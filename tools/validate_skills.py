@@ -62,8 +62,9 @@ for f in os.listdir(ROOT):
     deck_len[m.group(1)] = max(nums)
 
 # cited key -> source week of the material (2026-10-11 resequence)
-SOURCE_WEEK = {"0": 0, "1": 1, "2": 2, "3": 3, "4": 4, "6": 5, "7": 6, "8": 7,
-               "9a": 8, "9b": 9}
+# 2026-11-14: course files renumbered to session numbers (see build_skills.py)
+SOURCE_WEEK = {"0": 0, "1": 1, "2": 2, "3": 3, "4": 4, "6": 6, "7": 7, "8": 8,
+               "9a": 9, "9b": 9}
 SESSION_DECKS = {0: ["w0"], 1: ["w1"], 2: ["w2"], 3: ["w3"], 4: ["w4"], 5: [],
                  6: ["w6"], 7: ["w7"], 8: ["w8"], 9: ["w9a", "w9b"]}
 MIDTERM_ONLY = {5}               # no class, no deck, no lab, no new skills
@@ -93,6 +94,8 @@ assns = {a["html_url"]: a["name"]
 # lab part counts from the markdown sources
 lab_parts = {}
 for i in range(1, 10):
+    if not os.path.exists(os.path.join(LABS_DIR, "week%02d.md" % i)):
+        continue                # no week05.md: the midterm week has no lab
     txt = open(os.path.join(LABS_DIR, "week%02d.md" % i), encoding="utf-8").read()
     lab_parts[i] = {int(m) for m in re.findall(r"^### (\d+)\.", txt, re.M)}
     # labs rebuilt from Week 3 on number their sections "## Step N — ..."
@@ -170,8 +173,8 @@ skills = data["skills"]
 ids = [k["id"] for k in skills]
 chk(len(ids) == len(set(ids)), "duplicate skill ids: %r" %
     [i for i, n in collections.Counter(ids).items() if n > 1])
-chk(50 <= len(skills) <= 90,  # raised 2026-11-06 (was 80) for the 4 DP/shortest-path skills added to Session 6 (83 total)
-    "want 50-90 skills, got %d" % len(skills))
+chk(50 <= len(skills) <= 100,  # raised 2026-11-06 (was 80) for the 4 DP/shortest-path skills added to Session 6 (83 total); 2026-11-14 to 100 for the Week 8 ML redo (95 total)
+    "want 50-100 skills, got %d" % len(skills))
 by_id = {k["id"]: k for k in skills}
 ORDER = ["deck", "lab", "hw", "project", "exam"]
 DECK_RE = re.compile(r"^Deck Week (\d+[ab]?) · (slide|slides) ([\d,– ]+)$")
@@ -272,8 +275,8 @@ for s in sess:
     if s["n"] in MIDTERM_ONLY:   # 2026-10-11: the midterm week teaches nothing new
         chk(not s["skills"], "session %d is the midterm only: no skills" % s["n"])
         continue
-    chk(5 <= len(s["skills"]) <= 17,  # raised 2026-10-11 at the instructor's request (was 9, then 14; Session 2 has 14, the merged Session 9 has 17)
-        "session %d has %d skills (want 5-17)" % (s["n"], len(s["skills"])))
+    chk(5 <= len(s["skills"]) <= 18,  # raised 2026-10-11 at the instructor's request (was 9, then 14, then 17: Session 2 has 14, the merged Session 9 has 17); 18 on 2026-11-14 for the Week 8 ML redo (P0-P8)
+        "session %d has %d skills (want 5-18)" % (s["n"], len(s["skills"])))
 for k in skills:
     want = {k["introduced"]} | set(k["practised"])
     got = {s["n"] for s in sess if k["id"] in s["skills"]}

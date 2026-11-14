@@ -74,7 +74,10 @@ CATEGORIES = [
 # 2026-10-11 (tools/validate_*.py use the same table to check slide and part
 # numbers). If the course repo renumbers those files, update this table only.
 # --------------------------------------------------------------------------
-SOURCE_WEEK = {0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 6: 5, 7: 6, 8: 7, "9a": 8, "9b": 9}
+# 2026-11-14: the course repo renumbered its files to the session numbers
+# (week6/7/8.pptx = Sessions 6/7/8, week9.pptx = the merged Session 9; no
+# week5.pptx / labs/week05.md), so the table is the identity except 9a/9b -> 9.
+SOURCE_WEEK = {0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 6: 6, 7: 7, 8: 8, "9a": 9, "9b": 9}
 
 
 def session_of(key):
@@ -670,9 +673,8 @@ SKILLS = [
       "You can replay a recorded tape or a seeded simulation in one process with "
       "no sockets, drive every decision from the logical clock instead of the "
       "machine's, and prove it with the same fill digest at any replay speed.",
-      4, [7, 8, 9], 3,
+      4, [7, 9], 3,
       [deck(7, "18"),
-       deck(8, "19"),
        hw(4),
        final(FN_CI)], False),
 
@@ -681,9 +683,8 @@ SKILLS = [
       "decision time — an unlagged signal, a forward as-of match, a peek at the "
       "next book — fix it on the logical clock, and quantify how much of the edge"
       " was the leak.",
-      4, [8], 3,
-      [deck(8, "11"),
-       hw(4),
+      4, [], 3,
+      [hw(4),
        midterm(MT_BKT),
        final(FN_BKT)], True),
 
@@ -698,13 +699,13 @@ SKILLS = [
 
 
     # ================= session 8 (source week 7) =================
-    S("quant.overfitting", "quant", "Overfitting, data snooping & bias-variance",
-      "You can explain test error as bias plus variance plus irreducible noise, "
-      "recognise that keeping the best of 500 variants fits noise, and defend "
-      "against it with fewer parameters, counted trials and a held-out block.",
+    S("quant.overfitting", "quant", "Linear & logistic regression, and overfitting",
+      "You can fit OLS and logistic regression, read in-sample against "
+      "out-of-sample error as model complexity grows (train error always falls, "
+      "test error turns up), explain it as bias plus variance plus noise, and "
+      "name what a linear model cannot capture: interactions, regimes and outliers.",
       8, [], 3,
-      [deck(8, "9, 13"),
-       hw(8),
+      [hw(8),
        final(FN_ML)], True),
 
 
@@ -777,9 +778,8 @@ SKILLS = [
       "You can separate per-operation latency from operations per second, report "
       "p50/p95/p99 instead of a mean, and set a per-tick budget that the tail — "
       "not the average — has to fit inside.",
-      6, [8], 3,
+      6, [], 3,
       [deck(6, "16, 20"),
-       deck(8, "18"),
        lab(6, 5, "Tail latency of your own on_tick"),
        hw(6),
        final(FN_CPX)], True),
@@ -890,59 +890,155 @@ SKILLS = [
 
 
     # ================= session 8 (source week 7) =================
-    S("quant.supervised-setup", "quant", "The supervised setup: X, y and the horizon",
-      "You can frame a trading signal as supervised learning — features knowable "
-      "at t, a label about t+h — and choose classification or regression with a "
-      "horizon that matches the holding period you intend.",
+    # 2026-11-14 Week 8 redo: the checklist follows the new class, P0 -> P8.
+    # Deck and lab where-links are left out until the rebuilt week8.pptx and
+    # labs/week08.md land (their slide and step numbers are not final).
+    S("quant.supervised-setup", "quant", "Supervised vs unsupervised learning",
+      "You can say whether a trading question is supervised (features known at "
+      "t, a label about t+h, as classification or regression) or unsupervised "
+      "(regimes by clustering, common factors by PCA, a bot gone wrong by "
+      "anomaly detection), and name where each sits in the signal or execution "
+      "step of the bot.",
       8, [], 3,
-      [deck(8, "5"),
-       lab(8, 3, "Features known at t, label about t + h"),
-       hw(8),
+      [hw(8),
        final(FN_ML)], True),
 
-    S("quant.feature-engineering", "quant", "Features from prices & the order book",
-      "You can build momentum, volatility, spread and order-book-imbalance "
-      "features from a price history and a book snapshot, standardise them, and "
-      "justify why fewer, better features win in low signal-to-noise data.",
+    S("quant.feature-engineering", "quant", "Technical indicators as features, and the parameter count",
+      "You can compute SMA/EMA gaps, momentum, RSI, Bollinger z-scores, realised "
+      "volatility, spread and order-book imbalance as lagged features in O(1) per "
+      "tick, and count how windows, thresholds and symbols multiply them into "
+      "thousands of columns.",
       8, [], 3,
-      [deck(8, "6"),
-       lab(8, 3, "Features known at t, label about t + h"),
-       hw(8),
+      [hw(8),
        phase(3),
        final(FN_ML)], True),
 
-    S("quant.walk-forward", "quant", "Walk-forward validation & leakage control",
-      "You can split a time series chronologically into train, validation and an "
-      "untouched test block, roll the split forward over expanding or rolling "
-      "windows, and embargo the boundary so horizon-h labels cannot leak across "
-      "it.",
+    S("tools.ml-pipeline", "tools", "The data pipeline: clean, scale on train, as-of merge",
+      "You can clean a tape (duplicates, impossible values, gaps filled from the "
+      "past only), standardise with statistics fitted on the training slice only, "
+      "and as-of merge prices, book, events and news so no row sees the future.",
       8, [], 3,
-      [deck(8, "11-12"),
-       lab(8, 5, "Walk-forward, and the shuffled-label control"),
-       hw(8),
+      [hw(8),
+       final(FN_ML)], True),
+
+    S("quant.walk-forward", "quant", "Time-aware cross-validation with purge & embargo",
+      "You can explain why shuffled K-fold lies on overlapping time-series labels, "
+      "and replace it with time splits or walk-forward folds that purge and "
+      "embargo h rows at each boundary, keeping one test block that is touched "
+      "once.",
+      8, [], 3,
+      [hw(8),
        phase(3),
        final(FN_ML)], True),
 
-    S("quant.signal-scoring", "quant", "Scoring a signal after costs",
-      "You can explain why classification accuracy is necessary but not "
-      "sufficient, read hit rate together with average win over average loss, and"
-      " judge a signal on out-of-sample Sharpe and P&L net of fees, spread and "
-      "turnover.",
+    S("quant.signal-scoring", "quant", "Metrics: classification, regression and trading",
+      "You can choose and read the right metric — precision, recall, F1, ROC-AUC, "
+      "log-loss and the confusion matrix for a classifier, RMSE, MAE and "
+      "out-of-sample R squared for a regression, hit rate, P&L after costs, "
+      "Sharpe, turnover and drawdown for the strategy — against a baseline.",
       8, [], 3,
-      [deck(8, "14"),
-       lab(8, 5, "Walk-forward, and the shuffled-label control"),
-       hw(8),
+      [hw(8),
        final(FN_ML)], True),
 
-    S("quant.model-ops", "quant", "Persist, serve, monitor & retrain a model",
-      "You can train offline, serialise the fitted model with its feature list "
-      "and version, load it once outside the hot path, time predict against the "
-      "per-tick budget, and monitor drift to decide when to retrain or roll back.",
+    S("quant.dimensionality", "quant", "The curse of dimensionality",
+      "You can explain why distances concentrate and the data you need grows "
+      "exponentially as columns are added, and why a few hundred noisy financial "
+      "rows cannot support thousands of indicator columns.",
+      8, [], 2,
+      [hw(8),
+       final(FN_ML)], True),
+
+    S("quant.regularization", "quant", "Shrinkage: ridge, lasso & elastic net",
+      "You can fit ridge (L2, shrinks every weight) and lasso (L1, sets weights "
+      "to exactly zero and so selects features), choose the penalty by time-aware "
+      "cross-validation, and say when elastic net is the compromise.",
       8, [], 3,
-      [deck(8, "15, 18"),
-       lab(8, 6, "Freeze the model, then load it in on_tick"),
-       hw(8),
+      [hw(8),
+       final(FN_ML)], True),
+
+    S("quant.pca-lda", "quant", "PCA and LDA",
+      "You can reduce a basket of correlated returns with PCA (variance explained, "
+      "the first component as the market factor, eigen-portfolios), contrast it "
+      "with LDA's supervised projection that separates classes, and tell feature "
+      "extraction from feature selection.",
+      8, [], 2,
+      [hw(8),
+       final(FN_ML)], True),
+
+    S("quant.decision-tree", "quant", "Decision trees",
+      "You can explain how a tree splits on impurity, read its rules, use depth "
+      "and minimum leaf size as the overfitting knob, and show it capturing an "
+      "interaction that no linear model can.",
+      8, [], 2,
+      [hw(8),
+       final(FN_ML)], True),
+
+    S("quant.random-forest", "quant", "Random forests",
+      "You can explain bagging plus feature subsampling, read out-of-bag error "
+      "and feature importance, and say why a forest lowers a tree's variance and "
+      "trains in parallel.",
+      8, [], 2,
+      [hw(8),
+       final(FN_ML)], True),
+
+    S("quant.boosting", "quant", "Gradient boosting",
+      "You can explain boosting as sequential fitting of the residuals with a "
+      "learning rate and early stopping, train sklearn's "
+      "HistGradientBoostingClassifier, and say why it parallelises badly across "
+      "trees.",
+      8, [], 2,
+      [hw(8),
+       final(FN_ML)], True),
+
+    S("quant.svm-kernels", "quant", "Support vector machines & kernels",
+      "You can explain the maximum-margin classifier, the role of C, and the "
+      "kernel trick (linear, polynomial, RBF with gamma) that separates "
+      "XOR-shaped data without building the features explicitly.",
+      8, [], 2,
+      [hw(8),
+       final(FN_ML)], True),
+
+    S("quant.neural-nets", "quant", "Neural networks: the multilayer perceptron",
+      "You can describe an MLP's layers, activations, backpropagation and epochs, "
+      "use learning curves, early stopping and dropout against overfitting, and "
+      "say why it needs far more data than a few hundred noisy bars.",
+      8, [], 2,
+      [hw(8),
+       final(FN_ML)], True),
+
+    S("quant.model-ops", "quant", "From model to bot: freeze, load, predict, fall back, monitor",
+      "You can freeze a fitted model with its feature list and version, load it "
+      "once outside on_tick, predict within the per-tick budget, fall back to a "
+      "baseline when the artifact is missing or mismatched, and watch the live "
+      "hit rate for drift.",
+      8, [], 3,
+      [hw(8),
        phase(3),
+       final(FN_ML)], True),
+
+    S("tools.news-metadata", "tools", "News as data: metadata, dedup & timestamps",
+      "You can turn a raw headline or an arena news event into a record with the "
+      "time it was received, its source, tickers, topic and a dedup key, ready "
+      "for an as-of merge with prices.",
+      8, [], 2,
+      [hw(8),
+       final(FN_ML)], False),
+
+    S("quant.sentiment", "quant", "Sentiment scoring: from text to a feature",
+      "You can score a headline with a finance word list or a transformer "
+      "classifier, turn the scores into a decayed per-symbol feature known at t, "
+      "and check it with an event study before it enters the signal.",
+      8, [], 2,
+      [hw(8),
+       final(FN_ML)], True),
+
+    S("quant.fine-tuning", "quant", "Fine-tuning a transformer on labelled headlines",
+      "You can fine-tune a pretrained transformer such as DistilBERT on a small "
+      "labelled set of financial headlines by training a new classification head "
+      "(optionally the last layers), and compare held-out accuracy before and "
+      "after.",
+      8, [], 2,
+      [hw(8),
        final(FN_ML)], True),
 
 
@@ -1103,7 +1199,11 @@ SESSION_SKILLS = {
     6: ["trading.clob", "python.bigo", "python.containers", "python.hot-loop", "quant.rolling-stats", "trading.price-time-priority", "tools.profiling", "tools.latency-tail",
         "python.memoization", "python.dp-table", "quant.knapsack", "python.shortest-paths"],
     7: ["python.gil", "tools.headless-sim", "python.pandas-memory", "python.numpy-vectorize", "python.chunking", "python.multiprocessing", "tools.parquet", "tools.determinism", "trading.multi-venue"],
-    8: ["quant.look-ahead", "quant.overfitting", "tools.headless-sim", "tools.latency-tail", "quant.supervised-setup", "quant.feature-engineering", "quant.walk-forward", "quant.signal-scoring", "quant.model-ops"],
+    # 2026-11-14 Week 8 redo: in the order of the new class, P0 -> P8
+    8: ["quant.supervised-setup", "quant.feature-engineering", "tools.ml-pipeline", "quant.walk-forward", "quant.signal-scoring",
+        "quant.dimensionality", "quant.regularization", "quant.pca-lda", "quant.overfitting",
+        "quant.decision-tree", "quant.random-forest", "quant.boosting", "quant.svm-kernels", "quant.neural-nets",
+        "quant.model-ops", "tools.news-metadata", "quant.sentiment", "quant.fine-tuning"],
     # 2026-10-11: the old Session 8 (CI/CD) and Session 9 (finale) checklists,
     # merged in teaching order (part 9a, then part 9b; tools.test-pyramid once)
     9: ["tools.git-branching", "tools.headless-sim", "tools.determinism", "tools.test-pyramid", "tools.pytest", "tools.mocking-async", "tools.github-actions", "tools.docker", "tools.observability",

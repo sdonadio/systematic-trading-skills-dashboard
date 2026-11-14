@@ -27,6 +27,8 @@ def text_of(shape):
 
 for key, fn in DECKS.items():
     path = os.path.join(DECK_DIR, fn)
+    if not os.path.exists(path):
+        continue                # no week5.pptx: the midterm week has no deck
     prs = Presentation(path)
     lines = []
     for i, slide in enumerate(prs.slides, 1):

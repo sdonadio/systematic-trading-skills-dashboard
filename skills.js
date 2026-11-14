@@ -231,9 +231,9 @@ window.SKILLS = {
         "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189593"
       },
       "hw": {
-        "label": "HW 5 — Complexity & the order book data structure",
+        "label": "HW 6 — Complexity & the order book data structure",
         "url": "https://canvas.uchicago.edu/courses/74211/assignments/901647",
-        "due": "2026-11-07"
+        "due": "2026-11-14"
       },
       "project": {
         "label": "Phase 2 — A Real Edge, Backtested",
@@ -269,9 +269,9 @@ window.SKILLS = {
         "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189596"
       },
       "hw": {
-        "label": "HW 6 — Big data: vectorize your signal",
+        "label": "HW 7 — Big data: vectorize your signal",
         "url": "https://canvas.uchicago.edu/courses/74211/assignments/901648",
-        "due": "2026-11-14"
+        "due": "2026-11-21"
       },
       "project": null,
       "exam": null,
@@ -300,9 +300,9 @@ window.SKILLS = {
         "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189599"
       },
       "hw": {
-        "label": "HW 7 — ML signals & model ops",
+        "label": "HW 8 — ML signals & model ops",
         "url": "https://canvas.uchicago.edu/courses/74211/assignments/901649",
-        "due": "2026-11-21"
+        "due": "2026-11-28"
       },
       "project": {
         "label": "Phase 3 — Risk & Robustness",
@@ -312,15 +312,24 @@ window.SKILLS = {
       "exam": null,
       "companion_url": "https://sdonadio.github.io/systematic-trading-arena/week8.html",
       "skills": [
-        "quant.look-ahead",
-        "quant.overfitting",
-        "tools.headless-sim",
-        "tools.latency-tail",
         "quant.supervised-setup",
         "quant.feature-engineering",
+        "tools.ml-pipeline",
         "quant.walk-forward",
         "quant.signal-scoring",
-        "quant.model-ops"
+        "quant.dimensionality",
+        "quant.regularization",
+        "quant.pca-lda",
+        "quant.overfitting",
+        "quant.decision-tree",
+        "quant.random-forest",
+        "quant.boosting",
+        "quant.svm-kernels",
+        "quant.neural-nets",
+        "quant.model-ops",
+        "tools.news-metadata",
+        "quant.sentiment",
+        "quant.fine-tuning"
       ]
     },
     {
@@ -342,7 +351,7 @@ window.SKILLS = {
         }
       ],
       "hw": {
-        "label": "HW 9 — Integration & season-finale demo",
+        "label": "HW 9 — CI/CD, testing & the season-finale integration",
         "url": "https://canvas.uchicago.edu/courses/74211/assignments/901651",
         "due": "2026-12-12"
       },
@@ -1740,7 +1749,6 @@ window.SKILLS = {
       "introduced": 4,
       "practised": [
         7,
-        8,
         9
       ],
       "depth": 3,
@@ -1749,11 +1757,6 @@ window.SKILLS = {
           "type": "deck",
           "session": 7,
           "label": "Deck Week 7 · slide 18"
-        },
-        {
-          "type": "deck",
-          "session": 8,
-          "label": "Deck Week 8 · slide 19"
         },
         {
           "type": "hw",
@@ -1773,16 +1776,9 @@ window.SKILLS = {
       "name": "Look-ahead bias",
       "can": "You can find where a backtest used information that did not exist at decision time — an unlagged signal, a forward as-of match, a peek at the next book — fix it on the logical clock, and quantify how much of the edge was the leak.",
       "introduced": 4,
-      "practised": [
-        8
-      ],
+      "practised": [],
       "depth": 3,
       "where": [
-        {
-          "type": "deck",
-          "session": 8,
-          "label": "Deck Week 8 · slide 11"
-        },
         {
           "type": "hw",
           "label": "HW 4 — Your tapes in SQL and Parquet, and a backtest you can trust",
@@ -1827,20 +1823,15 @@ window.SKILLS = {
     {
       "id": "quant.overfitting",
       "category": "quant",
-      "name": "Overfitting, data snooping & bias-variance",
-      "can": "You can explain test error as bias plus variance plus irreducible noise, recognise that keeping the best of 500 variants fits noise, and defend against it with fewer parameters, counted trials and a held-out block.",
+      "name": "Linear & logistic regression, and overfitting",
+      "can": "You can fit OLS and logistic regression, read in-sample against out-of-sample error as model complexity grows (train error always falls, test error turns up), explain it as bias plus variance plus noise, and name what a linear model cannot capture: interactions, regimes and outliers.",
       "introduced": 8,
       "practised": [],
       "depth": 3,
       "where": [
         {
-          "type": "deck",
-          "session": 8,
-          "label": "Deck Week 8 · slides 9, 13"
-        },
-        {
           "type": "hw",
-          "label": "HW 7 — ML signals & model ops",
+          "label": "HW 8 — ML signals & model ops",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901649"
         },
         {
@@ -1872,7 +1863,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 5 — Complexity & the order book data structure",
+          "label": "HW 6 — Complexity & the order book data structure",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901647"
         },
         {
@@ -1904,7 +1895,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 5 — Complexity & the order book data structure",
+          "label": "HW 6 — Complexity & the order book data structure",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901647"
         },
         {
@@ -1936,7 +1927,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 5 — Complexity & the order book data structure",
+          "label": "HW 6 — Complexity & the order book data structure",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901647"
         },
         {
@@ -1968,7 +1959,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 5 — Complexity & the order book data structure",
+          "label": "HW 6 — Complexity & the order book data structure",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901647"
         },
         {
@@ -2000,7 +1991,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 5 — Complexity & the order book data structure",
+          "label": "HW 6 — Complexity & the order book data structure",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901647"
         },
         {
@@ -2037,7 +2028,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 5 — Complexity & the order book data structure",
+          "label": "HW 6 — Complexity & the order book data structure",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901647"
         },
         {
@@ -2058,20 +2049,13 @@ window.SKILLS = {
       "name": "Latency, throughput & the tail",
       "can": "You can separate per-operation latency from operations per second, report p50/p95/p99 instead of a mean, and set a per-tick budget that the tail — not the average — has to fit inside.",
       "introduced": 6,
-      "practised": [
-        8
-      ],
+      "practised": [],
       "depth": 3,
       "where": [
         {
           "type": "deck",
           "session": 6,
           "label": "Deck Week 6 · slides 16, 20"
-        },
-        {
-          "type": "deck",
-          "session": 8,
-          "label": "Deck Week 8 · slide 18"
         },
         {
           "type": "lab",
@@ -2081,7 +2065,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 5 — Complexity & the order book data structure",
+          "label": "HW 6 — Complexity & the order book data structure",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901647"
         },
         {
@@ -2177,7 +2161,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 6 — Big data: vectorize your signal",
+          "label": "HW 7 — Big data: vectorize your signal",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901648"
         },
         {
@@ -2209,7 +2193,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 6 — Big data: vectorize your signal",
+          "label": "HW 7 — Big data: vectorize your signal",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901648"
         },
         {
@@ -2241,7 +2225,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 6 — Big data: vectorize your signal",
+          "label": "HW 7 — Big data: vectorize your signal",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901648"
         },
         {
@@ -2273,7 +2257,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 6 — Big data: vectorize your signal",
+          "label": "HW 7 — Big data: vectorize your signal",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901648"
         },
         {
@@ -2317,7 +2301,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 6 — Big data: vectorize your signal",
+          "label": "HW 7 — Big data: vectorize your signal",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901648"
         },
         {
@@ -2361,7 +2345,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 6 — Big data: vectorize your signal",
+          "label": "HW 7 — Big data: vectorize your signal",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901648"
         },
         {
@@ -2387,7 +2371,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 6 — Big data: vectorize your signal",
+          "label": "HW 7 — Big data: vectorize your signal",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901648"
         },
         {
@@ -2401,26 +2385,15 @@ window.SKILLS = {
     {
       "id": "quant.supervised-setup",
       "category": "quant",
-      "name": "The supervised setup: X, y and the horizon",
-      "can": "You can frame a trading signal as supervised learning — features knowable at t, a label about t+h — and choose classification or regression with a horizon that matches the holding period you intend.",
+      "name": "Supervised vs unsupervised learning",
+      "can": "You can say whether a trading question is supervised (features known at t, a label about t+h, as classification or regression) or unsupervised (regimes by clustering, common factors by PCA, a bot gone wrong by anomaly detection), and name where each sits in the signal or execution step of the bot.",
       "introduced": 8,
       "practised": [],
       "depth": 3,
       "where": [
         {
-          "type": "deck",
-          "session": 8,
-          "label": "Deck Week 8 · slide 5"
-        },
-        {
-          "type": "lab",
-          "session": 8,
-          "label": "Lab 8 · part 3 — Features known at t, label about t + h",
-          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189599"
-        },
-        {
           "type": "hw",
-          "label": "HW 7 — ML signals & model ops",
+          "label": "HW 8 — ML signals & model ops",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901649"
         },
         {
@@ -2433,26 +2406,15 @@ window.SKILLS = {
     {
       "id": "quant.feature-engineering",
       "category": "quant",
-      "name": "Features from prices & the order book",
-      "can": "You can build momentum, volatility, spread and order-book-imbalance features from a price history and a book snapshot, standardise them, and justify why fewer, better features win in low signal-to-noise data.",
+      "name": "Technical indicators as features, and the parameter count",
+      "can": "You can compute SMA/EMA gaps, momentum, RSI, Bollinger z-scores, realised volatility, spread and order-book imbalance as lagged features in O(1) per tick, and count how windows, thresholds and symbols multiply them into thousands of columns.",
       "introduced": 8,
       "practised": [],
       "depth": 3,
       "where": [
         {
-          "type": "deck",
-          "session": 8,
-          "label": "Deck Week 8 · slide 6"
-        },
-        {
-          "type": "lab",
-          "session": 8,
-          "label": "Lab 8 · part 3 — Features known at t, label about t + h",
-          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189599"
-        },
-        {
           "type": "hw",
-          "label": "HW 7 — ML signals & model ops",
+          "label": "HW 8 — ML signals & model ops",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901649"
         },
         {
@@ -2468,28 +2430,38 @@ window.SKILLS = {
       "interview": true
     },
     {
-      "id": "quant.walk-forward",
-      "category": "quant",
-      "name": "Walk-forward validation & leakage control",
-      "can": "You can split a time series chronologically into train, validation and an untouched test block, roll the split forward over expanding or rolling windows, and embargo the boundary so horizon-h labels cannot leak across it.",
+      "id": "tools.ml-pipeline",
+      "category": "tools",
+      "name": "The data pipeline: clean, scale on train, as-of merge",
+      "can": "You can clean a tape (duplicates, impossible values, gaps filled from the past only), standardise with statistics fitted on the training slice only, and as-of merge prices, book, events and news so no row sees the future.",
       "introduced": 8,
       "practised": [],
       "depth": 3,
       "where": [
         {
-          "type": "deck",
-          "session": 8,
-          "label": "Deck Week 8 · slides 11–12"
+          "type": "hw",
+          "label": "HW 8 — ML signals & model ops",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901649"
         },
         {
-          "type": "lab",
-          "session": 8,
-          "label": "Lab 8 · part 5 — Walk-forward, and the shuffled-label control",
-          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189599"
-        },
+          "type": "exam",
+          "label": "Final · group: ML Signals: Features, Leakage & Validation"
+        }
+      ],
+      "interview": true
+    },
+    {
+      "id": "quant.walk-forward",
+      "category": "quant",
+      "name": "Time-aware cross-validation with purge & embargo",
+      "can": "You can explain why shuffled K-fold lies on overlapping time-series labels, and replace it with time splits or walk-forward folds that purge and embargo h rows at each boundary, keeping one test block that is touched once.",
+      "introduced": 8,
+      "practised": [],
+      "depth": 3,
+      "where": [
         {
           "type": "hw",
-          "label": "HW 7 — ML signals & model ops",
+          "label": "HW 8 — ML signals & model ops",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901649"
         },
         {
@@ -2507,26 +2479,183 @@ window.SKILLS = {
     {
       "id": "quant.signal-scoring",
       "category": "quant",
-      "name": "Scoring a signal after costs",
-      "can": "You can explain why classification accuracy is necessary but not sufficient, read hit rate together with average win over average loss, and judge a signal on out-of-sample Sharpe and P&L net of fees, spread and turnover.",
+      "name": "Metrics: classification, regression and trading",
+      "can": "You can choose and read the right metric — precision, recall, F1, ROC-AUC, log-loss and the confusion matrix for a classifier, RMSE, MAE and out-of-sample R squared for a regression, hit rate, P&L after costs, Sharpe, turnover and drawdown for the strategy — against a baseline.",
       "introduced": 8,
       "practised": [],
       "depth": 3,
       "where": [
         {
-          "type": "deck",
-          "session": 8,
-          "label": "Deck Week 8 · slide 14"
+          "type": "hw",
+          "label": "HW 8 — ML signals & model ops",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901649"
         },
         {
-          "type": "lab",
-          "session": 8,
-          "label": "Lab 8 · part 5 — Walk-forward, and the shuffled-label control",
-          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189599"
-        },
+          "type": "exam",
+          "label": "Final · group: ML Signals: Features, Leakage & Validation"
+        }
+      ],
+      "interview": true
+    },
+    {
+      "id": "quant.dimensionality",
+      "category": "quant",
+      "name": "The curse of dimensionality",
+      "can": "You can explain why distances concentrate and the data you need grows exponentially as columns are added, and why a few hundred noisy financial rows cannot support thousands of indicator columns.",
+      "introduced": 8,
+      "practised": [],
+      "depth": 2,
+      "where": [
         {
           "type": "hw",
-          "label": "HW 7 — ML signals & model ops",
+          "label": "HW 8 — ML signals & model ops",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901649"
+        },
+        {
+          "type": "exam",
+          "label": "Final · group: ML Signals: Features, Leakage & Validation"
+        }
+      ],
+      "interview": true
+    },
+    {
+      "id": "quant.regularization",
+      "category": "quant",
+      "name": "Shrinkage: ridge, lasso & elastic net",
+      "can": "You can fit ridge (L2, shrinks every weight) and lasso (L1, sets weights to exactly zero and so selects features), choose the penalty by time-aware cross-validation, and say when elastic net is the compromise.",
+      "introduced": 8,
+      "practised": [],
+      "depth": 3,
+      "where": [
+        {
+          "type": "hw",
+          "label": "HW 8 — ML signals & model ops",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901649"
+        },
+        {
+          "type": "exam",
+          "label": "Final · group: ML Signals: Features, Leakage & Validation"
+        }
+      ],
+      "interview": true
+    },
+    {
+      "id": "quant.pca-lda",
+      "category": "quant",
+      "name": "PCA and LDA",
+      "can": "You can reduce a basket of correlated returns with PCA (variance explained, the first component as the market factor, eigen-portfolios), contrast it with LDA's supervised projection that separates classes, and tell feature extraction from feature selection.",
+      "introduced": 8,
+      "practised": [],
+      "depth": 2,
+      "where": [
+        {
+          "type": "hw",
+          "label": "HW 8 — ML signals & model ops",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901649"
+        },
+        {
+          "type": "exam",
+          "label": "Final · group: ML Signals: Features, Leakage & Validation"
+        }
+      ],
+      "interview": true
+    },
+    {
+      "id": "quant.decision-tree",
+      "category": "quant",
+      "name": "Decision trees",
+      "can": "You can explain how a tree splits on impurity, read its rules, use depth and minimum leaf size as the overfitting knob, and show it capturing an interaction that no linear model can.",
+      "introduced": 8,
+      "practised": [],
+      "depth": 2,
+      "where": [
+        {
+          "type": "hw",
+          "label": "HW 8 — ML signals & model ops",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901649"
+        },
+        {
+          "type": "exam",
+          "label": "Final · group: ML Signals: Features, Leakage & Validation"
+        }
+      ],
+      "interview": true
+    },
+    {
+      "id": "quant.random-forest",
+      "category": "quant",
+      "name": "Random forests",
+      "can": "You can explain bagging plus feature subsampling, read out-of-bag error and feature importance, and say why a forest lowers a tree's variance and trains in parallel.",
+      "introduced": 8,
+      "practised": [],
+      "depth": 2,
+      "where": [
+        {
+          "type": "hw",
+          "label": "HW 8 — ML signals & model ops",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901649"
+        },
+        {
+          "type": "exam",
+          "label": "Final · group: ML Signals: Features, Leakage & Validation"
+        }
+      ],
+      "interview": true
+    },
+    {
+      "id": "quant.boosting",
+      "category": "quant",
+      "name": "Gradient boosting",
+      "can": "You can explain boosting as sequential fitting of the residuals with a learning rate and early stopping, train sklearn's HistGradientBoostingClassifier, and say why it parallelises badly across trees.",
+      "introduced": 8,
+      "practised": [],
+      "depth": 2,
+      "where": [
+        {
+          "type": "hw",
+          "label": "HW 8 — ML signals & model ops",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901649"
+        },
+        {
+          "type": "exam",
+          "label": "Final · group: ML Signals: Features, Leakage & Validation"
+        }
+      ],
+      "interview": true
+    },
+    {
+      "id": "quant.svm-kernels",
+      "category": "quant",
+      "name": "Support vector machines & kernels",
+      "can": "You can explain the maximum-margin classifier, the role of C, and the kernel trick (linear, polynomial, RBF with gamma) that separates XOR-shaped data without building the features explicitly.",
+      "introduced": 8,
+      "practised": [],
+      "depth": 2,
+      "where": [
+        {
+          "type": "hw",
+          "label": "HW 8 — ML signals & model ops",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901649"
+        },
+        {
+          "type": "exam",
+          "label": "Final · group: ML Signals: Features, Leakage & Validation"
+        }
+      ],
+      "interview": true
+    },
+    {
+      "id": "quant.neural-nets",
+      "category": "quant",
+      "name": "Neural networks: the multilayer perceptron",
+      "can": "You can describe an MLP's layers, activations, backpropagation and epochs, use learning curves, early stopping and dropout against overfitting, and say why it needs far more data than a few hundred noisy bars.",
+      "introduced": 8,
+      "practised": [],
+      "depth": 2,
+      "where": [
+        {
+          "type": "hw",
+          "label": "HW 8 — ML signals & model ops",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901649"
         },
         {
@@ -2539,32 +2668,84 @@ window.SKILLS = {
     {
       "id": "quant.model-ops",
       "category": "quant",
-      "name": "Persist, serve, monitor & retrain a model",
-      "can": "You can train offline, serialise the fitted model with its feature list and version, load it once outside the hot path, time predict against the per-tick budget, and monitor drift to decide when to retrain or roll back.",
+      "name": "From model to bot: freeze, load, predict, fall back, monitor",
+      "can": "You can freeze a fitted model with its feature list and version, load it once outside on_tick, predict within the per-tick budget, fall back to a baseline when the artifact is missing or mismatched, and watch the live hit rate for drift.",
       "introduced": 8,
       "practised": [],
       "depth": 3,
       "where": [
         {
-          "type": "deck",
-          "session": 8,
-          "label": "Deck Week 8 · slides 15, 18"
-        },
-        {
-          "type": "lab",
-          "session": 8,
-          "label": "Lab 8 · part 6 — Freeze the model, then load it in on_tick",
-          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189599"
-        },
-        {
           "type": "hw",
-          "label": "HW 7 — ML signals & model ops",
+          "label": "HW 8 — ML signals & model ops",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901649"
         },
         {
           "type": "project",
           "label": "Phase 3 — Risk & Robustness",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901655"
+        },
+        {
+          "type": "exam",
+          "label": "Final · group: ML Signals: Features, Leakage & Validation"
+        }
+      ],
+      "interview": true
+    },
+    {
+      "id": "tools.news-metadata",
+      "category": "tools",
+      "name": "News as data: metadata, dedup & timestamps",
+      "can": "You can turn a raw headline or an arena news event into a record with the time it was received, its source, tickers, topic and a dedup key, ready for an as-of merge with prices.",
+      "introduced": 8,
+      "practised": [],
+      "depth": 2,
+      "where": [
+        {
+          "type": "hw",
+          "label": "HW 8 — ML signals & model ops",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901649"
+        },
+        {
+          "type": "exam",
+          "label": "Final · group: ML Signals: Features, Leakage & Validation"
+        }
+      ],
+      "interview": false
+    },
+    {
+      "id": "quant.sentiment",
+      "category": "quant",
+      "name": "Sentiment scoring: from text to a feature",
+      "can": "You can score a headline with a finance word list or a transformer classifier, turn the scores into a decayed per-symbol feature known at t, and check it with an event study before it enters the signal.",
+      "introduced": 8,
+      "practised": [],
+      "depth": 2,
+      "where": [
+        {
+          "type": "hw",
+          "label": "HW 8 — ML signals & model ops",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901649"
+        },
+        {
+          "type": "exam",
+          "label": "Final · group: ML Signals: Features, Leakage & Validation"
+        }
+      ],
+      "interview": true
+    },
+    {
+      "id": "quant.fine-tuning",
+      "category": "quant",
+      "name": "Fine-tuning a transformer on labelled headlines",
+      "can": "You can fine-tune a pretrained transformer such as DistilBERT on a small labelled set of financial headlines by training a new classification head (optionally the last layers), and compare held-out accuracy before and after.",
+      "introduced": 8,
+      "practised": [],
+      "depth": 2,
+      "where": [
+        {
+          "type": "hw",
+          "label": "HW 8 — ML signals & model ops",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901649"
         },
         {
           "type": "exam",
@@ -2600,7 +2781,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 9 — Integration & season-finale demo",
+          "label": "HW 9 — CI/CD, testing & the season-finale integration",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901651"
         },
         {
@@ -2632,7 +2813,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 9 — Integration & season-finale demo",
+          "label": "HW 9 — CI/CD, testing & the season-finale integration",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901651"
         },
         {
@@ -2664,7 +2845,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 9 — Integration & season-finale demo",
+          "label": "HW 9 — CI/CD, testing & the season-finale integration",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901651"
         },
         {
@@ -2696,7 +2877,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 9 — Integration & season-finale demo",
+          "label": "HW 9 — CI/CD, testing & the season-finale integration",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901651"
         },
         {
@@ -2727,7 +2908,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 9 — Integration & season-finale demo",
+          "label": "HW 9 — CI/CD, testing & the season-finale integration",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901651"
         },
         {
@@ -2764,7 +2945,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 9 — Integration & season-finale demo",
+          "label": "HW 9 — CI/CD, testing & the season-finale integration",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901651"
         },
         {
@@ -2801,7 +2982,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 9 — Integration & season-finale demo",
+          "label": "HW 9 — CI/CD, testing & the season-finale integration",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901651"
         },
         {
@@ -2838,7 +3019,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 9 — Integration & season-finale demo",
+          "label": "HW 9 — CI/CD, testing & the season-finale integration",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901651"
         },
         {
@@ -2875,7 +3056,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 9 — Integration & season-finale demo",
+          "label": "HW 9 — CI/CD, testing & the season-finale integration",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901651"
         },
         {
@@ -2912,7 +3093,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 9 — Integration & season-finale demo",
+          "label": "HW 9 — CI/CD, testing & the season-finale integration",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901651"
         },
         {
@@ -2939,7 +3120,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 9 — Integration & season-finale demo",
+          "label": "HW 9 — CI/CD, testing & the season-finale integration",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901651"
         },
         {
@@ -2976,7 +3157,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 9 — Integration & season-finale demo",
+          "label": "HW 9 — CI/CD, testing & the season-finale integration",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901651"
         },
         {
@@ -3008,7 +3189,7 @@ window.SKILLS = {
         },
         {
           "type": "hw",
-          "label": "HW 9 — Integration & season-finale demo",
+          "label": "HW 9 — CI/CD, testing & the season-finale integration",
           "url": "https://canvas.uchicago.edu/courses/74211/assignments/901651"
         },
         {
