@@ -19,6 +19,8 @@ the same table as tools/build_skills.py.
 """
 import io
 import json
+import shutil
+import tempfile
 import os
 import re
 import subprocess
@@ -38,6 +40,12 @@ SOURCE_WEEK = {"0": 0, "1": 1, "2": 2, "3": 3, "4": 4, "6": 6, "7": 7, "8": 8,
 MIDTERM_ONLY = {5}
 # 2026-10-11: the merged Session 9 = old 8 + old 9, both parts kept
 MERGED_MAX = {9: {"concepts": 12, "paragraphs": 10, "interview": 16}}
+# 2026-11-14: Session 9 rebuilt for the last class (the Week 9 finale redo):
+# 9 cards for testing / git flow / CI/CD + 5 synthesis cards, and a
+# course-wide interview bank (at least 40, linked to skills of any session)
+MERGED_MAX[9] = {"concepts": 14, "paragraphs": 6, "interview": 80}
+COURSE_WIDE = {9}        # interview links may point at any session's skill
+MIN_INTERVIEW = {9: 40}
 # 2026-11-14: the rebuilt Week 8 class has nine parts P0-P8 with P3 in two
 # cards and fine-tuning as its own card -> 11 concept cards
 MERGED_MAX[8] = {"concepts": 11}
@@ -129,7 +137,9 @@ for s in sessions:
             lines = c["code"].split("\n")
             if len(lines) > 27:  # raised 2026-10-11 at the instructor's request (was 12; S3.c7 has 27)
                 err("%s.c%d: code is %d lines (max 27)" % (tag, i, len(lines)))
-            snippets.append((tag, i, c["title"], c["code"]))
+            snippets.append((tag, i, c["title"], c["code"], c.get("lang", "python")))
+            if c.get("lang", "python") not in ("python", "bash"):
+                err("%s.c%d: lang must be python or bash, got %r" % (tag, i, c.get("lang")))
         if "deck" in c:
             found = DECK_RE.findall(c["deck"])
             if not found:
@@ -169,8 +179,8 @@ for s in sessions:
             err("%s: the midterm week carries no interview questions" % tag)
         lvl_tally[n] = {}
         continue
-    if not (6 <= len(iv) <= imax):  # raised 2026-10-11 at the instructor's request (was 6-8; Sessions 2 and 3 have 10)
-        err("%s: %d interview items (want 6-%d)" % (tag, len(iv), imax))
+    if not (MIN_INTERVIEW.get(n, 6) <= len(iv) <= imax):  # raised 2026-10-11 at the instructor's request (was 6-8; Sessions 2 and 3 have 10)
+        err("%s: %d interview items (want %d-%d)" % (tag, len(iv), MIN_INTERVIEW.get(n, 6), imax))
     counts = {}
     for j, q in enumerate(iv, 1):
         if not q.get("q"):
@@ -185,7 +195,7 @@ for s in sessions:
             used_skills.add(q["skill"])
             if q["skill"] not in skill_ids:
                 err("%s.i%d: skill %r not in skills.js" % (tag, j, q["skill"]))
-            elif q["skill"] not in sess_skills.get(n, set()):
+            elif q["skill"] not in sess_skills.get(n, set()) and n not in COURSE_WIDE:
                 warnings.append("%s.i%d links %s, which skills.js does not list "
                                 "for this session" % (tag, j, q["skill"]))
     lvl_tally[n] = counts
@@ -209,7 +219,7 @@ for s in sessions:
 os.makedirs(SNIPS, exist_ok=True)
 print("5. snippets ............ written to snips/ and run with `python3`")
 ok = bad = 0
-for tag, i, title, code in snippets:
+for tag, i, title, code, lang in snippets:
     # claimed output = the trailing '#' comment lines
     exp = []
     for ln in reversed(code.split("\n")):
@@ -223,8 +233,8 @@ for tag, i, title, code in snippets:
     # normalise whitespace the same way we normalise stdout
     exp = [" ".join(e.split()) for e in reversed(exp) if e.strip()]
 
-    # import hygiene
-    for mod in re.findall(r"^\s*(?:import|from)\s+([A-Za-z_][\w]*)", code, re.M):
+    # import hygiene (python only)
+    for mod in [] if lang == "bash" else re.findall(r"^\s*(?:import|from)\s+([A-Za-z_][\w]*)", code, re.M):
         if mod in ALLOWED_3P:
             continue
         try:
@@ -233,11 +243,24 @@ for tag, i, title, code in snippets:
             err("%s.c%d %r: imports %r which is not available" % (tag, i, title, mod))
 
     name = "v_%s_c%d" % (tag.lower(), i)
-    src = os.path.join(SNIPS, name + ".py")
+    src = os.path.join(SNIPS, name + (".sh" if lang == "bash" else ".py"))
     io.open(src, "w", encoding="utf-8").write(code + "\n")
     try:
-        rp = subprocess.run([sys.executable, src], capture_output=True,
-                            text=True, timeout=120, cwd=SNIPS)
+        if lang == "bash":
+            # a bash card (the git-flow walk-through) runs in an empty temp dir
+            # with a throw-away HOME and git identity: no user config, no repo
+            tmp = tempfile.mkdtemp(prefix="focus_sh_")
+            env = dict(os.environ, HOME=tmp, GIT_CONFIG_NOSYSTEM="1",
+                       GIT_AUTHOR_NAME="desk", GIT_AUTHOR_EMAIL="desk@example.com",
+                       GIT_COMMITTER_NAME="desk", GIT_COMMITTER_EMAIL="desk@example.com")
+            try:
+                rp = subprocess.run(["bash", src], capture_output=True, text=True,
+                                    timeout=120, cwd=tmp, env=env)
+            finally:
+                shutil.rmtree(tmp, ignore_errors=True)
+        else:
+            rp = subprocess.run([sys.executable, src], capture_output=True,
+                                text=True, timeout=120, cwd=SNIPS)
     except subprocess.TimeoutExpired:
         err("%s.c%d %r: RUN TIMED OUT" % (tag, i, title))
         bad += 1
@@ -312,6 +335,7 @@ if errors:
         print("  -", e)
     sys.exit(1)
 print("PASS  focus.js conforms to FOCUS_SCHEMA.md — %d sessions (0..9), 4-10 concepts, "
-      "3-6 paragraphs, 6-10 interview items (midterm week exempt, merged Session 9 "
-      "up to 12/10/16), %d Python snippets executed and their printed output "
-      "verified." % (len(sessions), ok))
+      "3-6 paragraphs, 6-10 interview items (midterm week exempt; Session 9, the "
+      "last class, up to 14 concepts and a course-wide bank of 40-80 questions), "
+      "%d snippets (Python, plus bash in a throw-away git repo) executed and their "
+      "printed output verified." % (len(sessions), ok))

@@ -275,8 +275,8 @@ for s in sess:
     if s["n"] in MIDTERM_ONLY:   # 2026-10-11: the midterm week teaches nothing new
         chk(not s["skills"], "session %d is the midterm only: no skills" % s["n"])
         continue
-    chk(5 <= len(s["skills"]) <= 18,  # raised 2026-10-11 at the instructor's request (was 9, then 14, then 17: Session 2 has 14, the merged Session 9 has 17); 18 on 2026-11-14 for the Week 8 ML redo (P0-P8)
-        "session %d has %d skills (want 5-18)" % (s["n"], len(s["skills"])))
+    chk(5 <= len(s["skills"]) <= 22,  # 22 on 2026-11-14 for the Week 9 finale redo (P1-P3 + four git-flow skills = 21)  # raised 2026-10-11 at the instructor's request (was 9, then 14, then 17: Session 2 has 14, the merged Session 9 has 17); 18 on 2026-11-14 for the Week 8 ML redo (P0-P8)
+        "session %d has %d skills (want 5-22)" % (s["n"], len(s["skills"])))
 for k in skills:
     want = {k["introduced"]} | set(k["practised"])
     got = {s["n"] for s in sess if k["id"] in s["skills"]}

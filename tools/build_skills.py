@@ -117,8 +117,12 @@ LABS = {
     6: ("Lab 6 — Complexity & Data Structures", ITEM + "3189593"),
     7: ("Lab 7 — Big Data", ITEM + "3189596"),
     8: ("Lab 8 — ML Signals & Model Ops", ITEM + "3189599"),
-    "9a": ("Lab 9a — CI/CD, Testing & the Dashboard", ITEM + "3189602"),
-    "9b": ("Lab 9b — Integration, Failure Drills & the Demo", ITEM + "3189605"),
+    # 2026-11-14: Canvas now has ONE Week 9 lab page (module 481572, page
+    # lab-9-testing-ci-slash-cd-and-the-finale-drills, item 3189605); the old 9a
+    # item 3189602 is no longer live. Both part keys point at it, and the
+    # session lists it once (build_sessions dedupes by url).
+    "9a": ("Lab 9 — Testing, CI/CD & the Finale Drills", ITEM + "3189605"),
+    "9b": ("Lab 9 — Testing, CI/CD & the Finale Drills", ITEM + "3189605"),
 }
 
 # homework assignment id per session (HW 8, 901650, is folded into HW 9)
@@ -139,7 +143,7 @@ SESSION_META = [
     (6, "2026-11-06", "Algorithmic Complexity & Data Structures", None),
     (7, "2026-11-13", "Big Data & Distributed Computing", None),
     (8, "2026-11-20", "Machine Learning Signals & Model Ops", None),
-    (9, "2026-12-04", "CI/CD, Testing & UI · Integration & Demo — Season Finale", "final"),
+    (9, "2026-12-04", "Testing, Git Flow & CI/CD · Nine Weeks, One System — Season Finale", "final"),
 ]
 
 # the decks each session teaches (session 5 has none: midterm only)
@@ -1182,6 +1186,49 @@ SKILLS = [
        hw(9),
        phase(5),
        final(FN_LIVE)], False),
+
+    # ===== session 9, part P2 (2026-11-14 Week 9 finale redo): git flow =====
+    # no deck or lab citation yet: the Week 9 deck and lab are being rebuilt
+    # at the same time (OUTLINE.md); HW 9, Phase 4 and the final carry them
+    S("tools.git-flow-branches", "tools", "Git flow: main, develop, feature, release & hotfix",
+      "You can say what each branch in git flow is for, run a feature through "
+      "develop and a release branch to a tagged version on main, start a hotfix "
+      "from the live tag and merge it back to both, and choose between git flow, "
+      "GitHub flow and trunk-based development for a given team.",
+      9, [], 3,
+      [hw(9),
+       phase(4),
+       final(FN_CI)], True),
+
+    S("tools.pull-request-gate", "tools", "Pull requests, required checks & semantic versions",
+      "You can open a pull request a reviewer can approve (what, why, how it was "
+      "tested, a linked ticket), protect main with two approvals and required "
+      "checks, pick a merge strategy, and derive the next semantic version from "
+      "conventional commits.",
+      9, [], 3,
+      [hw(9),
+       phase(4),
+       final(FN_CI)], True),
+
+    S("tools.environments-release", "tools", "Environments, canaries, flags & rollback",
+      "You can walk a change up the ladder from local and CI through testing and "
+      "a production-like staging to a canary and full production, ship new "
+      "behaviour behind a flag that defaults off, and roll back by redeploying "
+      "the previous tag.",
+      9, [], 2,
+      [hw(9),
+       phase(4),
+       final(FN_CI)], True),
+
+    S("tools.change-window", "tools", "Change windows, the two-person rule & a mid-week hotfix",
+      "You can plan a deploy at a trading firm — never while a session is open, "
+      "in a change window right after the close, with a run-book, a two-person "
+      "rule on order-sending code and research kept apart from production — and "
+      "ship a mid-week hotfix that way.",
+      9, [], 2,
+      [hw(9),
+       phase(5),
+       final(FN_LIVE)], True),
 ]
 
 # --------------------------------------------------------------------------
@@ -1204,10 +1251,13 @@ SESSION_SKILLS = {
         "quant.dimensionality", "quant.regularization", "quant.pca-lda", "quant.overfitting",
         "quant.decision-tree", "quant.random-forest", "quant.boosting", "quant.svm-kernels", "quant.neural-nets",
         "quant.model-ops", "tools.news-metadata", "quant.sentiment", "quant.fine-tuning"],
-    # 2026-10-11: the old Session 8 (CI/CD) and Session 9 (finale) checklists,
-    # merged in teaching order (part 9a, then part 9b; tools.test-pyramid once)
-    9: ["tools.git-branching", "tools.headless-sim", "tools.determinism", "tools.test-pyramid", "tools.pytest", "tools.mocking-async", "tools.github-actions", "tools.docker", "tools.observability",
-        "quant.performance-metrics", "quant.risk-controls", "quant.tearsheet", "quant.risk-adjusted-score", "trading.portfolio-pnl", "trading.reconciliation", "tools.failure-modes", "tools.runbook"],
+    # 2026-11-14 Week 9 finale redo, in the order of the class: P1 testing,
+    # P2 git flow and environments, P3 CI/CD, live failure modes and the score
+    9: ["tools.test-pyramid", "tools.pytest", "tools.mocking-async", "tools.determinism", "tools.headless-sim",
+        "tools.git-branching", "tools.git-flow-branches", "tools.pull-request-gate", "tools.environments-release", "tools.change-window",
+        "tools.github-actions", "tools.docker", "tools.observability", "tools.failure-modes", "tools.runbook",
+        "trading.portfolio-pnl", "trading.reconciliation", "quant.risk-controls",
+        "quant.performance-metrics", "quant.tearsheet", "quant.risk-adjusted-score"],
 }
 
 # a session whose student-facing page is a combined companion page: the skills
@@ -1219,8 +1269,10 @@ def build_sessions():
     out = []
     for n, date, title, exam in SESSION_META:
         ids = SESSION_SKILLS[n]
-        labs = [{"label": v[0], "url": v[1]} for k, v in LABS.items()
-                if session_of(k) == n]
+        labs = []
+        for k, v in LABS.items():
+            if session_of(k) == n and v[1] not in [x["url"] for x in labs]:
+                labs.append({"label": v[0], "url": v[1]})
         phases = [_assn(PHASES[p]) for p in sorted(PHASES)
                   if PHASE_SESSION[p] == n]
         s = {

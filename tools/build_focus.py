@@ -3,13 +3,15 @@
 """Assemble focus.js (window.FOCUS) from the per-slice modules fp1..fp5.
 
 fp1 = sessions 0,1,2   fp2 = sessions 3,4,6   fp3 = sessions 7,8
-fp4 = session 9 (two parts: 9a CI/CD, 9b integration & finale)
+fp4 = session 9 (the last class; its interview bank is in fp4_interview.py)
 fp5 = session 5 (midterm week)
 
 Resequenced 2026-10-11 (the instructor's decision): Week 5 is the midterm only;
 the old Sessions 5, 6, 7 are taught in 6, 7, 8 and the old Sessions 8 and 9 are
-merged into Session 9 — both parts' concepts, paragraphs, arena examples and
-interview questions are kept, part 9a first.
+merged into Session 9. 2026-11-14: Session 9 was rebuilt as ONE object (the
+Week 9 finale redo: testing, git flow and environments, CI/CD, the synthesis
+and a course-wide interview bank), so nothing is merged any more; merge() is
+kept for any future session split across slices.
 
 Run:  python3 tools/build_focus.py   ->  writes ../focus.js
 """
@@ -32,13 +34,9 @@ META = {
     "interview_title": "Interview questions",
 }
 
-# the merged Session 9 (2026-10-11): its own focus line and tagline
-MERGED = {
-    9: {
-        "focus": "CI/CD, testing & the live system",
-        "tagline": "A green run on your laptop proves nothing, and parts that pass their own tests prove little more: the bar is a seeded, network-free suite on a clean runner, then parts that honour each other's contracts while the leaderboard scores risk rather than return.",
-    },
-}
+# focus line and tagline of a session assembled from several slices (none today;
+# the 2026-10-11 two-part Session 9 was rebuilt as one object on 2026-11-14)
+MERGED = {}
 
 
 def merge(parts, n):

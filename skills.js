@@ -335,21 +335,15 @@ window.SKILLS = {
     {
       "n": 9,
       "date": "2026-12-04",
-      "title": "CI/CD, Testing & UI · Integration & Demo — Season Finale",
+      "title": "Testing, Git Flow & CI/CD · Nine Weeks, One System — Season Finale",
       "decks": [
         "w9a",
         "w9b"
       ],
-      "lab": [
-        {
-          "label": "Lab 9a — CI/CD, Testing & the Dashboard",
-          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189602"
-        },
-        {
-          "label": "Lab 9b — Integration, Failure Drills & the Demo",
-          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189605"
-        }
-      ],
+      "lab": {
+        "label": "Lab 9 — Testing, CI/CD & the Finale Drills",
+        "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189605"
+      },
       "hw": {
         "label": "HW 9 — CI/CD, testing & the season-finale integration",
         "url": "https://canvas.uchicago.edu/courses/74211/assignments/901651",
@@ -370,23 +364,27 @@ window.SKILLS = {
       "exam": "final",
       "companion_url": "https://sdonadio.github.io/systematic-trading-arena/week9.html",
       "skills": [
-        "tools.git-branching",
-        "tools.headless-sim",
-        "tools.determinism",
         "tools.test-pyramid",
         "tools.pytest",
         "tools.mocking-async",
+        "tools.determinism",
+        "tools.headless-sim",
+        "tools.git-branching",
+        "tools.git-flow-branches",
+        "tools.pull-request-gate",
+        "tools.environments-release",
+        "tools.change-window",
         "tools.github-actions",
         "tools.docker",
         "tools.observability",
-        "quant.performance-metrics",
-        "quant.risk-controls",
-        "quant.tearsheet",
-        "quant.risk-adjusted-score",
+        "tools.failure-modes",
+        "tools.runbook",
         "trading.portfolio-pnl",
         "trading.reconciliation",
-        "tools.failure-modes",
-        "tools.runbook"
+        "quant.risk-controls",
+        "quant.performance-metrics",
+        "quant.tearsheet",
+        "quant.risk-adjusted-score"
       ]
     }
   ],
@@ -2341,7 +2339,7 @@ window.SKILLS = {
           "type": "lab",
           "session": 9,
           "label": "Lab 9a · part 5 — Determinism: same seed, same result",
-          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189602"
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189605"
         },
         {
           "type": "hw",
@@ -2777,7 +2775,7 @@ window.SKILLS = {
           "type": "lab",
           "session": 9,
           "label": "Lab 9a · part 4 — An integration test — the bot inside the simulator",
-          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189602"
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189605"
         },
         {
           "type": "hw",
@@ -2809,7 +2807,7 @@ window.SKILLS = {
           "type": "lab",
           "session": 9,
           "label": "Lab 9a · part 3 — Fixtures and parametrize instead of copy-paste",
-          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189602"
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189605"
         },
         {
           "type": "hw",
@@ -2841,7 +2839,7 @@ window.SKILLS = {
           "type": "lab",
           "session": 9,
           "label": "Lab 9a · part 6 — One async test",
-          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189602"
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189605"
         },
         {
           "type": "hw",
@@ -2873,7 +2871,7 @@ window.SKILLS = {
           "type": "lab",
           "session": 9,
           "label": "Lab 9a · part 8 — The CI workflow you will commit in HW 9",
-          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189602"
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189605"
         },
         {
           "type": "hw",
@@ -2941,7 +2939,7 @@ window.SKILLS = {
           "type": "lab",
           "session": 9,
           "label": "Lab 9a · part 9 — Read the dashboard against a local exchange",
-          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189602"
+          "url": "https://canvas.uchicago.edu/courses/74211/modules/items/3189605"
         },
         {
           "type": "hw",
@@ -3203,6 +3201,110 @@ window.SKILLS = {
         }
       ],
       "interview": false
+    },
+    {
+      "id": "tools.git-flow-branches",
+      "category": "tools",
+      "name": "Git flow: main, develop, feature, release & hotfix",
+      "can": "You can say what each branch in git flow is for, run a feature through develop and a release branch to a tagged version on main, start a hotfix from the live tag and merge it back to both, and choose between git flow, GitHub flow and trunk-based development for a given team.",
+      "introduced": 9,
+      "practised": [],
+      "depth": 3,
+      "where": [
+        {
+          "type": "hw",
+          "label": "HW 9 — CI/CD, testing & the season-finale integration",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901651"
+        },
+        {
+          "type": "project",
+          "label": "Phase 4 — Scale & Operations",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901656"
+        },
+        {
+          "type": "exam",
+          "label": "Final · group: Testing, CI/CD & Reproducibility"
+        }
+      ],
+      "interview": true
+    },
+    {
+      "id": "tools.pull-request-gate",
+      "category": "tools",
+      "name": "Pull requests, required checks & semantic versions",
+      "can": "You can open a pull request a reviewer can approve (what, why, how it was tested, a linked ticket), protect main with two approvals and required checks, pick a merge strategy, and derive the next semantic version from conventional commits.",
+      "introduced": 9,
+      "practised": [],
+      "depth": 3,
+      "where": [
+        {
+          "type": "hw",
+          "label": "HW 9 — CI/CD, testing & the season-finale integration",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901651"
+        },
+        {
+          "type": "project",
+          "label": "Phase 4 — Scale & Operations",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901656"
+        },
+        {
+          "type": "exam",
+          "label": "Final · group: Testing, CI/CD & Reproducibility"
+        }
+      ],
+      "interview": true
+    },
+    {
+      "id": "tools.environments-release",
+      "category": "tools",
+      "name": "Environments, canaries, flags & rollback",
+      "can": "You can walk a change up the ladder from local and CI through testing and a production-like staging to a canary and full production, ship new behaviour behind a flag that defaults off, and roll back by redeploying the previous tag.",
+      "introduced": 9,
+      "practised": [],
+      "depth": 2,
+      "where": [
+        {
+          "type": "hw",
+          "label": "HW 9 — CI/CD, testing & the season-finale integration",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901651"
+        },
+        {
+          "type": "project",
+          "label": "Phase 4 — Scale & Operations",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901656"
+        },
+        {
+          "type": "exam",
+          "label": "Final · group: Testing, CI/CD & Reproducibility"
+        }
+      ],
+      "interview": true
+    },
+    {
+      "id": "tools.change-window",
+      "category": "tools",
+      "name": "Change windows, the two-person rule & a mid-week hotfix",
+      "can": "You can plan a deploy at a trading firm — never while a session is open, in a change window right after the close, with a run-book, a two-person rule on order-sending code and research kept apart from production — and ship a mid-week hotfix that way.",
+      "introduced": 9,
+      "practised": [],
+      "depth": 2,
+      "where": [
+        {
+          "type": "hw",
+          "label": "HW 9 — CI/CD, testing & the season-finale integration",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901651"
+        },
+        {
+          "type": "project",
+          "label": "Phase 5 — Season Finale: Demo & Postmortem",
+          "url": "https://canvas.uchicago.edu/courses/74211/assignments/901657"
+        },
+        {
+          "type": "exam",
+          "label": "Final · group: Live Systems: Risk, Reconciliation & Failure Modes"
+        }
+      ],
+      "interview": true
     }
   ]
 };

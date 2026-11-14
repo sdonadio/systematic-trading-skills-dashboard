@@ -696,7 +696,9 @@
         var ht = add(hd, el("div", "ctt"));
         add(ht, el("h3", "cti", txt(c.title) || "Concept " + (k + 1)));
         if (c.text) add(ht, el("p", "ctx", txt(c.text)));
-        if (c.code) card.appendChild(codeBlock(c.code, c.deck, txt(c.title)));
+        /* a card may name its snippet's language ("lang": "bash"); the chip is
+           the deck label if there is one, else that language, else course.lang */
+        if (c.code) card.appendChild(codeBlock(c.code, c.deck || (c.lang ? txt(c.lang) : null), txt(c.title)));
         else if (c.deck) add(card, el("div", "chips")).appendChild(el("span", "chip deck", txt(c.deck)));
       }
     }
@@ -790,10 +792,16 @@
           renderRichText(body, item.a, "the answer to question " + (idx + 1));
           if (item.skill && byId[item.skill]) {
             var rel = add(body, el("a", "rel"));
-            rel.href = "#skill-" + domId(item.skill);
+            /* a skill on this page's checklist: jump to its row; a skill from
+               another session (a course-wide question bank): open that
+               session's page at the row */
+            var here = !!$("skill-" + domId(item.skill));
+            var home = byId[item.skill].introduced;
+            rel.href = (here ? "" : "session-" + home + ".html") + "#skill-" + domId(item.skill);
             add(rel, el("span", "rl", "related skill"));
-            add(rel, document.createTextNode(byId[item.skill].name));
-            rel.addEventListener("click", function (ev) {
+            add(rel, document.createTextNode(byId[item.skill].name +
+              (here ? "" : " (Session " + home + ")")));
+            if (here) rel.addEventListener("click", function (ev) {
               if (ev.preventDefault) ev.preventDefault();
               jumpToSkill(item.skill);
             });
@@ -827,6 +835,12 @@
       for (q = 0; q < ds.length && q < wasOpen.length; q++) ds[q].open = wasOpen[q];
       wasOpen = null;
     });
+
+    /* arrived from another page's related-skill link: flash that row */
+    if (/^#skill-/.test(window.location.hash || "")) {
+      var hrow = $(window.location.hash.slice(1));
+      if (hrow) jumpToSkill(hrow.id.slice(6));
+    }
 
     /* ── 6 · prev / next ────────────────────────────────────────── */
     var pn = $("pn");
